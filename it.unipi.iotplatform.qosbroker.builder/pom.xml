@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<parent>
+		<groupId>it.unipi.iotplatform</groupId>
+		<artifactId>QoSbrokerParent</artifactId>
+		<version>0.0.1</version>
+		<relativePath>../QoSbrokerParent</relativePath>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>qosbroker.builder</artifactId>
+	<packaging>pom</packaging>
+	<name>QoSbroker</name>
+
+
+
+	<properties>
+		<target-framework>equinox</target-framework>
+		<dependency.pax.web.version>0.5.2</dependency.pax.web.version>
+	</properties>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.5.3</version>
+				<executions>
+					<execution>
+						<id>create-target</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+
+
+
+	<modules>
+		<module>../qosbroker.qosmanager</module>
+	</modules>
+
+
+</project>
