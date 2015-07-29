@@ -16,9 +16,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<taget-platform.root>
-			/home/lorenzo/workspace/Spring-DM-Target-Platform/target
-		</taget-platform.root>
 		<!-- Spring version -->
 		<spring.version>3.2.3.RELEASE</spring.version>
 		<!-- <spring.osgi.version>2.0.0.M1</spring.osgi.version> -->
@@ -569,7 +566,7 @@
 
 	</repositories>
 	
-		<dependencyManagement>
+	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>it.unipi.iotplatform</groupId>
