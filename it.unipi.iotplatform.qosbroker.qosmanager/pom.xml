@@ -47,17 +47,6 @@
 							javax.xml.xpath,
 							org.apache.log4j;version="1.2",
 							org.osgi.framework;version="1.5",
-							org.springframework.beans;version="${spring.version}",
-							org.springframework.beans.annotation;version="${spring.version}",
-							org.springframework.beans.factory;version="${spring.version}",
-							org.springframework.beans.factory.annotation;version="${spring.version}",
-							org.springframework.stereotype;version="${spring.version}",
-							org.springframework.web;version="${spring.version}",
-							org.springframework.web.bind;version="${spring.version}",
-							org.springframework.web.bind.annotation;version="${spring.version}",
-							org.springframework.web.context;version="${spring.version}",
-							org.springframework.web.servlet.mvc;version="${spring.version}",
-							org.springframework.web.servlet.mvc.annotation;version="${spring.version}",
 							org.w3c.dom,
 							org.xml.sax
 						</Import-Package>

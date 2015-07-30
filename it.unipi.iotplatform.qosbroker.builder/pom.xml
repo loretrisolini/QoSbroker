@@ -51,6 +51,7 @@
 
 	<modules>
 		<module>../qosbroker.qosmanager</module>
+		<module>../qosbroker.restcontroller</module>
 	</modules>
 
 

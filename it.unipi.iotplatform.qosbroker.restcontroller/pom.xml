@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+  
+  <parent>
+    <groupId>it.unipi.iotplatform</groupId>
+    <artifactId>QoSbrokerParent</artifactId>
+    <version>0.0.1</version>
+ 	<relativePath>../QoSbrokerParent</relativePath>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>qosbroker.restcontroller</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>it.unipi.iotplatform.qosbroker.restcontroller</name>
+  <packaging>bundle</packaging>
+  
+	<build>
+	<resources>
+		<resource>
+			<directory>src/main/resources</directory>
+		</resource>
+		<resource>
+			<directory>.</directory>
+			<includes>
+				<include>META-INF/**</include>
+			</includes>
+		</resource>
+	</resources>
+	<plugins>
+		<plugin>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>maven-bundle-plugin</artifactId>
+			<extensions>true</extensions>
+			<configuration>
+				<manifestLocation>META-INF</manifestLocation>
+				<instructions>
+					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
+					<Import-Package>eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
+						eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
+						eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
+						eu.neclab.iotplatform.ngsi.api.ngsi9;version="${pom.version}",
+						eu.neclab.iotplatform.ngsi.association.datamodel;version="${pom.version}",
+						com.google.common.base;version="17.0.0",
+						javax.xml.bind,
+						javax.xml.bind.annotation,
+						javax.xml.datatype,
+						javax.xml.namespace,
+						javax.xml.parsers,
+						javax.xml.xpath,
+						org.apache.log4j;version="1.2",
+						org.osgi.framework;version="1.5",
+						org.w3c.dom,
+						org.xml.sax
+					</Import-Package>
+				</instructions>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+</project>
