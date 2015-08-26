@@ -4,7 +4,16 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
 	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
-
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/appServlet/spring-security.xml</param-value>
+	</context-param>
+	
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/applicationContext.xml</param-value>
+	</context-param>
+	
 	<context-param>
 		<param-name>contextClass</param-name>
 		<param-value>
@@ -27,12 +36,32 @@
 				org.springframework.osgi.web.context.support.OsgiBundleXmlWebApplicationContext
 			</param-value>
 		</init-param>
+		<init-param>
+			<param-name>contextClass</param-name>
+			<param-value>
+				org.springframework.osgi.web.context.support.OsgiBundleXmlWebApplicationContext
+			</param-value>
+		</init-param>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+		</init-param>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 		
 	<servlet-mapping>
 		<servlet-name>rest</servlet-name>
-		<url-pattern>/</url-pattern>
+		<url-pattern>/qos/</url-pattern>
 	</servlet-mapping>
+
+	<!-- Spring Security -->
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/qos/*</url-pattern>
+    </filter-mapping>
 
 </web-app>

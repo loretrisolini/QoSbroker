@@ -22,6 +22,7 @@ import it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck.SanityCheck;
  * Handles requests for the application home page.
  */
 @Controller
+@RequestMapping("/qos")
 public class RestController {
 	
 	private static final Logger logger =Logger.getLogger(RestController.class);
