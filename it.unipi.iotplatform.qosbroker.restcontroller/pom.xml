@@ -83,7 +83,7 @@
 							org.springframework.web.servlet.view;version="${spring.version}"
 					</Import-Package>
 					<Include-Resource>src/main/webapp</Include-Resource>
-					<Web-ContextPath>/</Web-ContextPath>
+					<Web-ContextPath>/qos</Web-ContextPath>
 				</instructions>
 			</configuration>
 		</plugin>

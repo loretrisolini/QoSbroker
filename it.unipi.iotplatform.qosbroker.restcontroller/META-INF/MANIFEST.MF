@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1440589506837
+Bnd-LastModified: 1440598421388
 Build-Jdk: 1.8.0_51
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
@@ -53,4 +53,4 @@ Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.4.1"
  ngframework.web.servlet.view;version="3.2.3.RELEASE"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
 Tool: Bnd-2.4.1.201501161923
-Web-ContextPath: /
+Web-ContextPath: /qos/
