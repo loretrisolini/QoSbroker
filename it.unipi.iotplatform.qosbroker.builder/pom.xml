@@ -50,8 +50,8 @@
 
 
 	<modules>
-		<module>../qosbroker.qosmanager</module>
-		<module>../qosbroker.restcontroller</module>
+		<module>../it.unipi.iotplatform.qosbroker.qosmanager</module>
+		<module>../it.unipi.iotplatform.qosbroker.restcontroller</module>
 	</modules>
 
 
