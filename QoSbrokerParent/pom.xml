@@ -11,7 +11,7 @@
 	<groupId>it.unipi.iotplatform</groupId>
 	<artifactId>QoSbrokerParent</artifactId>
 	<packaging>pom</packaging>
-	<version>0.0.1</version>
+	<version>4.3.3</version>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
