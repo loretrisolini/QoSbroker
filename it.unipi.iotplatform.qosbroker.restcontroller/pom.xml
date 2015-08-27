@@ -5,7 +5,7 @@
   <parent>
     <groupId>it.unipi.iotplatform</groupId>
     <artifactId>QoSbrokerParent</artifactId>
-    <version>0.0.1</version>
+    <version>4.3.3</version>
  	<relativePath>../QoSbrokerParent</relativePath>
   </parent>
   
@@ -35,11 +35,11 @@
 				<manifestLocation>META-INF</manifestLocation>
 				<instructions>
 					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
-					<Import-Package>eu.neclab.iotplatform.iotbroker.commons;version="4.4.1",
-							eu.neclab.iotplatform.ngsi.api.datamodel;version="4.4.1",
-							eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.4.1",
-							eu.neclab.iotplatform.ngsi.api.ngsi9;version="4.4.1",
-							eu.neclab.iotplatform.iotbroker.commons.interfaces;version="4.4.1",
+					<Import-Package>eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
+							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
+							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
+							eu.neclab.iotplatform.ngsi.api.ngsi9;version="${pom.version}",
+							eu.neclab.iotplatform.iotbroker.commons.interfaces;version="${pom.version}",
 							javax.servlet;version="2.5.0",
 							javax.servlet.http;version="2.5.0",
 							javax.xml.bind,

@@ -1,11 +1,11 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1440678818629
+Bnd-LastModified: 1440684628124
 Build-Jdk: 1.8.0_51
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
 Bundle-Name: it.unipi.iotplatform.qosbroker.restcontroller
 Bundle-SymbolicName: it.unipi.iotplatform.qosbroker.restcontroller
-Bundle-Version: 0.0.1
+Bundle-Version: 4.3.3
 Created-By: Apache Maven Bundle Plugin
 Export-Package: it.unipi.iotplatform.qosbroker.restcontroller.sanitychec
  k;version="0.0.1";uses:="javax.xml.bind.annotation",it.unipi.iotplatfor
@@ -14,16 +14,16 @@ Export-Package: it.unipi.iotplatform.qosbroker.restcontroller.sanitychec
  platform.ngsi.api.ngsi9,it.unipi.iotplatform.qosbroker.restcontroller.s
  anitycheck,javax.servlet.http,org.springframework.http,org.springframew
  ork.stereotype,org.springframework.web.bind.annotation"
-Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.4.1"
- ,eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.4.1",eu.neclab.iotpla
- tform.ngsi.api.ngsi9;version="4.4.1",javax.servlet.http;version="2.5.0"
+Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3"
+ ,eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotpla
+ tform.ngsi.api.ngsi9;version="4.3.3",javax.servlet.http;version="2.5.0"
  ,javax.xml.bind.annotation,org.apache.log4j;version="1.2",org.osgi.fram
  ework;version="1.6",org.springframework.beans.factory.annotation;versio
  n="3.2.3.RELEASE",org.springframework.http;version="3.2.3.RELEASE",org.
  springframework.stereotype;version="3.2.3.RELEASE",org.springframework.
  web.bind.annotation;version="3.2.3.RELEASE",eu.neclab.iotplatform.iotbr
- oker.commons;version="4.4.1",eu.neclab.iotplatform.iotbroker.commons.in
- terfaces;version="4.4.1",javax.servlet;version="2.5.0",javax.xml.bind,n
+ oker.commons;version="4.3.3",eu.neclab.iotplatform.iotbroker.commons.in
+ terfaces;version="4.3.3",javax.servlet;version="2.5.0",javax.xml.bind,n
  et.bull.javamelody;version="1.0.0",org.springframework.beans.factory;ve
  rsion="3.2.3.RELEASE",org.springframework.http.client;version="3.2.3.RE
  LEASE",org.springframework.http.converter;version="3.2.3.RELEASE",org.s
