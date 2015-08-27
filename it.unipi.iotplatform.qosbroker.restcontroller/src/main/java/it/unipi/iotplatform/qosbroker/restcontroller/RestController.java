@@ -22,7 +22,6 @@ import it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck.SanityCheck;
  * Handles requests for the application home page.
  */
 @Controller
-@RequestMapping("/qos")
 public class RestController {
 	
 	private static final Logger logger =Logger.getLogger(RestController.class);
@@ -93,7 +92,7 @@ public class RestController {
 	 *
 	 * @return the response entity
 	 */
-	@RequestMapping(value = "/QoSbroker/sanityCheck", method = RequestMethod.GET, consumes = { "*/*" }, produces = {
+	@RequestMapping(value = "/sanityCheck", method = RequestMethod.GET, consumes = { "*/*" }, produces = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
 	public ResponseEntity<SanityCheck> sanityCheck() {
 
@@ -102,10 +101,9 @@ public class RestController {
 		BundleContext bc = FrameworkUtil
 				.getBundle(RestController.class).getBundleContext();
 
-		SanityCheck response = new SanityCheck("IoT Broker GE", "Sanity Check",
+		SanityCheck response = new SanityCheck("QoS Broker GE", "Sanity Check",
 				"Version: " + bc.getBundle().getVersion());
 
-		logger.info("/QoSbroker/sanityCheck"+response.toString());
 		
 		return new ResponseEntity<SanityCheck>(response, HttpStatus.OK);
 
@@ -117,7 +115,7 @@ public class RestController {
 	 *
 	 * @return the response entity
 	 */
-	@RequestMapping(value = "/QoSbroker/test", method = RequestMethod.POST, consumes = { "*/*" }, produces = {
+	@RequestMapping(value = "/test", method = RequestMethod.POST, consumes = { "*/*" }, produces = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
 	public ResponseEntity<QueryContextRequest> test(
 			HttpServletRequest requester,
@@ -125,8 +123,6 @@ public class RestController {
 
 		System.out.println(request);
 
-		logger.info("/QoSbroker/sanityCheck"+request);
-		
 		return new ResponseEntity<QueryContextRequest>(request, HttpStatus.OK);
 
 	}
