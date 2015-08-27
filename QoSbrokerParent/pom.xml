@@ -12,18 +12,16 @@
 	<artifactId>QoSbrokerParent</artifactId>
 	<packaging>pom</packaging>
 	<version>0.0.1</version>
-
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<!-- Spring version -->
+<!-- 		<iotbroker.version>4.3.3</iotbroker.version> -->
 		<spring.version>3.2.3.RELEASE</spring.version>
-		<!-- <spring.osgi.version>2.0.0.M1</spring.osgi.version> -->
+		<spring.osgi.version>2.0.0.M1</spring.osgi.version>
 		<equinox.version>3.7.0.v20110221</equinox.version>
-		
-		<gemini.blueprint.version>1.0.2.RELEASE</gemini.blueprint.version>
 	</properties>
-	
+
+
 	<dependencies>
 
 		<!-- GUAVA -->
@@ -40,7 +38,6 @@
 		</dependency>
 
 		<!-- TOMCAT -->
-		
 		<dependency>
 			<groupId>org.apache.catalina</groupId>
 			<artifactId>com.springsource.org.apache.catalina</artifactId>
@@ -109,25 +106,7 @@
 			<version>3.1.4.RELEASE</version>
 		</dependency>
 
-		<!-- GEMINI BLUEPRINT -->
-
-        <dependency>
-            <groupId>org.eclipse.gemini</groupId>
-            <artifactId>org.eclipse.gemini.blueprint.core</artifactId>
-            <version>${gemini.blueprint.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.gemini</groupId>
-            <artifactId>org.eclipse.gemini.blueprint.extender</artifactId>
-            <version>${gemini.blueprint.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.gemini</groupId>
-            <artifactId>org.eclipse.gemini.blueprint.io</artifactId>
-            <version>${gemini.blueprint.version}</version>
-        </dependency>
-
-		<!-- SPRING OSGI 
+		<!-- SPRING OSGI -->
 
 		<dependency>
 			<groupId>org.springframework.osgi</groupId>
@@ -145,7 +124,7 @@
 			<groupId>org.springframework.osgi</groupId>
 			<artifactId>spring-osgi-core</artifactId>
 			<version>${spring.osgi.version}</version>
-		</dependency>-->
+		</dependency>
 
 		<!-- SPRING FRAMEWORK -->
 
@@ -221,7 +200,6 @@
 			<artifactId>org.springframework.web</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>org.springframework.web.servlet</artifactId>
@@ -245,7 +223,8 @@
 		</dependency>
 
 		<!-- DEPENDECIES -->
-		
+
+
 		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>com.springsource.javax.activation</artifactId>
@@ -282,6 +261,8 @@
 			<artifactId>com.springsource.org.apache.commons.el</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+
+
 
 		<!-- javamelody-core for DASHBOARD -->
 		<dependency>
@@ -371,6 +352,7 @@
 
 
 	</dependencies>
+
 
 
 	<build>
