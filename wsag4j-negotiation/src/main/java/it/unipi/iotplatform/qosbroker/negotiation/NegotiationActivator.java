@@ -3,7 +3,7 @@
 // Component: TaaS QoS Manager
 // Responsible: Carlo Vallati & Giacomo Tanganelli
 
-package eu.betaas.taas.qosmanager.negotiation;
+package it.unipi.iotplatform.qosbroker.negotiation;
 
 import org.apache.log4j.Logger;
 import org.osgi.framework.BundleActivator;

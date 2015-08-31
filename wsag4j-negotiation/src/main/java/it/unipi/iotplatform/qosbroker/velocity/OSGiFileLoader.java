@@ -1,4 +1,4 @@
-package eu.betaas.taas.qosmanager.velocity;
+package it.unipi.iotplatform.qosbroker.velocity;
 
 import java.io.BufferedInputStream;
 import java.io.File;

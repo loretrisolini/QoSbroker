@@ -1,4 +1,4 @@
-package eu.betaas.taas.qosmanager.negotiation;
+package it.unipi.iotplatform.qosbroker.negotiation;
 
 public interface NegotiationInterface {
 	

@@ -76,8 +76,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService;
-import eu.betaas.taas.qosmanager.negotiation.NegotiationActivator;
-
+import it.unipi.iotplatform.qosbroker.negotiation.NegotiationActivator;
 import eu.betaas.taas.bigdatamanager.database.hibernate.data.PersistentAgreementContainerDatabase;
 
 /*
