@@ -19,9 +19,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.impl.values.XmlAnyTypeImpl;
@@ -57,7 +54,6 @@ import org.ogf.graap.wsag.api.AgreementOffer;
 import org.ogf.graap.wsag.api.types.AgreementOfferType;
 import org.ogf.schemas.graap.wsAgreement.ServiceTermStateType;
 
-import eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService;
 import org.ogf.graap.wsag.server.persistence.EmfRegistry;
 
 /**
@@ -67,7 +63,7 @@ import org.ogf.graap.wsag.server.persistence.EmfRegistry;
 public class NegotiationActivator {
 	private static Logger LOG = Logger.getLogger("betaas");
 
-    public static IBigDataDatabaseService service;
+//    public static IBigDataDatabaseService service;
     
     public static BundleContext context;
     
@@ -76,10 +72,11 @@ public class NegotiationActivator {
     public void start() throws Exception {
 		LOG.debug("WSAG4J Neogtiation started");
 		
-        LOG.debug("Got database service: "+ service);
+//        LOG.debug("Got database service: "+ service);
         
         // Create the manager
-        nm = new NegotiationManager(context, service);
+//        nm = new NegotiationManager(context, service);
+        nm = new NegotiationManager(context);
         
 	}
 
@@ -88,11 +85,11 @@ public class NegotiationActivator {
 		nm.stop();
 		LOG.debug("WSAG4J Neogtiation stopped");
 	}
-	public void setService(IBigDataDatabaseService service) throws SQLException {
-		// TODO Auto-generated method stub
-		this.service = service;
-		//this.setConnection(service.getConnection());
-	}
+//	public void setService(IBigDataDatabaseService service) throws SQLException {
+//		// TODO Auto-generated method stub
+//		this.service = service;
+//		//this.setConnection(service.getConnection());
+//	}
 	public void setContext(BundleContext context) {
 		// TODO Auto-generated method stub
 		this.context = context;

@@ -1,13 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>eu.betaas</groupId>
-		<artifactId>betaas-taas-qosmanager</artifactId>
-		<version>2.1-release</version>
-	</parent>
 
-	<groupId>eu.betaas.net.sf.wsag4j</groupId>
+	<groupId>it.unipi.iotplatform</groupId>
 	<artifactId>wsag4j-types</artifactId>
 	<version>2.1-release</version>
 
@@ -46,6 +41,7 @@
 							<phase>generate-sources</phase>
 							<goals>
 								<goal>xmlbeans</goal>
+								<goal>install</goal>
 							</goals>
 						</execution>
 					</executions>

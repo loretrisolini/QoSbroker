@@ -71,7 +71,7 @@ private static Logger LOG = Logger.getLogger("betaas");
 
     private static final XmlObject[] DEFAULT_NON_CRITICAL_EXT = new XmlObject[0];	
 
-    public static IBigDataDatabaseService service;
+//    public static IBigDataDatabaseService service;
     
     public static BundleContext context;
     
@@ -81,16 +81,16 @@ private static Logger LOG = Logger.getLogger("betaas");
     
     AgreementFactory genericAgreementFactory;
 	
-    public NegotiationManager(BundleContext c,
-			IBigDataDatabaseService s) throws Exception {
+    public NegotiationManager(BundleContext c/*,
+			IBigDataDatabaseService s*/) throws Exception {
     	context = c;
-    	service = s;
+//    	service = s;
     	
     	// Initialization
     	
         // Set the entity manager received from the 
-        EntityManager em = service.getEntityManager(); 
-        EmfRegistry.setEntityManager(em); 
+//        EntityManager em = service.getEntityManager(); 
+//        EmfRegistry.setEntityManager(em); 
         
         // Create the engine and retrieve the factory
         genericAgreementFactory = getEngine(context);
