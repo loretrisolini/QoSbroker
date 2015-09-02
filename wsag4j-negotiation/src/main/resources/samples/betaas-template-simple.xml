@@ -9,21 +9,19 @@
   <wsag:Terms>
     <wsag:All>
 	<wsag:ServiceDescriptionTerm wsag:Name="THING" wsag:ServiceName="THINGSERVICE">
-                <!--  <wsag4jt:TimeConstraint xmlns:wsag4jt="http://schemas.wsag4j.org/2009/07/wsag4j-scheduling-extensions">
-                </wsag4jt:TimeConstraint>-->
+                <wsag4jt:TimeConstraint xmlns:wsag4jt="http://schemas.wsag4j.org/2009/07/wsag4j-scheduling-extensions">
+                </wsag4jt:TimeConstraint>
         
-        <betaas:ThingService xmlns:betaas="http://betaas.eu/schemas/betaas">
+        <!--	    <betaas:ThingService xmlns:betaas="http://betaas.eu/schemas/betaas">
 	      <betaas:Definition>
 		  <betaas:transactionID>$TRANSACTIONID</betaas:transactionID>
 	      </betaas:Definition>
 	      <betaas:QoS>
-			<betaas:MaxResponseTime>$MAXRESPONSETIME</betaas:MaxResponseTime>
-			<betaas:MinAvailability>$MINAVAILABILITY</betaas:MinAvailability>
-			<betaas:MaxInterRequestTime>$MAXINTERREQUESTTIME</betaas:MaxInterRequestTime>
-			<betaas:AverageRate>$AVERAGERATE</betaas:AverageRate>
-			<betaas:MaxBurstSize>$MAXBURSTSIZE</betaas:MaxBurstSize>
+		<betaas:MaxResponseTime>$MAXRESPONSETIME</betaas:MaxResponseTime>
+		<betaas:MinAvailability>$MINAVAILABILITY</betaas:MinAvailability>
+		<betaas:MaxInterRequestTime>$MAXINTERREQUESTTIME</betaas:MaxInterRequestTime>
 	      </betaas:QoS>
-	    </betaas:ThingService>
+	    </betaas:ThingService>--> 
 	</wsag:ServiceDescriptionTerm>
     </wsag:All>
   </wsag:Terms>

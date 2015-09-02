@@ -34,10 +34,6 @@
  */
 package org.ogf.graap.wsag.server.persistence.impl;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Iterator;
@@ -72,12 +68,6 @@ import org.ogf.graap.wsag4j.types.engine.PersistenceAgreementContextDocument;
 import org.ogf.graap.wsag4j.types.engine.PersistenceAgreementContextType;
 import org.ogf.schemas.graap.wsAgreement.AgreementPropertiesType;
 import org.ogf.schemas.graap.wsAgreement.AgreementStateType;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-
-import eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService;
-import it.unipi.iotplatform.qosbroker.negotiation.NegotiationActivator;
-import eu.betaas.taas.bigdatamanager.database.hibernate.data.PersistentAgreementContainerDatabase;
 
 /*
  * TODO: the container should implement the CRUD operations
@@ -92,15 +82,70 @@ import eu.betaas.taas.bigdatamanager.database.hibernate.data.PersistentAgreement
  * 
  * @author T.Weuffel
  */
-
-public class PersistentAgreementContainer extends PersistentAgreementContainerDatabase
+@Entity
+@Table( name = "PERSISTENT_AGREEMENT_CONTAINER",
+        uniqueConstraints = @UniqueConstraint( columnNames = "agreement_id" ) )
+@NamedQueries( {
+    @NamedQuery( name = "PersistentAgreementContainer.findAll",
+                 query = "SELECT p FROM PersistentAgreementContainer p" ),
+    @NamedQuery( name = "PersistentAgreementContainer.findByAgreementId",
+                 query = "SELECT p FROM PersistentAgreementContainer p "
+                     + "WHERE p.agreementId = :agreementId" ),
+    @NamedQuery( name = "PersistentAgreementContainer.findByAgreementAndFactoryId",
+                 query = "SELECT p FROM PersistentAgreementContainer p "
+                     + "WHERE p.agreementId = :agreementId AND p.agreementFactoryId = :agreementFactoryId" ),
+    @NamedQuery( name = "PersistentAgreementContainer.findAllByAgreementFactoryId",
+                 query = "SELECT p FROM PersistentAgreementContainer p "
+                     + "WHERE p.agreementFactoryId = :agreementFactoryId" ) } )
+public class PersistentAgreementContainer
 {
-	
+
     // the logger should not be persisted
+    @Transient
     private static final Logger LOG = Logger.getLogger( PersistentAgreementContainer.class );
 
+    @Transient
+    private static final int AGREEMENT_CONTEXT_SIZE = 1638400;
+
+    @Transient
     private PersistenceAgreementContextDocument persistenceContext;
 
+    // primary-key of the stored entity
+    @Id
+    @Column( name = "id" )
+    @GeneratedValue( strategy = GenerationType.TABLE )
+    @Basic( optional = false )
+    private Integer id;
+
+    // agreement id
+    @GeneratedValue( strategy = GenerationType.TABLE )
+    @Column( name = "agreement_id" )
+    @Basic( optional = false )
+    private String agreementId;
+
+    // original agreement factory id
+    @Column( name = "agreement_factory_id", nullable = false )
+    @Basic( optional = false )
+    private String agreementFactoryId;
+
+    //
+    // state of the agreement, this state is only used in db queries
+    //
+    @SuppressWarnings( "unused" )
+    @Column( name = "state", nullable = false )
+    @Basic( optional = false )
+    private String state;
+
+    // original agreement class name
+    @Column( name = "agreement_class_name", nullable = false )
+    @Basic( optional = false )
+    private String agreementClassName;
+
+    // context-type of the agreement
+    @Lob
+    @Column( name = "persisted_agreement_context_type", nullable = false, length = AGREEMENT_CONTEXT_SIZE )
+    @Basic( optional = false, fetch = FetchType.LAZY )
+    private String persistedAgreementContextType;
 
     /**
      * The default constructor is required by the JPA2 environment. It is used to instantiate an instance of
@@ -110,19 +155,6 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
     {
         persistenceContext = PersistenceAgreementContextDocument.Factory.newInstance();
         persistenceContext.addNewPersistenceAgreementContext();
-    }
-
-    public PersistentAgreementContainer(PersistentAgreementContainerDatabase a){
-    	
-        persistenceContext = PersistenceAgreementContextDocument.Factory.newInstance();
-        persistenceContext.addNewPersistenceAgreementContext();
-    	
-        id=a.id;
-        agreementId=a.agreementId;
-        agreementFactoryId=a.agreementFactoryId;
-        state=a.state;
-        agreementClassName=a.agreementClassName;
-        persistedAgreementContextType=a.persistedAgreementContextType;
     }
 
     /**
@@ -135,7 +167,7 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
      */
     public PersistentAgreementContainer( Agreement agreement, String factoryId )
     {
-        agreementFactoryId = factoryId;
+        this.agreementFactoryId = factoryId;
 
         // build wrapper
         persistenceContext = PersistenceAgreementContextDocument.Factory.newInstance();
@@ -278,7 +310,7 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
     public static PersistentAgreementContainer createContainer( Agreement agreement, String factoryId )
         throws AgreementFactoryException
     {
-        LOG.debug( "Create new PersistentAgreementContainer " + factoryId );
+        LOG.debug( "Create new PersistentAgreementContainer." );
 
         PersistentAgreementContainer container = new PersistentAgreementContainer( agreement, factoryId );
 
@@ -296,14 +328,14 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
                 em.getTransaction().begin();
                 try
                 {
-                    LOG.info( "original agreement id: " + container.getAgreementId() + " " + container.getId() );
+                    LOG.trace( "original agreement id: " + container.getAgreementId() );
 
                     // persist and commit
                     em.persist( container );
                     em.getTransaction().commit();
 
                     String agreementId = container.getAgreementId();
-                    LOG.info( "generated agreement id: " + agreementId + " " + container.getId() );
+                    LOG.trace( "generated agreement id: " + agreementId );
 
                 }
                 catch ( RollbackException ex )
@@ -365,7 +397,6 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
         return container;
     }
 
-   
     /**
      * Loads a persistent container for the given agreement id and agreement factory id.
      * 
@@ -481,8 +512,6 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
         }
     }
 
-    
-
     /**
      * Creates a list of all persistent agreement containers.
      * 
@@ -501,6 +530,7 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
         try
         {
             Query query = em.createNamedQuery( "PersistentAgreementContainer.findAll" );
+
             Collection<PersistentAgreementContainer> containers = null;
             try
             {
@@ -559,27 +589,22 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
         //
         // load the persisted agreement
         //
-
-    	
         EntityManager em = EmfRegistry.getEntityManager();
-    	
         try
         {
-        
-            Query query = em.createNamedQuery( "PersistentAgreementContainer.findAll" );
-        	
+            Query query = em.createNamedQuery( "PersistentAgreementContainer.findAllByAgreementFactoryId" );
+            query.setParameter( "agreementFactoryId", agreementFactoryId );
+
             Collection<PersistentAgreementContainer> containers = null;
-            
             try
             {
-            	containers = query.getResultList();
-              	
+                containers = query.getResultList();
+
                 for ( Iterator<PersistentAgreementContainer> iterator = containers.iterator(); iterator.hasNext(); )
                 {
-             
-                	PersistentAgreementContainer persistentAgreementContainer = iterator.next();
-                	
-                	try
+                    PersistentAgreementContainer persistentAgreementContainer = iterator.next();
+
+                    try
                     {
                         String xml = persistentAgreementContainer.persistedAgreementContextType;
                         persistentAgreementContainer.persistenceContext =
@@ -592,7 +617,7 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
                             ex );
                     }
                 }
-                //LOG.error("lenght" + containersfinal.size());
+
                 return containers.toArray( new PersistentAgreementContainer[containers.size()] );
 
             }
@@ -739,7 +764,5 @@ public class PersistentAgreementContainer extends PersistentAgreementContainerDa
     {
         return persistenceContext.xmlText( new XmlOptions().setSavePrettyPrint() );
     }
-    
-    
 
 }

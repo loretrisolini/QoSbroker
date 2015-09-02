@@ -72,8 +72,6 @@ import org.ogf.schemas.graap.wsAgreement.TermTreeType;
 import org.ogf.schemas.graap.wsAgreement.TerminateInputType;
 import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
-import eu.betaas.taas.bigdatamanager.database.hibernate.data.PersistentAgreementContainerDatabase;
-
 /**
  * <p>
  * Database-related implementation of the {@link PersistentAgreement} interface. This implementation uses
@@ -174,7 +172,7 @@ public class DatabasePersistentAgreement extends AgreementDelegator
         insertAgreement( Agreement agreement, String agreementFactoryId ) throws AgreementFactoryException
     {
 
-        LOG.debug( "Create new PersistentAgreementContainer " + agreementFactoryId );
+        LOG.debug( "Create new PersistentAgreementContainer" );
 
         PersistentAgreementContainer container =
             PersistentAgreementContainer.createContainer( agreement, agreementFactoryId );
@@ -545,7 +543,6 @@ public class DatabasePersistentAgreement extends AgreementDelegator
         try
         {
             container = (PersistentAgreementContainer) query.getSingleResult();
-            
         }
         catch ( NonUniqueResultException ex )
         {
@@ -613,7 +610,7 @@ public class DatabasePersistentAgreement extends AgreementDelegator
             try
             {
                 // persist and commit
-            	em.merge( container );
+                em.merge( container );
                 em.getTransaction().commit();
             }
             catch ( RollbackException ex )

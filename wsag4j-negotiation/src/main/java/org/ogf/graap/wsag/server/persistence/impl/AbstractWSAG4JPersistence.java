@@ -163,7 +163,7 @@ public abstract class AbstractWSAG4JPersistence extends EngineComponent
             {
                 persistentFactories.clear();
                 factoriesById.clear();
-                
+
                 PersistentAgreementFactory[] factories = doLoad();
 
                 for ( int i = 0; i < factories.length; i++ )

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
-    <feature name="wsag4j-negotiation">
+    <feature name="TaaS-QosManager">
         <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
 	<bundle>mvn:commons-discovery/commons-discovery/0.5</bundle>
 	<bundle>mvn:org.apache.commons/commons-jexl/2.0.1</bundle>

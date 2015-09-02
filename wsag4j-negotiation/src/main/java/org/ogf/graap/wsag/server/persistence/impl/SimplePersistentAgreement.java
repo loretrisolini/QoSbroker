@@ -37,10 +37,8 @@ package org.ogf.graap.wsag.server.persistence.impl;
 import java.util.Map;
 import java.util.Observer;
 
-import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlObject;
 import org.ogf.graap.wsag.api.Agreement;
-import org.ogf.graap.wsag.server.engine.WsagEngine;
 import org.ogf.graap.wsag.server.persistence.PersistentAgreement;
 import org.ogf.schemas.graap.wsAgreement.AgreementContextType;
 import org.ogf.schemas.graap.wsAgreement.AgreementPropertiesType;
@@ -62,8 +60,6 @@ import org.w3.x2005.x08.addressing.EndpointReferenceType;
 public class SimplePersistentAgreement
     implements PersistentAgreement
 {
-	
-	private static final Logger LOG = Logger.getLogger( WsagEngine.class );
 
     private final Agreement agreement;
 
@@ -118,9 +114,6 @@ public class SimplePersistentAgreement
     @Override
     public void save() throws Exception
     {
-    	
-    	LOG.info( "Nothing to do here" );
-    	
         //
         // nothing to do in simple implementation
         //

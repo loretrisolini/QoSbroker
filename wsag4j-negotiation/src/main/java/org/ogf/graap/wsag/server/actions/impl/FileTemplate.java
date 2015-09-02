@@ -34,14 +34,10 @@
  */
 package org.ogf.graap.wsag.server.actions.impl;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Properties;
@@ -50,12 +46,7 @@ import org.apache.log4j.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.context.InternalContextAdapterImpl;
-import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.runtime.RuntimeInstance;
-import org.apache.velocity.runtime.parser.Parser;
-import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.xmlbeans.XmlDateTime;
 import org.ogf.graap.wsag.api.logging.LogMessage;
 
@@ -86,8 +77,6 @@ public class FileTemplate
     private VelocityContext context;
 
     private Template template;
-    
-    
 
     static
     {
@@ -104,8 +93,9 @@ public class FileTemplate
             {
                 in = FileTemplate.class.getResourceAsStream( VELOCITY_PROPERTIES_FILE_DEFAULT );
             }
+
             properties.load( in );
-            
+
             //
             // set Velocity log4j logger name
             //
@@ -121,7 +111,7 @@ public class FileTemplate
         }
 
         try
-        {   
+        {
             Velocity.init( properties );
         }
         catch ( Exception e )
@@ -141,12 +131,10 @@ public class FileTemplate
      */
     public FileTemplate( String filename )
     {
-        LOG.debug("Read");
-        
         try
         {
             this.context = new VelocityContext();
-            
+
             String currDate = XmlDateTime.Factory.newValue( new Date() ).getStringValue();
             addParameter( "currentTime", currDate );
 
@@ -154,19 +142,12 @@ public class FileTemplate
             // avoid escaping all the XPath expression
             //
             addParameter( "this", "$this" );
-            
-            
+
             template = Velocity.getTemplate( filename );
-            
         }
         catch ( ResourceNotFoundException e )
         {
             LOG.error( MessageFormat.format( "error loading template file [{0}]", filename ) );
-            LOG.error( e.getMessage() );
-        }
-        catch (ParseErrorException e)
-        {
-        	LOG.error( MessageFormat.format( "error parsing template file [{0}]", filename ) );
             LOG.error( e.getMessage() );
         }
         catch ( Exception e )

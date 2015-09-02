@@ -80,7 +80,6 @@ public class DatabasePersistentAgreementFactory extends AbstractPersistentAgreem
         {
             synchronized ( agreement )
             {
-                LOG.debug( "About to create persist agreement " + getResourceId() );
                 DatabasePersistentAgreement inserted =
                     DatabasePersistentAgreement.insertAgreement( agreement, getResourceId() );
                 return inserted;
@@ -108,12 +107,10 @@ public class DatabasePersistentAgreementFactory extends AbstractPersistentAgreem
 
         try
         {
-        	
             List<PersistentAgreement> loaded = new Vector<PersistentAgreement>();
-            
             PersistentAgreementContainer[] persistentAgreementContainers =
-            		PersistentAgreementContainer.listContainers( getResourceId() );
-            
+                PersistentAgreementContainer.listContainers( getResourceId() );
+
             // extract all agreements
             for ( PersistentAgreementContainer persistentAgreementContainer : persistentAgreementContainers )
             {

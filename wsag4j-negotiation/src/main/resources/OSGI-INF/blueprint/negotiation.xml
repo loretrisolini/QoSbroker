@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
-    <bean id="serviceTaasLoggerBean" class="eu.betaas.taas.qosmanager.negotiation.NegotiationActivator" init-method="start" destroy-method="stop" >
+    <bean id="serviceTaasLoggerBean" class="eu.betaas.taas.qosmanager.negotiation.NegotiationActivator" init-method="start" >
     	<property name="service" ref="databaseService"/>
     	<property name="context" ref="blueprintBundleContext"/>
     </bean>

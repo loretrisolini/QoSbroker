@@ -44,7 +44,7 @@ import org.ogf.schemas.graap.wsAgreement.AgreementStateType;
 import org.ogf.schemas.graap.wsAgreement.GuaranteeTermStateType;
 import org.ogf.schemas.graap.wsAgreement.ServiceTermStateType;
 import org.ogf.schemas.graap.wsAgreement.TermTreeType;
-
+import org.ogf.schemas.graap.wsAgreement.TerminateInputType;
 
 /**
  * Agreement interface used by the server module. It provides the required methods to access the properties of

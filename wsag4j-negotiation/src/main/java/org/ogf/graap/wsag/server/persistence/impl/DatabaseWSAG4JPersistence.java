@@ -79,13 +79,13 @@ public class DatabaseWSAG4JPersistence extends AbstractWSAG4JPersistence
             // initialize the factory prototype based on the configuration
             //
             IAgreementFactory factory = getEngine().getAgreementFactoryPrototype();
-            
+
             //
             // create the persistent factory
             //
             persistentFactory = new DatabasePersistentAgreementFactory( factory );
             persistentFactory.setResourceId( resourceId );
-            
+
             //
             // load the active agreements for this factory
             //

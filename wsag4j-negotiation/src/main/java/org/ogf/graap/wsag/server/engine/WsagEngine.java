@@ -407,7 +407,7 @@ public class WsagEngine
      * @throws Exception
      *             indicates an error during engine initialization
      */
-    public void initialize() throws Exception  // Make it private CV
+    private void initialize() throws Exception
     {
         try
         {
@@ -634,10 +634,8 @@ public class WsagEngine
      */
     private void shutdownPersistenceLayer() throws Exception
     {
-    	   	
         // load all agreements
         PersistentAgreementFactory[] factories = getPersistenceLayer().list();
-        
         for ( int i = 0; i < factories.length; i++ )
         {
             try

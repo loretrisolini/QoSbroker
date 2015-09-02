@@ -83,7 +83,7 @@ public class Sample1CreateAgreementAction extends AbstractCreateAgreementAction
         // myResources.reserve();
         // myServer.start();
         //
-        
+
         //
         // At last, create an agreement instance and return it
         //
