@@ -105,21 +105,23 @@
 			  <artifactId>betaas-taas-bigdatamanager-database</artifactId>
 			  <version>0.0.1-SNAPSHOT</version>
         </dependency> -->
-       <!--   <dependency>
-<groupId>org.hibernate</groupId>
-<artifactId>hibernate-core</artifactId>
-<version>4.2.2.Final</version>
-</dependency>
-<dependency>
-<groupId>org.hibernate</groupId>
-<artifactId>hibernate-entitymanager</artifactId>
-<version>4.2.2.Final</version>
-</dependency>
-<dependency>
-<groupId>org.hibernate.javax.persistence</groupId>
-<artifactId>hibernate-jpa-2.1-api</artifactId>
-<version>1.0.0.Final</version>
-</dependency>-->
+        
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.2.2.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<version>4.2.2.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.0.Final</version>
+		</dependency>
+	
 		<dependency>
 			<groupId>org.apache.openjpa</groupId>
 			<artifactId>openjpa-all</artifactId>
@@ -159,8 +161,8 @@
 						<!-- <Bundle-Activator>eu.betaas.taas.qosmanager.negotiation.NegotiationActivator</Bundle-Activator>-->
 						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
 						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
-						<Import-Package>eu.betaas.taas.bigdatamanager.database.service,javax.persistence,eu.betaas.taas.bigdatamanager.database.hibernate.data,org.apache.xmlbeans.impl.schema,*</Import-Package> 
-						<!-- <Meta-Persistence>src/main/resources/META-INF/persistence.xml</Meta-Persistence> -->
+						<Import-Package></Import-Package> 
+						<Meta-Persistence>src/main/resources/META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
 				</configuration>
 			</plugin>
