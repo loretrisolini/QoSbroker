@@ -8,7 +8,7 @@
 
     <!-- <service ref="serviceTaasLoggerBean" interface="eu.betaas.taas.bigdatamanager.logger.service.IBigDataLoggerService"/> -->
 
-	<reference id="databaseService" availability="mandatory" activation="eager" interface="eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService">
-	</reference>
+	<!-- <reference id="databaseService" availability="mandatory" activation="eager" interface="eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService">
+	</reference> -->
 
 </blueprint>

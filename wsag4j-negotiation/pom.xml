@@ -161,7 +161,7 @@
 						<!-- <Bundle-Activator>eu.betaas.taas.qosmanager.negotiation.NegotiationActivator</Bundle-Activator>-->
 						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
 						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
-						<Import-Package></Import-Package> 
+						<Import-Package>javax.persistence,org.apache.xmlbeans.impl.schema,*</Import-Package> 
 						<Meta-Persistence>src/main/resources/META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
 				</configuration>
