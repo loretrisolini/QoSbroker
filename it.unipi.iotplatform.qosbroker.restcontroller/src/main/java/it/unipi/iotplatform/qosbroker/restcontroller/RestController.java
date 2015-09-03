@@ -127,5 +127,23 @@ public class RestController {
 
 	}
 	
+	/**
+	 * Executes the test of the IoT Broker, which simply returns the request
+	 * message.
+	 *
+	 * @return the response entity
+	 */
+	@RequestMapping(value = "/createAgreement", method = RequestMethod.POST, consumes = { "CONTENT_TYPE_XML" }, produces = {
+			CONTENT_TYPE_XML})
+	public ResponseEntity<QueryContextRequest> createAgreement(
+			HttpServletRequest requester,
+			@RequestBody QueryContextRequest request) {
+
+		System.out.println(request);
+
+		return new ResponseEntity<QueryContextRequest>(request, HttpStatus.OK);
+
+	}
+	
 }
 
