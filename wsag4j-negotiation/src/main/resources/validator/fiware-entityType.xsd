@@ -15,31 +15,36 @@ This document and the information contained herein is provided on an "AS IS" bas
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://fiware.eu/schemas/fiware" xmlns:fiware="http://fiware.eu/schemas/fiware" targetNamespace="http://fiware.eu/schemas/fiware" elementFormDefault="qualified">
 	
 	<!--=====================================================================-->
-	<xsd:complexType name="EntityService_Type">
+	<xsd:complexType name="serviceDefinition_Type">
 		<xsd:sequence>
 			<xsd:element ref="fiware:Definition"/>
 			<xsd:element ref="fiware:QoS"/>
+
 		</xsd:sequence>
 	</xsd:complexType>
 	<!--========================================================================-->
 	<xsd:complexType name="Definition_Type">
 		<xsd:sequence>
 			<xsd:element ref="fiware:transactionID"/>
+			<xsd:element ref="fiware:entityType"/>
+			<xsd:element ref="fiware:attributeName"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<!--=====================================================================-->
 	<xsd:complexType name="QoS_Type">
 		<xsd:sequence>
 			<xsd:element ref="fiware:MaxResponseTime"/>
-			<xsd:element ref="fiware:MaxRate"/>
+			<xsd:element ref="fiware:MaxRateRequest"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<!--=====================================================================-->
-	<xsd:element name="EntityService" type="fiware:EntityService_Type"/>
-	<xsd:element name="Definition" type="fiware:Definition_Type"/>
+	<xsd:element name="serviceDefinition" type="fiware:serviceDefinition_Type"/>
 	<xsd:element name="QoS" type="fiware:QoS_Type"/>
+	<xsd:element name="entityType" type="xsd:string"/>
+	<xsd:element name="Definition" type="fiware:Definition_Type"/>
 	<xsd:element name="transactionID" type="xsd:string"/>
+	<xsd:element name="attributeName" type="xsd:string"/>
 	<xsd:element name="MaxResponseTime" type="xsd:string"/>
-	<xsd:element name="MaxRate" type="xsd:string"/>
+	<xsd:element name="MaxRateRequest" type="xsd:string"/>
 	
 </xsd:schema>
