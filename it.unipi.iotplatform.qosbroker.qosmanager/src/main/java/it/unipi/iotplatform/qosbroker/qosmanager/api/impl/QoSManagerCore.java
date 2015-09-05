@@ -1,6 +1,14 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.log4j.Logger;
+
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRequest;
@@ -26,11 +34,69 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionResponse;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
+import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 
 public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
 	
+	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
+
+	/** Executor for asynchronous tasks */
+	private final ExecutorService taskExecutor = Executors
+			.newCachedThreadPool();
 	
+	/** The logger. */
+	private static Logger logger = Logger.getLogger(QoSManagerCore.class);
+
+	/** The implementation of the NGSI 9 interface */
+	private Ngsi9Interface ngsi9Impl;
+
+	/** Used to make NGSI 10 requests. */
+	private Ngsi10Requester ngsi10Requester;
+
+	/**
+	 * Returns the implementation of the NGSI 9 interface. This interface is
+	 * used by the core for making NGSI-9 discovery operations.
+	 *
+	 * @return The NGSI 9 interface.
+	 */
+	public Ngsi9Interface getNgsi9Impl() {
+		return ngsi9Impl;
+	}
+
+	/**
+	 * Sets the implementation of the NGSI 9 interface. This interface is used
+	 * by the core for making NGSI-9 discovery operations.
+	 *
+	 * @param ngsi9
+	 *            The NGSI 9 interface.
+	 */
+	public void setNgsi9Impl(Ngsi9Interface ngsi9) {
+		ngsi9Impl = ngsi9;
+	}
+
+	/**
+	 * Returns the ngsi10 requester. This object is used for making NGSI-10
+	 * requests to arbitrary URLs.
+	 *
+	 * @return the ngsi10 requester.
+	 */
+	public Ngsi10Requester getNgsi10Requester() {
+
+		return ngsi10Requester;
+	}
+
+	/**
+	 * Sets the ngsi10 requester. This object is used for making NGSI-10
+	 * requests to arbitrary URLs.
+	 *
+	 * @param ngsi10Requester
+	 *            The new ngsi10 requester.
+	 */
+	public void setNgsi10Requestor(Ngsi10Requester ngsi10Requester) {
+
+		this.ngsi10Requester = ngsi10Requester;
+	}
 	
 	/**
 	 *
@@ -634,8 +700,8 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 	}
 
 	@Override
-	public void createAgreement(String offer) {
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 }

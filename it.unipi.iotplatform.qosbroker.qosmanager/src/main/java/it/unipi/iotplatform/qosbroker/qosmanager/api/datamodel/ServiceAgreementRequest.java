@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "serviceRequest")
-public class ServiceRequest extends ServiceRequestStructure{
+public class ServiceAgreementRequest extends ServiceRequestStructure{
 	
 	@XmlElementWrapper(name = "serviceRequest")
 	@XmlElement(name = "serviceDefinition", required = true)
@@ -38,7 +38,7 @@ public class ServiceRequest extends ServiceRequestStructure{
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ServiceRequest other = (ServiceRequest) obj;
+		ServiceAgreementRequest other = (ServiceAgreementRequest) obj;
 		if (serviceDefList == null) {
 			if (other.serviceDefList != null)
 				return false;

@@ -1,5 +1,12 @@
 package it.unipi.iotplatform.qosbroker.restcontroller;
 
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
+import it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck.SanityCheck;
+
+import java.io.BufferedReader;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
@@ -14,10 +21,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import eu.neclab.iotplatform.iotbroker.commons.JsonValidator;
+import eu.neclab.iotplatform.iotbroker.commons.XmlValidator;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
-import it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck.SanityCheck;
 /**
  * Handles requests for the application home page.
  */
@@ -31,6 +42,10 @@ public class RestController {
 
 	/** String representing xml content type. */
 	private final String CONTENT_TYPE_XML = "application/xml";
+	
+	/** The component for receiving WSAG4J requests. **/
+	@Autowired
+	private QoSManagerIF qosCore;
 	
 	/** The component for receiving NGSI9 requests. */
 	@Autowired
@@ -87,6 +102,9 @@ public class RestController {
 	/** String representing the xml schema for NGSI 9. */
 	private @Value("${schema_ngsi9_operation}") String sNgsi9schema;
 	
+	/** String representing the xml schema for service request. */
+	private @Value("${schema_serviceReq_operation}") String qosSchema;
+	
 	/**
 	 * Executes the Sanity Check Procedure of the IoT Broker.
 	 *
@@ -135,13 +153,77 @@ public class RestController {
 	 */
 	@RequestMapping(value = "/createAgreement", method = RequestMethod.POST, consumes = { "CONTENT_TYPE_XML" }, produces = {
 			CONTENT_TYPE_XML})
-	public ResponseEntity<QueryContextRequest> createAgreement(
+	public ResponseEntity<ServiceAgreementResponse> createAgreement(
 			HttpServletRequest requester,
-			@RequestBody QueryContextRequest request) {
+			@RequestBody ServiceAgreementRequest request) {
 
-		System.out.println(request);
+		logger.info(" <--- WSAG4J has received negotiation request ---> \n");
+		
+		if (validateMessageBody(requester, request, qosSchema)) {
 
-		return new ResponseEntity<QueryContextRequest>(request, HttpStatus.OK);
+			ServiceAgreementResponse response = qosCore.createAgreement(request);
+
+			logger.debug("ServiceID: "+ response.getServiceID());
+
+			return new ResponseEntity<ServiceAgreementResponse>(response,
+					HttpStatus.OK);
+		} else {
+
+			ServiceAgreementResponse response = new ServiceAgreementResponse();
+			StatusCode statusCode = new StatusCode(
+					Code.BADREQUEST_400.getCode(),
+					ReasonPhrase.BADREQUEST_400.toString(), "XML syntax Error!");
+
+			response.setErrorCode(statusCode);
+
+			return new ResponseEntity<ServiceAgreementResponse>(response,
+					HttpStatus.BAD_REQUEST);
+
+		}
+
+	}
+	
+	/**
+	 * Executes a syntax check of incoming messages. Currently supported formats
+	 * are XML and JSON.
+	 */
+	private boolean validateMessageBody(HttpServletRequest request,
+			Object objRequest, String schema) {
+
+		boolean status = false;
+
+		logger.info("ContentType: " + request.getContentType());
+
+		if (request.getContentType().contains("application/xml")) {
+
+			XmlValidator validator = new XmlValidator();
+
+			status = validator.xmlValidation(objRequest, schema);
+
+		} else if (request.getContentType().contains("application/json")) {
+
+			JsonValidator validator = new JsonValidator();
+			
+			StringBuffer jb = new StringBuffer();
+			String line = null;
+			try {
+				BufferedReader reader = request.getReader();	
+				
+				while ((line = reader.readLine()) != null) {
+					jb.append(line);
+				}
+			} catch (Exception e) {
+				logger.info("Impossible to get the Json Request! Please check the error using debug mode.");
+				logger.debug("Impossible to get the Json Request", e);
+			}
+			
+			status = validator.isValidJSON(jb.toString());
+
+		}
+
+		logger.info("Incoming request Valid:" + status);
+
+		return status;
 
 	}
 	
