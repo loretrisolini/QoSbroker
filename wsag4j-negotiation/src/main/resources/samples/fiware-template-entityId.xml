@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsag:Template wsag:TemplateId="1" xmlns:wsag="http://schemas.ggf.org/graap/2007/03/ws-agreement">
+  <wsag:Name>Fiware-Template-EntityID</wsag:Name>
+  <wsag:Context>
+    <wsag:ServiceProvider>AgreementResponder</wsag:ServiceProvider>
+    <wsag:TemplateId>1</wsag:TemplateId>
+    <wsag:TemplateName>Fiware-Template-EntityID</wsag:TemplateName>
+  </wsag:Context>
+  <wsag:Terms>
+    <wsag:All>
+	<wsag:ServiceDescriptionTerm wsag:Name="ENTITY" wsag:ServiceName="ENTITYRESOURCE">
+        
+        <fiware:serviceDefinition xmlns:fiware="http://fiware.eu/schemas/fiware">
+			
+			<fiware:Definition>
+				<fiware:transactioID>$TRANSACTIONID</fiware:transactioID>
+	 			<fiware:entityID>$ENTITYID</fiware:entityID>
+	 			<fiware:attributeName>$ATTRIBUTENAME</fiware:attributeName>
+			</fiware:Definition>
+			
+			<fiware:QoS>
+				<fiware:MinAvailability>$MAXRESPONSETIME</fiware:MinAvailability>
+				<fiware:MaxInterRequestTime>$MAXRATE</fiware:MaxInterRequestTime>
+			</fiware:QoS>
+	    </fiware:serviceDefinition>
+	</wsag:ServiceDescriptionTerm>
+    </wsag:All>
+  </wsag:Terms>
+ </wsag:Template>

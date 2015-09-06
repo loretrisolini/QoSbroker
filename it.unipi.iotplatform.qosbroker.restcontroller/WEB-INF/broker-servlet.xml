@@ -46,6 +46,12 @@
 		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping" />
 
 
+	<context:property-placeholder
+		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml" />
+		
+	<context:property-placeholder
+		location="file:///${dir.QoSconfig}/qosbrokerconfig/config/config.xml" />
+
 	<mvc:default-servlet-handler />
 	
 	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
