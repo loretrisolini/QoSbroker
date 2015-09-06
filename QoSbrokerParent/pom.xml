@@ -350,7 +350,12 @@
 			</exclusions>
 		</dependency>
 
-
+		<dependency>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>xmlbeans-maven-plugin</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+		
 	</dependencies>
 
 
@@ -445,6 +450,12 @@
 				<artifactId>qosbroker.restcontroller</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			
+		    <dependency>
+				  <groupId>eu.betaas.net.sf.wsag4j</groupId>
+				  <artifactId>wsag4j-negotiation</artifactId>
+				  <version>0.0.1-SNAPSHOT</version>
+	  		</dependency>
 		</dependencies>
 		
 		

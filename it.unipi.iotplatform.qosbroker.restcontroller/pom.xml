@@ -35,7 +35,8 @@
 				<manifestLocation>META-INF</manifestLocation>
 				<instructions>
 					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
-					<Import-Package>eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
+					<Import-Package>it.unipi.iotplatform.qosbroker.qosmanager.api;version="${pom.version}",
+							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi9;version="${pom.version}",
@@ -102,6 +103,11 @@
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
 			<version>4.4.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.qosmanager</artifactId>
 		</dependency>
 		
 	</dependencies>

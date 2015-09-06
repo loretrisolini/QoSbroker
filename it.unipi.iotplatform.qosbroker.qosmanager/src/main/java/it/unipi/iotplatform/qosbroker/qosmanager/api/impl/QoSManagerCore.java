@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
+import eu.betaas.taas.qosmanager.negotiation.NegotiationInterface;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRequest;
@@ -53,6 +54,9 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 
 	/** Used to make NGSI 10 requests. */
 	private Ngsi10Requester ngsi10Requester;
+	
+	/** Used to make WSAG4J requests **/
+	private NegotiationInterface ni;
 
 	/**
 	 * Returns the implementation of the NGSI 9 interface. This interface is
@@ -695,8 +699,7 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 
 	@Override
 	public String getTemplate() {
-		// TODO Auto-generated method stub
-		return null;
+		return ni.getTemplate("Fiware-Template-EntityType");
 	}
 
 	@Override

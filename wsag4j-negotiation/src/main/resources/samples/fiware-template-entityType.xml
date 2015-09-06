@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wsag:Template wsag:TemplateId="1" xmlns:wsag="http://schemas.ggf.org/graap/2007/03/ws-agreement">
-  <wsag:Name>Fiware-Template</wsag:Name>
+  <wsag:Name>Fiware-Template-EntityType</wsag:Name>
   <wsag:Context>
     <wsag:ServiceProvider>AgreementResponder</wsag:ServiceProvider>
     <wsag:TemplateId>1</wsag:TemplateId>

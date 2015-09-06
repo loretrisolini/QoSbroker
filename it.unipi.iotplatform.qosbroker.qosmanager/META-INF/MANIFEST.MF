@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1441114364839
+Bnd-LastModified: 1441557679628
 Build-Jdk: 1.8.0_60
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
@@ -7,13 +7,20 @@ Bundle-Name: it.unipi.iotplatform.qosbroker.qosmanager
 Bundle-SymbolicName: it.unipi.iotplatform.qosbroker.qosmanager
 Bundle-Version: 4.3.3
 Created-By: Apache Maven Bundle Plugin
-Import-Package: eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
- eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotp
- latform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.
- ngsi9;version="4.3.3",eu.neclab.iotplatform.ngsi.association.datamodel;
- version="4.3.3",com.google.common.base;version="17.0.0",javax.xml.bind,
- javax.xml.bind.annotation,javax.xml.datatype,javax.xml.namespace,javax.
- xml.parsers,javax.xml.xpath,org.apache.log4j;version="1.2",org.osgi.fra
- mework;version="1.5",org.w3c.dom,org.xml.sax
+Export-Package: it.unipi.iotplatform.qosbroker.qosmanager.api;version="4
+ .3.3";uses:="it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel",i
+ t.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;version="4.3.3";
+ uses:="eu.neclab.iotplatform.ngsi.api.datamodel,javax.xml.bind.annotati
+ on"
+Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3"
+ ,eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotpla
+ tform.ngsi.api.ngsi9;version="4.3.3",javax.xml.bind,javax.xml.bind.anno
+ tation,org.apache.log4j;version="1.2",eu.betaas.taas.qosmanager.negotia
+ tion;version="4.3.3",eu.neclab.iotplatform.iotbroker.commons;version="4
+ .3.3",eu.neclab.iotplatform.ngsi.association.datamodel;version="4.3.3",
+ com.google.common.base;version="17.0.0",javax.xml.datatype,javax.xml.na
+ mespace,javax.xml.parsers,javax.xml.xpath,org.osgi.framework;version="1
+ .5",org.w3c.dom,org.xml.sax
 Originally-Created-By: Apache Maven Bundle Plugin
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
 Tool: Bnd-2.4.1.201501161923
