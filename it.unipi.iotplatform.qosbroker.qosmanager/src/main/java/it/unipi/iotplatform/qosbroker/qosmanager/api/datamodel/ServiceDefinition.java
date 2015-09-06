@@ -1,14 +1,17 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 /*
- * 
-<serviceDefinitionEntityType>
+<serviceDefinition>
 	<operationType>queryContext</operationType>
-	<entityType>Room1</entityType>
+	<entityInfo>
+<entityType>Room1</entityType>
+</entityInfo>
 	<attributeName>temperature</attributeName>
 	<restriction>
 		<scope>
@@ -40,18 +43,58 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 			 </operationScope>
 		</scope>
 	</restriction>
-	</serviceDefinitionEntityType>
- * 
- * */
+	</serviceDefinition>
+	
+	<serviceDefinition>
+	<operationType>queryContext</operationType>
+<entityInfo>
+	<entityID>sensorTemp_1:temperature</entityID>
+<entityInfo>
+	<attributeName>temperature</attributeName>
+	<restriction>
+		<scope>
+			 <operationScope>
+				 <scopeType>Location</scopeType>
+				 <scopeValue>
+					 <Altitude>30</Altitude>
+					 <Latitude>43.656998</Latitude>
+					 <Longitude>10.437418</Longitude>
+				 </scopeValue>
+				 </operationScope>
+ <operationScope>
+				 <scopeType>ServiceFeatures</scopeType>
+				 <scopeValue>
+					 <feature>
+						 <featureName>accuracy</featureName>
+						 <featureValue>0.8</featureValue>
+					 </feature>
+				 </scopeValue>
+				 </operationScope> 
+			 <operationScope>
+				 <scopeType>QoS</scopeType>
+				 <scopeValue>
+					 <maxResponseTime>15</maxResponseTime>
+					 <maxRateRequest>15</maxRateRequest>
+				 </scopeValue>
+			 </operationScope>
+		</scope>
+	</restriction>
+	</serviceDefinition>
+*/
 
-@XmlRootElement(name = "serviceDefinitionEntityType")
-public class ServiceDefinitionEntityType extends ServiceRequestStructure{
+@XmlRootElement(name = "serviceDefinition")
+public class ServiceDefinition extends ServiceAgreementStructure{
 
 	@XmlElement(name = "operationType", required=true)
 	private String operationType;
 	
-	@XmlElement(name = "entityType")
-	private String entityType;
+    @XmlElements(value = { 
+            @XmlElement(name="entityType", 
+                        type=String.class),
+            @XmlElement(name="entityID", 
+                        type=String.class),
+    })
+	private String entityInfo;
 	
 	@XmlElement(name = "attributeName", required=true)
 	private String attributeName;
@@ -65,14 +108,6 @@ public class ServiceDefinitionEntityType extends ServiceRequestStructure{
 
 	public void setOperationType(String operationType) {
 		this.operationType = operationType;
-	}
-
-	public String getEntityType() {
-		return entityType;
-	}
-
-	public void setEntityType(String entityType) {
-		this.entityType = entityType;
 	}
 
 	public String getAttributeName() {
@@ -91,51 +126,12 @@ public class ServiceDefinitionEntityType extends ServiceRequestStructure{
 		this.restriction = restriction;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((attributeName == null) ? 0 : attributeName.hashCode());
-		result = prime * result
-				+ ((entityType == null) ? 0 : entityType.hashCode());
-		result = prime * result
-				+ ((operationType == null) ? 0 : operationType.hashCode());
-		result = prime * result
-				+ ((restriction == null) ? 0 : restriction.hashCode());
-		return result;
+	public String getEntityInfo() {
+		return entityInfo;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ServiceDefinitionEntityType other = (ServiceDefinitionEntityType) obj;
-		if (attributeName == null) {
-			if (other.attributeName != null)
-				return false;
-		} else if (!attributeName.equals(other.attributeName))
-			return false;
-		if (entityType == null) {
-			if (other.entityType != null)
-				return false;
-		} else if (!entityType.equals(other.entityType))
-			return false;
-		if (operationType == null) {
-			if (other.operationType != null)
-				return false;
-		} else if (!operationType.equals(other.operationType))
-			return false;
-		if (restriction == null) {
-			if (other.restriction != null)
-				return false;
-		} else if (!restriction.equals(other.restriction))
-			return false;
-		return true;
+	public void setEntityInfo(String entityInfo) {
+		this.entityInfo = entityInfo;
 	}
 
 }

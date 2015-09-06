@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 @XmlRootElement(name = "serviceResponse")
-public class ServiceAgreementResponse extends ServiceRequestStructure{
+public class ServiceAgreementResponse extends ServiceAgreementStructure{
 	
 	@XmlElement(name = "serviceID")
 	private String serviceID = null;

@@ -6,30 +6,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "serviceAgreementRequest")
-public class ServiceAgreementRequest extends ServiceRequestStructure{
+public class ServiceAgreementRequest extends ServiceAgreementStructure{
 	
 	@XmlElement(name = "serviceDefinitionEntityType")
-	private ArrayList<ServiceDefinitionEntityType> serviceDefEntTypeList;
-	
-	@XmlElement(name = "serviceDefinitionEntityID")
-	private ArrayList<ServiceDefinitionEntityType> serviceDefEntIDList;
-
-	public ArrayList<ServiceDefinitionEntityType> getServiceDefEntTypeList() {
-		return serviceDefEntTypeList;
-	}
-
-	public void setServiceDefEntTypeList(
-			ArrayList<ServiceDefinitionEntityType> serviceDefEntTypeList) {
-		this.serviceDefEntTypeList = serviceDefEntTypeList;
-	}
-
-	public ArrayList<ServiceDefinitionEntityType> getServiceDefEntIDList() {
-		return serviceDefEntIDList;
-	}
-
-	public void setServiceDefEntIDList(
-			ArrayList<ServiceDefinitionEntityType> serviceDefEntIDList) {
-		this.serviceDefEntIDList = serviceDefEntIDList;
-	}
+	private ArrayList<ServiceDefinition> serviceDefList;
 
 }

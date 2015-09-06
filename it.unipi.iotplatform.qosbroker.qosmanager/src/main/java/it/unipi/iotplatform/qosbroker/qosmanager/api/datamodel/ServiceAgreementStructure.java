@@ -13,10 +13,10 @@ import org.apache.log4j.Logger;
 /**
  *  Common super-type for NGSI data structure implementations.
  */
-public abstract class ServiceRequestStructure {
+public abstract class ServiceAgreementStructure {
 
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(ServiceRequestStructure.class);
+	private static Logger logger = Logger.getLogger(ServiceAgreementStructure.class);
 
 	@Override
 	public String toString() {
@@ -39,7 +39,7 @@ public abstract class ServiceRequestStructure {
 
 	public static Object convertStringToXml(String xml, Class<?> type) {
 
-		if (type.getSuperclass() != ServiceRequestStructure.class) {
+		if (type.getSuperclass() != ServiceAgreementStructure.class) {
 			throw new RuntimeException("Cannot convert String to "
 					+ type.getName());
 		}
