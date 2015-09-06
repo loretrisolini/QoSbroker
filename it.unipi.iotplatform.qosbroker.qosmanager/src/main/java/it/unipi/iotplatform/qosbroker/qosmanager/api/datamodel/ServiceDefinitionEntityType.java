@@ -6,8 +6,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 /*
  * 
-<serviceRequest>
-	<serviceDefinition>
+<serviceDefinitionEntityType>
 	<operationType>queryContext</operationType>
 	<entityType>Room1</entityType>
 	<attributeName>temperature</attributeName>
@@ -20,15 +19,19 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 					 <Latitude>43.656998</Latitude>
 					 <Longitude>10.437418</Longitude>
 				 </scopeValue>
-				 
+				  </operationScope>
+  <operationScope>
 				 <scopeType>ServiceFeatures</scopeType>
 				 <scopeValue>
-					 <feature>
+					<featureList>
+					   <feature>
 						 <featureName>accuracy</featureName>
 						 <featureValue>0.8</featureValue>
-					 </feature>
+					   </feature>
+					</featureList>
 				 </scopeValue>
-				 
+				  </operationScope> 
+  <operationScope>
 				 <scopeType>QoS</scopeType>
 				 <scopeValue>
 					 <maxResponseTime>15</maxResponseTime>
@@ -37,19 +40,15 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 			 </operationScope>
 		</scope>
 	</restriction>
-	</serviceDefinition>
-</serviceRequest>
+	</serviceDefinitionEntityType>
  * 
  * */
 
-@XmlRootElement(name = "serviceDefinition")
-public class ServiceDefinition extends ServiceRequestStructure{
+@XmlRootElement(name = "serviceDefinitionEntityType")
+public class ServiceDefinitionEntityType extends ServiceRequestStructure{
 
 	@XmlElement(name = "operationType", required=true)
 	private String operationType;
-	
-	@XmlElement(name = "entityID")
-	private String entityID;
 	
 	@XmlElement(name = "entityType")
 	private String entityType;
@@ -99,8 +98,6 @@ public class ServiceDefinition extends ServiceRequestStructure{
 		result = prime * result
 				+ ((attributeName == null) ? 0 : attributeName.hashCode());
 		result = prime * result
-				+ ((entityID == null) ? 0 : entityID.hashCode());
-		result = prime * result
 				+ ((entityType == null) ? 0 : entityType.hashCode());
 		result = prime * result
 				+ ((operationType == null) ? 0 : operationType.hashCode());
@@ -117,16 +114,11 @@ public class ServiceDefinition extends ServiceRequestStructure{
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ServiceDefinition other = (ServiceDefinition) obj;
+		ServiceDefinitionEntityType other = (ServiceDefinitionEntityType) obj;
 		if (attributeName == null) {
 			if (other.attributeName != null)
 				return false;
 		} else if (!attributeName.equals(other.attributeName))
-			return false;
-		if (entityID == null) {
-			if (other.entityID != null)
-				return false;
-		} else if (!entityID.equals(other.entityID))
 			return false;
 		if (entityType == null) {
 			if (other.entityType != null)
@@ -144,14 +136,6 @@ public class ServiceDefinition extends ServiceRequestStructure{
 		} else if (!restriction.equals(other.restriction))
 			return false;
 		return true;
-	}
-
-	public String getEntityID() {
-		return entityID;
-	}
-
-	public void setEntityID(String entityID) {
-		this.entityID = entityID;
 	}
 
 }
