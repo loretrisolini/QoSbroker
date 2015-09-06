@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		   elementFormDefault="qualified">      
+		   
+<!-- _______________________________________ Complex types instantiation ___________________________________________ -->
+
+
+
+  <xs:element name="serviceAgreementRequest"                        type="serviceAgreementRequest"/>
+  <xs:element name="serviceDefinitionEntityType"                    type="serviceDefinitionEntityType"/>
+  <xs:element name="serviceDefinitionEntityID"                      type="serviceDefinitionEntityID"/>
+  <xs:element name="restriction" 									type="restriction"/>
+  <xs:element name="operationScope" 								type="OperationScope" />
+ 
+
+<!-- ________________________________________ Methods messages ________________________________________________ -->
+
+	<xs:complexType name="serviceAgreementRequest">
+		<xs:sequence>
+			<xs:element name="serviceDefinitionEntityType" type="serviceDefinitionEntityType"
+				minOccurs="0" />
+			<xs:element name="serviceDefinitionEntityID" type="serviceDefinitionEntityID"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="serviceDefinitionEntityType">
+		<xs:sequence>
+			<xs:element name="operationType" 	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityType" 		type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="attributeName"	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="restriction"		type="restriction"  minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="serviceDefinitionEntityID">
+		<xs:sequence>
+			<xs:element name="operationType"	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityID"			type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="attributeName"	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="restriction"		type="restriction"  minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="restriction">
+		<xs:sequence>
+			<xs:element name="scope" type="OperationScopeList"
+				minOccurs="0" maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+ 
+</xs:schema>
