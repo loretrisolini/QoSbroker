@@ -705,6 +705,13 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 	@Override
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
 		// TODO Auto-generated method stub
+		
+		//TODO parse the request
+		//TODO discovery phase
+		//TODO query to qosmonitor
+		//TODO getTemplate for two types
+		//TODO agreement
+		
 		return null;
 	}
 }
