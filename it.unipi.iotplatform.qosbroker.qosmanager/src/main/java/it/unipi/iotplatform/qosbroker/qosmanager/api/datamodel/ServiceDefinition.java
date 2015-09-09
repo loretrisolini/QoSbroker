@@ -1,5 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -83,9 +85,10 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 */
 
 @XmlRootElement(name = "serviceDefinition")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceDefinition extends ServiceAgreementStructure{
 
-	@XmlElement(name = "operationType", required=true)
+	@XmlElement(required=true)
 	private String operationType;
 	
     @XmlElements(value = { 
@@ -96,10 +99,10 @@ public class ServiceDefinition extends ServiceAgreementStructure{
     })
 	private String entityInfo;
 	
-	@XmlElement(name = "attributeName", required=true)
+	@XmlElement(required=true)
 	private String attributeName;
 	
-	@XmlElement(name = "restriction", required=true)
+	@XmlElement(required=true)
 	private Restriction restriction = null;
 
 	public String getOperationType() {

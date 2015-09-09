@@ -8,8 +8,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import eu.betaas.taas.qosmanager.negotiation.NegotiationInterface;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRequest;
@@ -18,8 +20,10 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
 import eu.neclab.iotplatform.ngsi.api.datamodel.RegisterContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.RegisterContextResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 import eu.neclab.iotplatform.ngsi.api.datamodel.SubscribeContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.SubscribeContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.SubscribeContextRequest;
@@ -48,55 +52,53 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSManagerCore.class);
-
+	
 	/** The implementation of the NGSI 9 interface */
+	@Autowired
 	private Ngsi9Interface ngsi9Impl;
 
 	/** Used to make NGSI 10 requests. */
 	private Ngsi10Requester ngsi10Requester;
-	
-	/** Used to make WSAG4J requests **/
-	private NegotiationInterface ni;
 
-	/**
-	 * Returns the implementation of the NGSI 9 interface. This interface is
-	 * used by the core for making NGSI-9 discovery operations.
-	 *
-	 * @return The NGSI 9 interface.
-	 */
+//	/**
+//	 * Returns the implementation of the NGSI 9 interface. This interface is
+//	 * used by the core for making NGSI-9 discovery operations.
+//	 *
+//	 * @return The NGSI 9 interface.
+//	 */
 	public Ngsi9Interface getNgsi9Impl() {
 		return ngsi9Impl;
 	}
 
-	/**
-	 * Sets the implementation of the NGSI 9 interface. This interface is used
-	 * by the core for making NGSI-9 discovery operations.
-	 *
-	 * @param ngsi9
-	 *            The NGSI 9 interface.
-	 */
+//	/**
+//	 * Sets the implementation of the NGSI 9 interface. This interface is used
+//	 * by the core for making NGSI-9 discovery operations.
+//	 *
+//	 * @param ngsi9
+//	 *            The NGSI 9 interface.
+//	 */
 	public void setNgsi9Impl(Ngsi9Interface ngsi9) {
 		ngsi9Impl = ngsi9;
 	}
 
-	/**
-	 * Returns the ngsi10 requester. This object is used for making NGSI-10
-	 * requests to arbitrary URLs.
-	 *
-	 * @return the ngsi10 requester.
-	 */
+//	/**
+//	 * Returns the ngsi10 requester. This object is used for making NGSI-10
+//	 * requests to arbitrary URLs.
+//	 *
+//	 * @return the ngsi10 requester.
+//	 */
 	public Ngsi10Requester getNgsi10Requester() {
 
 		return ngsi10Requester;
 	}
-
-	/**
-	 * Sets the ngsi10 requester. This object is used for making NGSI-10
-	 * requests to arbitrary URLs.
-	 *
-	 * @param ngsi10Requester
-	 *            The new ngsi10 requester.
-	 */
+//
+//	/**
+//	 * Sets the ngsi10 requester. This object is used for making NGSI-10
+//	 * requests to arbitrary URLs.
+//	 *
+//	 * @param ngsi10Requester
+//	 *            The new ngsi10 requester.
+//	 */
 	public void setNgsi10Requestor(Ngsi10Requester ngsi10Requester) {
 
 		this.ngsi10Requester = ngsi10Requester;
@@ -213,10 +215,10 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 //
 //			QueryResponseMerger merger = new QueryResponseMerger(request);
 //
-//			// List of Task
+//			 List of Task
 //			List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
 //
-//			// Countdown of Task
+//			 Countdown of Task
 //			CountDownLatch count = new CountDownLatch(queryList.size());
 //
 //			for (int i = 0; i < queryList.size(); i++) {
@@ -248,7 +250,7 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 //				logger.debug("Thread Error", e);
 //			}
 //
-//			// Call the Merge Method
+//			 Call the Merge Method
 //			QueryContextResponse threadResponse = merger.get();
 //
 //			logger.debug("Response after merging: " + threadResponse);
@@ -421,7 +423,7 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 //				.getContextElement();
 //		final List<ContextElement> listContextElement = new LinkedList<ContextElement>();
 //		UpdateContextRequest updateContextRequest = null;
-//		// Going through individual ContextElement
+//		 Going through individual ContextElement
 //		Iterator<ContextElement> it = lContextElements.iterator();
 //		while (it.hasNext()) {
 //			ContextElement ce = it.next();
@@ -446,18 +448,18 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 //					attributeList.add(ca.getName());
 //				}
 //			}
-//			// Creating Restriction OperationScopes for
-//			// DiscoverContextAvailabilityRequest
+//			 Creating Restriction OperationScopes for
+//			 DiscoverContextAvailabilityRequest
 //			OperationScope os = new OperationScope("IncludeAssociations",
 //					"TARGETS");
 //			List<OperationScope> loperOperationScopes = new LinkedList<OperationScope>();
 //			loperOperationScopes.add(os);
 //			Restriction restriction = new Restriction("", loperOperationScopes);
 //
-//			// Create the NGSI 9 DiscoverContextAvailabilityRequest
+//			 Create the NGSI 9 DiscoverContextAvailabilityRequest
 //			DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
 //					eidList, attributeList, restriction);
-//			// Get the NGSI 9 DiscoverContextAvailabilityResponse
+//			 Get the NGSI 9 DiscoverContextAvailabilityResponse
 //			DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
 //					.discoverContextAvailability(discoveryRequest);
 //
@@ -577,20 +579,20 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 //		/**
 //		 * Dump data in Big Data Repository if present.
 //		 */
-//		// if (bigDataRepository != null) {
-//		//
-//		// new Thread() {
-//		//
-//		// @Override
-//		// public void run() {
-//		//
-//		// bigDataRepository.storeData(lContextElements);
-//		//
-//		// }
-//		// }.start();
-//		//
-//		// }
-//		//
+//		 if (bigDataRepository != null) {
+//		
+//		 new Thread() {
+//		
+//		 @Override
+//		 public void run() {
+//		
+//		 bigDataRepository.storeData(lContextElements);
+//		
+//		 }
+//		 }.start();
+//		
+//		 }
+//		
 //		try {
 //
 //			response = ngsi10Requester.updateContext(updateContextRequest,
@@ -699,19 +701,34 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 
 	@Override
 	public String getTemplate() {
-		return ni.getTemplate("Fiware-Template-EntityType");
+
+		return null;
 	}
 
 	@Override
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
-		// TODO Auto-generated method stub
+//		 TODO Auto-generated method stub
+//		
+//		TODO parse the request
+//		TODO discovery phase
+//		TODO query to qosmonitor
+//		TODO allocation call
+//		TODO getTemplate for two types
+//		TODO agreement
 		
-		//TODO parse the request
-		//TODO discovery phase
-		//TODO query to qosmonitor
-		//TODO getTemplate for two types
-		//TODO agreement
+		logger.info("############## createAgreement ###############");
 		
-		return null;
+		ServiceAgreementResponse response = new ServiceAgreementResponse();
+		
+		response.setServiceID("home_service");
+		
+		StatusCode statusCode = new StatusCode(
+				Code.OK_200.getCode(),
+				ReasonPhrase.OK_200.toString(), "Succes Operation");
+		
+		response.setErrorCode(statusCode);
+		
+		return response;
 	}
+
 }

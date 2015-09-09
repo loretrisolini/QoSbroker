@@ -4,18 +4,21 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans   
        http://www.springframework.org/schema/beans/spring-beans.xsd                      
        http://www.springframework.org/schema/osgi  
-       http://www.springframework.org/schema/osgi/spring-osgi.xsd">
-
-	<osgi:service id="iotConsumerNgsi10core" ref="qosmanagercore"
+       http://www.springframework.org/schema/osgi/spring-osgi.xsd"> 
+		
+    <osgi:service id="QoSManagerService" ref="QoSManagerCore"
+        interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF" />
+    
+    <osgi:service id="qosConsumerNgsi10core" ref="QoSManagerCore"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" />
 
-	<osgi:service id="iotConsumerNgsi9core" ref="qosmanagercore"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" />
-
-	<osgi:reference id="Ngsi9Interface"
+	<osgi:service id="qosConsumerNgsi9core" ref="QoSManagerCore"
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" /> 
+    
+ 	<osgi:reference id="QoSNgsi9Interface"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" bean-name="connector"></osgi:reference>
 
-	<osgi:reference id="Ngsi10Requester"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester" bean-name="connector"></osgi:reference>
+	<osgi:reference id="QoSNgsi10Requester"
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester" bean-name="connector"></osgi:reference>  
 
 </beans>

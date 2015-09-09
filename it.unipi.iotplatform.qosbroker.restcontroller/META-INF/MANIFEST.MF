@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1441114366520
+Bnd-LastModified: 1441816492082
 Build-Jdk: 1.8.0_60
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
@@ -11,46 +11,50 @@ Export-Package: it.unipi.iotplatform.qosbroker.restcontroller.sanitychec
  k;version="0.0.1";uses:="javax.xml.bind.annotation",it.unipi.iotplatfor
  m.qosbroker.restcontroller;version="0.0.1";uses:="eu.neclab.iotplatform
  .ngsi.api.datamodel,eu.neclab.iotplatform.ngsi.api.ngsi10,eu.neclab.iot
- platform.ngsi.api.ngsi9,it.unipi.iotplatform.qosbroker.restcontroller.s
- anitycheck,javax.servlet.http,org.springframework.http,org.springframew
- ork.stereotype,org.springframework.web.bind.annotation"
-Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3"
- ,eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotpla
- tform.ngsi.api.ngsi9;version="4.3.3",javax.servlet.http;version="2.5.0"
+ platform.ngsi.api.ngsi9,it.unipi.iotplatform.qosbroker.qosmanager.api,i
+ t.unipi.iotplatform.qosbroker.qosmanager.api.datamodel,it.unipi.iotplat
+ form.qosbroker.restcontroller.sanitycheck,javax.servlet.http,org.spring
+ framework.beans.factory.annotation,org.springframework.http,org.springf
+ ramework.stereotype,org.springframework.web.bind.annotation"
+Import-Package: eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
+ eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotp
+ latform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.
+ ngsi9;version="4.3.3",javax.servlet.http;version="2.5.0",javax.xml.bind
  ,javax.xml.bind.annotation,org.apache.log4j;version="1.2",org.osgi.fram
  ework;version="1.6",org.springframework.beans.factory.annotation;versio
  n="3.2.3.RELEASE",org.springframework.http;version="3.2.3.RELEASE",org.
  springframework.stereotype;version="3.2.3.RELEASE",org.springframework.
- web.bind.annotation;version="3.2.3.RELEASE",eu.neclab.iotplatform.iotbr
- oker.commons;version="4.3.3",eu.neclab.iotplatform.iotbroker.commons.in
- terfaces;version="4.3.3",javax.servlet;version="2.5.0",javax.xml.bind,n
- et.bull.javamelody;version="1.0.0",org.springframework.beans.factory;ve
- rsion="3.2.3.RELEASE",org.springframework.http.client;version="3.2.3.RE
- LEASE",org.springframework.http.converter;version="3.2.3.RELEASE",org.s
- pringframework.osgi.web.context.support;version="2.0.0.M1",org.springfr
- amework.security.access;version="3.1.4.RELEASE",org.springframework.sec
- urity.provisioning;version="3.1.4.RELEASE",org.springframework.security
- .web.authentication;version="3.1.4.RELEASE",org.springframework.securit
- y.web.context;version="3.1.4.RELEASE",org.springframework.security.web.
- access;version="3.1.4.RELEASE",org.springframework.ui;version="3.2.3.RE
- LEASE",org.springframework.util;version="3.2.3.RELEASE",org.springframe
- work.web;version="3.2.3.RELEASE",org.springframework.web.bind;version="
- 3.2.3.RELEASE",org.springframework.web.bind.annotation.support;version=
- "3.2.3.RELEASE",org.springframework.web.bind.support;version="3.2.3.REL
- EASE",org.springframework.web.context;version="3.2.3.RELEASE",org.sprin
- gframework.web.filter;version="3.2.3.RELEASE",org.springframework.web.s
- ervlet;version="3.2.3.RELEASE",org.springframework.web.servlet.config;v
- ersion="3.2.3.RELEASE",org.springframework.web.servlet.handler;version=
- "3.2.3.RELEASE",org.springframework.web.servlet.mvc;version="3.2.3.RELE
- ASE",org.springframework.web.servlet.mvc.annotation;version="3.2.3.RELE
- ASE",org.springframework.web.servlet.mvc.condition;version="3.2.3.RELEA
- SE",org.springframework.web.servlet.mvc.method;version="3.2.3.RELEASE",
- org.springframework.web.servlet.mvc.method.annotation;version="3.2.3.RE
- LEASE",org.springframework.web.servlet.mvc.multiaction;version="3.2.3.R
- ELEASE",org.springframework.web.servlet.mvc.support;version="3.2.3.RELE
- ASE",org.springframework.web.servlet.resource;version="3.2.3.RELEASE",o
- rg.springframework.web.servlet.support;version="3.2.3.RELEASE",org.spri
- ngframework.web.servlet.view;version="3.2.3.RELEASE"
+ web.bind.annotation;version="3.2.3.RELEASE",it.unipi.iotplatform.qosbro
+ ker.qosmanager.api;version="4.3.3",it.unipi.iotplatform.qosbroker.qosma
+ nager.api.datamodel;version="4.3.3",eu.neclab.iotplatform.iotbroker.com
+ mons.interfaces;version="4.3.3",javax.servlet;version="2.5.0",net.bull.
+ javamelody;version="1.0.0",org.springframework.beans.factory;version="3
+ .2.3.RELEASE",org.springframework.http.client;version="3.2.3.RELEASE",o
+ rg.springframework.http.converter;version="3.2.3.RELEASE",org.springfra
+ mework.osgi.web.context.support;version="2.0.0.M1",org.springframework.
+ security.access;version="3.1.4.RELEASE",org.springframework.security.pr
+ ovisioning;version="3.1.4.RELEASE",org.springframework.security.web.aut
+ hentication;version="3.1.4.RELEASE",org.springframework.security.web.co
+ ntext;version="3.1.4.RELEASE",org.springframework.security.web.access;v
+ ersion="3.1.4.RELEASE",org.springframework.ui;version="3.2.3.RELEASE",o
+ rg.springframework.util;version="3.2.3.RELEASE",org.springframework.web
+ ;version="3.2.3.RELEASE",org.springframework.web.bind;version="3.2.3.RE
+ LEASE",org.springframework.web.bind.annotation.support;version="3.2.3.R
+ ELEASE",org.springframework.web.bind.support;version="3.2.3.RELEASE",or
+ g.springframework.web.context;version="3.2.3.RELEASE",org.springframewo
+ rk.web.filter;version="3.2.3.RELEASE",org.springframework.web.servlet;v
+ ersion="3.2.3.RELEASE",org.springframework.web.servlet.config;version="
+ 3.2.3.RELEASE",org.springframework.web.servlet.handler;version="3.2.3.R
+ ELEASE",org.springframework.web.servlet.mvc;version="3.2.3.RELEASE",org
+ .springframework.web.servlet.mvc.annotation;version="3.2.3.RELEASE",org
+ .springframework.web.servlet.mvc.condition;version="3.2.3.RELEASE",org.
+ springframework.web.servlet.mvc.method;version="3.2.3.RELEASE",org.spri
+ ngframework.web.servlet.mvc.method.annotation;version="3.2.3.RELEASE",o
+ rg.springframework.web.servlet.mvc.multiaction;version="3.2.3.RELEASE",
+ org.springframework.web.servlet.mvc.support;version="3.2.3.RELEASE",org
+ .springframework.web.servlet.resource;version="3.2.3.RELEASE",org.sprin
+ gframework.web.servlet.support;version="3.2.3.RELEASE",org.springframew
+ ork.web.servlet.view;version="3.2.3.RELEASE"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
 Tool: Bnd-2.4.1.201501161923
 Web-ContextPath: /QoSbroker

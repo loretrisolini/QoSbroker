@@ -5,7 +5,7 @@
 	<configSuffixes>
 		<configSuffix><![CDATA[xml]]></configSuffix>
 	</configSuffixes>
-	<enableImports><![CDATA[false]]></enableImports>
+	<enableImports><![CDATA[true]]></enableImports>
 	<configs>
 		<config>META-INF/spring/qosmanager-osgi.xml</config>
 		<config>META-INF/spring/qosmanager-context.xml</config>

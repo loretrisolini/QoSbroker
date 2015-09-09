@@ -1,6 +1,6 @@
 /home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/impl/QoSManagerCore.java
 /home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/datamodel/ServiceAgreementResponse.java
-/home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/datamodel/ServiceRequestStructure.java
+/home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/datamodel/ServiceAgreementStructure.java
 /home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/datamodel/ServiceDefinition.java
 /home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/QoSManagerIF.java
 /home/lorenzo/Downloads/QoSbroker/it.unipi.iotplatform.qosbroker.qosmanager/src/main/java/it/unipi/iotplatform/qosbroker/qosmanager/api/datamodel/ServiceAgreementRequest.java

@@ -33,9 +33,7 @@
 					<manifestLocation>META-INF</manifestLocation>
 					<instructions>
 						<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
-						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
-						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
-						<Import-Package>eu.betaas.taas.qosmanager.negotiation;version="${pom.version}",
+						<Import-Package>
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
@@ -72,11 +70,11 @@
 			<version>4.3.3-SNAPSHOT</version>
 		</dependency>
 
-	    <dependency>
+<!-- 	    <dependency>
 		  <groupId>eu.betaas.net.sf.wsag4j</groupId>
 		  <artifactId>wsag4j-negotiation</artifactId>
 		  <version>0.0.1-SNAPSHOT</version>
-	  	</dependency>
+	  	</dependency> -->
 
 	</dependencies>
 </project>

@@ -29,17 +29,20 @@
 		</mvc:message-converters>
 	</mvc:annotation-driven>
 	
-	<osgi:reference id="Ngsi10Interface"
+ 	<osgi:reference id="Ngsi10Interface"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface"></osgi:reference>
 
 	<osgi:reference id="Ngsi9Interface"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface"
-		bean-name="brokercore"></osgi:reference>
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface"></osgi:reference>  
+		
+	<osgi:reference id="QoSManagerService"
+		interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF" bean-name="QoSManagerCore"></osgi:reference>
 
 	<beans:bean id="RestController"
 		class="it.unipi.iotplatform.qosbroker.restcontroller.RestController">
-		<beans:property name="ngsi9Core" ref="Ngsi9Interface"></beans:property>
-		<beans:property name="ngsiCore" ref="Ngsi10Interface"></beans:property>
+ 		<beans:property name="ngsi9Core" ref="Ngsi9Interface"></beans:property>
+		<beans:property name="ngsiCore" ref="Ngsi10Interface"></beans:property> 
+		<beans:property name="qosCore" ref="QoSManagerService"></beans:property>
 	</beans:bean>
 
 	<beans:bean
@@ -49,8 +52,8 @@
 	<context:property-placeholder
 		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml" />
 		
-	<context:property-placeholder
-		location="file:///${dir.QoSconfig}/qosbrokerconfig/config/config.xml" />
+<!-- 	<context:property-placeholder
+		location="file:///${dir.QoSconfig}/qosbrokerconfig/config/config.xml" /> -->
 
 	<mvc:default-servlet-handler />
 	

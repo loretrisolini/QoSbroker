@@ -53,45 +53,45 @@ public class RestController {
 
 	/** The component for receiving NGSI 10 requests. */
 	private Ngsi10Interface ngsiCore;
-
-	/**
-	 * Returns a pointer to the component which receives NGSI 10 requests
-	 * arriving at the controller.
-	 *
-	 * @return the ngsi core
-	 */
+//
+//	/**
+//	 * Returns a pointer to the component which receives NGSI 10 requests
+//	 * arriving at the controller.
+//	 *
+//	 * @return the ngsi core
+//	 */
 	public Ngsi10Interface getNgsiCore() {
 		return ngsiCore;
 	}
-
-	/**
-	 * Assigns a pointer to the component which will receive NGSI 10 requests
-	 * arriving at the controller.
-	 *
-	 * @param ngsiCore
-	 *            the new ngsi core
-	 */
+//
+//	/**
+//	 * Assigns a pointer to the component which will receive NGSI 10 requests
+//	 * arriving at the controller.
+//	 *
+//	 * @param ngsiCore
+//	 *            the new ngsi core
+//	 */
 	public void setNgsiCore(Ngsi10Interface ngsiCore) {
 		this.ngsiCore = ngsiCore;
 	}
-
-	/**
-	 * Returns a pointer to the component which receives NGSI 9 requests
-	 * arriving at the controller.
-	 *
-	 * @return the ngsi9 core
-	 */
+//
+//	/**
+//	 * Returns a pointer to the component which receives NGSI 9 requests
+//	 * arriving at the controller.
+//	 *
+//	 * @return the ngsi9 core
+//	 */
 	public Ngsi9Interface getNgsi9Core() {
 		return ngsi9Core;
 	}
-
-	/**
-	 * Assigns a pointer to the component which will receive NGSI 9 requests
-	 * arriving at the controller.
-	 *
-	 * @param ngsi9Core
-	 *            the new ngsi9 core
-	 */
+//
+//	/**
+//	 * Assigns a pointer to the component which will receive NGSI 9 requests
+//	 * arriving at the controller.
+//	 *
+//	 * @param ngsi9Core
+//	 *            the new ngsi9 core
+//	 */
 	public void setNgsi9Core(Ngsi9Interface ngsi9Core) {
 		this.ngsi9Core = ngsi9Core;
 	}
@@ -103,7 +103,7 @@ public class RestController {
 	private @Value("${schema_ngsi9_operation}") String sNgsi9schema;
 	
 	/** String representing the xml schema for service request. */
-	private @Value("${schema_serviceReq_operation}") String qosSchema;
+	private @Value("${schema_serviceAgreement_operation}") String qosSchema;
 	
 	/**
 	 * Executes the Sanity Check Procedure of the IoT Broker.
@@ -151,8 +151,7 @@ public class RestController {
 	 *
 	 * @return the response entity
 	 */
-	@RequestMapping(value = "/createAgreement", method = RequestMethod.POST, consumes = { "CONTENT_TYPE_XML" }, produces = {
-			CONTENT_TYPE_XML})
+	@RequestMapping(value = "/createAgreement", method = RequestMethod.POST, consumes = { CONTENT_TYPE_XML }, produces = { CONTENT_TYPE_XML })
 	public ResponseEntity<ServiceAgreementResponse> createAgreement(
 			HttpServletRequest requester,
 			@RequestBody ServiceAgreementRequest request) {
@@ -180,7 +179,6 @@ public class RestController {
 					HttpStatus.BAD_REQUEST);
 
 		}
-
 	}
 	
 	/**
@@ -225,6 +223,15 @@ public class RestController {
 
 		return status;
 
+	}
+
+	public QoSManagerIF getQosCore() {
+		return qosCore;
+	}
+
+	@Autowired
+	public void setQosCore(QoSManagerIF qosCore) {
+		this.qosCore = qosCore;
 	}
 	
 }

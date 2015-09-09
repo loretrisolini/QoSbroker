@@ -1,8 +1,11 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
+import javax.annotation.Resource;
+
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
 
+@Resource
 public interface QoSManagerIF {
 
 	/**
