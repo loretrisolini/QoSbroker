@@ -9,8 +9,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+//import eu.betaas.taas.qosmanager.negotiation.NegotiationInterface;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityResponse;
@@ -52,6 +52,9 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSManagerCore.class);
+	
+//	/**  Reference to the Negotiator engine */
+//	private NegotiationInterface negotiator; 
 	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
@@ -729,6 +732,18 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 		response.setErrorCode(statusCode);
 		
 		return response;
+	}
+
+//	public NegotiationInterface getNegotiator() {
+//		return negotiator;
+//	}
+//
+//	public void setNegotiator(NegotiationInterface negotiator) {
+//		this.negotiator = negotiator;
+//	}
+
+	public void setNgsi10Requester(Ngsi10Requester ngsi10Requester) {
+		this.ngsi10Requester = ngsi10Requester;
 	}
 
 }
