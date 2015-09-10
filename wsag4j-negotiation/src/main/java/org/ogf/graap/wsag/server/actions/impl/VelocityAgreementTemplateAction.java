@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.apache.xmlbeans.SimpleValue;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 import org.ogf.graap.wsag.server.actions.AbstractGetTemplateAction;
@@ -88,6 +89,7 @@ public class VelocityAgreementTemplateAction extends AbstractGetTemplateAction
         try
         {
             ImplementationConfigurationType handlerConfig = getHandlerContext().getHandlerConfiguration();
+
             XmlObject[] children =
                 handlerConfig.selectChildren( FileTemplateConfigurationDocument.type.getDocumentElementName() );
             if ( children.length != 1 )
@@ -103,8 +105,12 @@ public class VelocityAgreementTemplateAction extends AbstractGetTemplateAction
                 String message = MessageFormat.format( msgInvalidConfig, filler );
                 throw new ActionInitializationException( message );
             }
+            /*System.out.println(((SimpleValue)children[0]).getStringValue());*/
 
-            FileTemplateConfigurationType config = (FileTemplateConfigurationType) children[0];
+            /* GIACOMO EDITED */
+            FileTemplateConfigurationType config= FileTemplateConfigurationType.Factory.newInstance();
+            config.setFilename(((SimpleValue)children[0]).getStringValue().trim());
+            
             setTemplateFilename( config.getFilename() );
 
             FileTemplate fileTemplate = new FileTemplate( getTemplateFilename() );

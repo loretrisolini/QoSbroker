@@ -4,35 +4,36 @@ Bundle-SymbolicName: eu.betaas.net.sf.wsag4j.negotiation
 Meta-Persistence: src/main/resources/META-INF/persistence.xml
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1441558810126
+Bnd-LastModified: 1441878523096
 Embed-Dependency: wsag4j-common-types;inline=true, wsag4j-negotiation-
  types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreem
  ent-types;inline=true
-Import-Package: eu.betaas.taas.qosmanager.negotiation,eu.betaas.taas.q
- osmanager.velocity,javax.persistence;version="2.1",javax.security.aut
- h,javax.security.auth.callback,javax.security.auth.login,javax.securi
- ty.auth.spi,javax.security.auth.x500,javax.xml.namespace,javax.xml.st
- ream,org.apache.commons.beanutils;version="1.8",org.apache.commons.be
- anutils.converters;version="1.8",org.apache.commons.collections;versi
- on="3.2",org.apache.commons.discovery.log,org.apache.commons.discover
- y.resource,org.apache.commons.discovery.tools,org.apache.commons.jexl
- 2;version="2.0",org.apache.commons.lang;version="2.4",org.apache.log4
- j;version="1.2",org.apache.velocity;version="1.7",org.apache.velocity
- .app;version="1.7",org.apache.velocity.context;version="1.7",org.apac
- he.velocity.exception;version="1.7",org.apache.velocity.runtime.resou
- rce;version="1.7",org.apache.velocity.runtime.resource.loader;version
- ="1.7",org.apache.velocity.util;version="1.7",org.apache.xml.resolver
- .tools,org.apache.xmlbeans;version="2.4",org.apache.xmlbeans.impl.com
- mon;version="2.4",org.apache.xmlbeans.impl.schema;version="2.4",org.a
- pache.xmlbeans.impl.values;version="2.4",org.apache.xmlbeans.impl.xb.
- xsdschema;version="2.4",org.apache.xmlbeans.xml.stream;version="2.4",
- org.osgi.framework;version="1.6",org.osgi.service.blueprint;version="
- [1.0.0,2.0.0)",org.quartz,org.quartz.impl,org.w3c.dom,org.xml.sax
+Import-Package: eu.betaas.taas.bigdatamanager.database.service,eu.beta
+ as.taas.qosmanager.negotiation,eu.betaas.taas.qosmanager.velocity,jav
+ ax.persistence,javax.security.auth,javax.security.auth.callback,javax
+ .security.auth.login,javax.security.auth.spi,javax.security.auth.x500
+ ,javax.xml.namespace,javax.xml.stream,org.apache.commons.beanutils;ve
+ rsion="1.8",org.apache.commons.beanutils.converters;version="1.8",org
+ .apache.commons.collections;version="3.2",org.apache.commons.discover
+ y.log,org.apache.commons.discovery.resource,org.apache.commons.discov
+ ery.tools,org.apache.commons.jexl2;version="2.0",org.apache.commons.l
+ ang;version="2.4",org.apache.log4j;version="1.2",org.apache.velocity;
+ version="1.7",org.apache.velocity.app;version="1.7",org.apache.veloci
+ ty.context;version="1.7",org.apache.velocity.exception;version="1.7",
+ org.apache.velocity.runtime.resource;version="1.7",org.apache.velocit
+ y.runtime.resource.loader;version="1.7",org.apache.velocity.util;vers
+ ion="1.7",org.apache.xml.resolver.tools,org.apache.xmlbeans;version="
+ 2.4",org.apache.xmlbeans.impl.common;version="2.4",org.apache.xmlbean
+ s.impl.schema;version="2.4",org.apache.xmlbeans.impl.values;version="
+ 2.4",org.apache.xmlbeans.impl.xb.xsdschema;version="2.4",org.apache.x
+ mlbeans.xml.stream;version="2.4",org.osgi.framework;version="1.6",org
+ .osgi.service.blueprint;version="[1.0.0,2.0.0)",org.quartz,org.quartz
+ .impl,org.w3c.dom,org.xml.sax
 DynamicImport-Package: schemaorg_apache_xmlbeans.*
 Tool: Bnd-0.0.357
 Originally-Created-By: Apache Maven Bundle Plugin
-Export-Package: eu.betaas.taas.qosmanager.negotiation;uses:="org.osgi.
- framework,org.apache.log4j,org.apache.xmlbeans",eu.betaas.taas.qosman
+Export-Package: eu.betaas.taas.qosmanager.negotiation;uses:="org.apach
+ e.xmlbeans,org.osgi.framework,org.apache.log4j",eu.betaas.taas.qosman
  ager.velocity;uses:="org.apache.commons.collections,org.apache.veloci
  ty.util,org.apache.velocity.runtime.resource.loader,org.apache.veloci
  ty.runtime.resource,org.apache.commons.lang,org.apache.velocity.excep
@@ -41,4 +42,6 @@ Bundle-Version: 0.0.1.SNAPSHOT
 Bundle-Name: WSAG4J: negotiation bundle
 Created-By: Apache Maven Bundle Plugin
 Build-Jdk: 1.8.0_60
+Import-Service: eu.betaas.taas.bigdatamanager.database.service.IBigDat
+ aDatabaseService
 

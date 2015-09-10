@@ -118,9 +118,12 @@ public class EmfRegistry
      */
     public static final String PERSISTENCE_MODE_FILE_PU_NAME = "wsag4j_file";
 
+    //public static final String PERSISTENCE_MODE_FILE_PU_NAME = "taas-jpa";
+
     private static EntityManagerFactory emf;
 
     private static String persistenceMode = PERSISTENCE_MODE_FILE;
+    
 
     /**
      * Sets the persistence mode.
@@ -211,7 +214,8 @@ public class EmfRegistry
                 {
                     configuredDataPath += "/";
                 }
-
+                LOG.debug("EmfRegistry LOG");
+                LOG.debug(persistenceMode);
                 LOG.debug( LogMessage.getMessage( "WSAG4J persistence data path configuration: {0}",
                     configuredDataPath ) );
             }

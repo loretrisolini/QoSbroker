@@ -255,7 +255,6 @@ public abstract class AbstractPersistentAgreementFactory
         activeAgreements.clear();
 
         PersistentAgreement[] agreements = doLoad();
-
         // extract all agreements
         for ( int i = 0; i < agreements.length; i++ )
         {
@@ -272,8 +271,10 @@ public abstract class AbstractPersistentAgreementFactory
     public void save() throws Exception
     {
         Iterator<PersistentAgreement> it = activeAgreements.iterator();
+        LOG.info("active agreements "+ activeAgreements.size());
         while ( it.hasNext() )
         {
+        	LOG.info("saving");
             PersistentAgreement persistentAgreement = it.next();
             persistentAgreement.save();
         }

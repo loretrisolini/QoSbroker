@@ -89,7 +89,6 @@ public class ClasspathResourceLoader extends ResourceLoader
             /*
              * log and convert to a general Velocity ResourceNotFoundException
              */
-
             throw new ResourceNotFoundException( fnfe.getMessage() );
         }
 

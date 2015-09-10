@@ -2,13 +2,13 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
     <bean id="serviceTaasLoggerBean" class="eu.betaas.taas.qosmanager.negotiation.NegotiationActivator" init-method="start" >
-    	<property name="service" ref="databaseService"/>
-    	<property name="context" ref="blueprintBundleContext"/>
+<!--     	<property name="service" ref="databaseService"/>
+    	<property name="context" ref="blueprintBundleContext"/> -->
     </bean>
 
     <!-- <service ref="serviceTaasLoggerBean" interface="eu.betaas.taas.bigdatamanager.logger.service.IBigDataLoggerService"/> -->
 
-	<!-- <reference id="databaseService" availability="mandatory" activation="eager" interface="eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService">
+<!-- 	<reference id="databaseService" availability="mandatory" activation="eager" interface="eu.betaas.taas.bigdatamanager.database.service.IBigDataDatabaseService">
 	</reference> -->
 
 </blueprint>

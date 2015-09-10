@@ -107,10 +107,12 @@ public class DatabasePersistentAgreementFactory extends AbstractPersistentAgreem
 
         try
         {
+        	
             List<PersistentAgreement> loaded = new Vector<PersistentAgreement>();
+            
             PersistentAgreementContainer[] persistentAgreementContainers =
-                PersistentAgreementContainer.listContainers( getResourceId() );
-
+            		PersistentAgreementContainer.listContainers( getResourceId() );
+            
             // extract all agreements
             for ( PersistentAgreementContainer persistentAgreementContainer : persistentAgreementContainers )
             {

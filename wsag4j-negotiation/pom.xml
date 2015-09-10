@@ -1,18 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <!--<parent>
+<!--   <parent>
     <groupId>eu.betaas</groupId>
     <artifactId>betaas-taas-qosmanager</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-  </parent>-->
-
-	<parent>
+  </parent> -->
+  	<parent>
 		<groupId>it.unipi.iotplatform</groupId>
 		<artifactId>QoSbrokerParent</artifactId>
 		<version>4.3.3</version>
 		<relativePath>../QoSbrokerParent</relativePath>
 	</parent>
-  
+	
   <groupId>eu.betaas.net.sf.wsag4j</groupId>
   <artifactId>wsag4j-negotiation</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -24,16 +23,16 @@
 
   
   <dependencies>
-  	<dependency>
+<!--   	<dependency>
   		<groupId>org.apache.felix</groupId>
   		<artifactId>org.osgi.core</artifactId>
-		<version>1.4.0</version>
+  		<version>1.4.0</version>
   	</dependency>
   	<dependency>
 		<groupId>log4j</groupId>
 		<artifactId>log4j</artifactId>
 		<version>1.2.13</version>
-	</dependency>
+	</dependency> -->
 	
             
 
@@ -80,11 +79,11 @@
 		<artifactId>quartz</artifactId>
 		<version>1.6.1</version>
 	</dependency>       
-	  <!--  <dependency>
+  <dependency>
 		<groupId>javax.persistence</groupId>
 		<artifactId>persistence-api</artifactId>
 		<version>1.0.2</version>
-	</dependency>-->
+	</dependency>
 	<dependency>
 		<groupId>commons-discovery</groupId>
 		<artifactId>commons-discovery</artifactId>
@@ -95,6 +94,14 @@
 		<artifactId>commons-beanutils</artifactId>
 		<version>1.8.3</version>
 	</dependency>
+
+	<dependency>
+		<groupId>org.apache.openjpa</groupId>
+		<artifactId>openjpa-all</artifactId>
+		<version>2.4.0</version>
+	</dependency>
+	
+	
         <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-jexl</artifactId>
@@ -105,59 +112,41 @@
 			  <artifactId>betaas-taas-bigdatamanager-database</artifactId>
 			  <version>0.0.1-SNAPSHOT</version>
         </dependency> -->
-        
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>4.2.2.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-			<version>4.2.2.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.1-api</artifactId>
-			<version>1.0.0.Final</version>
-		</dependency>
-	
-		<dependency>
-			<groupId>org.apache.openjpa</groupId>
-			<artifactId>openjpa-all</artifactId>
-			<version>2.0.1</version>
-		</dependency>
-	
-		<dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>8.4-701.jdbc3</version>
-		</dependency>
-	
-		<!-- The path of the hsqldb database is specified via a system property. 
-			This requires a HSQLDB version >= 2.0.1. For Java 1.5 compatibility we need 
-			a specific HSQLDB version. -->
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb-j5</artifactId>
-			<version>2.2.4</version>
-		</dependency>
+       <!--   <dependency>
+<groupId>org.hibernate</groupId>
+<artifactId>hibernate-core</artifactId>
+<version>4.2.2.Final</version>
+</dependency>
+<dependency>
+<groupId>org.hibernate</groupId>
+<artifactId>hibernate-entitymanager</artifactId>
+<version>4.2.2.Final</version>
+</dependency>
+<dependency>
+<groupId>org.hibernate.javax.persistence</groupId>
+<artifactId>hibernate-jpa-2.1-api</artifactId>
+<version>1.0.0.Final</version>
+</dependency>-->
+            
                                 
   </dependencies>
   
 	<build>
 		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
-			<resource>
-				<directory>.</directory>
-				<includes>
-					<include>META-INF/**</include>
-				</includes>
-			</resource>
-		</resources>
+		<resource>
+			<directory>src/main/resources</directory>
+		</resource>
+		<resource>
+			<directory>.</directory>
+			<includes>
+				<include>META-INF/**</include>
+			</includes>
+		</resource>
+	</resources>
 		<plugins>
+
+
+
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
@@ -170,7 +159,7 @@
 						<!-- <Bundle-Activator>eu.betaas.taas.qosmanager.negotiation.NegotiationActivator</Bundle-Activator>-->
 						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
 						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
-						<Import-Package>javax.persistence,org.apache.xmlbeans.impl.schema,*</Import-Package> 
+						<Import-Package>javax.persistence, org.apache.xmlbeans.impl.schema, *</Import-Package> 
 						<Meta-Persistence>src/main/resources/META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
 				</configuration>
