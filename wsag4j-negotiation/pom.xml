@@ -134,12 +134,12 @@
 	<build>
 		<resources>
 		<resource>
-			<directory>src/main/resources</directory>
+			<directory>./src/main/resources</directory>
 		</resource>
 		<resource>
 			<directory>.</directory>
 			<includes>
-				<include>META-INF/**</include>
+				<include>./META-INF/**</include>
 			</includes>
 		</resource>
 	</resources>
@@ -153,14 +153,48 @@
 				<version>2.1.0</version>
 				<extensions>true</extensions>
 				<configuration>
-					<manifestLocation>META-INF</manifestLocation>
+					<manifestLocation>./META-INF</manifestLocation>
 					<instructions>
 						<Export-Package>eu.betaas.taas.qosmanager.negotiation, eu.betaas.taas.qosmanager.velocity</Export-Package>
 						<!-- <Bundle-Activator>eu.betaas.taas.qosmanager.negotiation.NegotiationActivator</Bundle-Activator>-->
 						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
 						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
-						<Import-Package>javax.persistence, org.apache.xmlbeans.impl.schema, *</Import-Package> 
-						<Meta-Persistence>src/main/resources/META-INF/persistence.xml</Meta-Persistence>
+						<Import-Package>
+						eu.betaas.taas.qosmanager.negotiation,
+						eu.betaas.taas.qosmanager.velocity,javax.persistence,
+						javax.security.auth,
+						javax.security.auth.callback,javax.security.auth.login,
+						javax.security.auth.spi,
+						javax.security.auth.x500,
+						javax.xml.namespace,
+						javax.xml.stream,
+						org.apache.commons.beanutils;version="1.8",
+						org.apache.commons.beanutils.converters;version="1.8",
+						org.apache.commons.collections;version="3.2",
+						org.apache.commons.discovery.log,
+						org.apache.commons.discovery.resource,
+						org.apache.commons.discovery.tools,
+						org.apache.commons.jexl2;version="2.0",
+						org.apache.commons.lang;version="2.4",
+						org.apache.log4j;version="1.2",
+						org.apache.velocity;version="1.7",
+						org.apache.velocity.app;version="1.7",
+						org.apache.velocity.context;version="1.7",
+						org.apache.velocity.exception;version="1.7",
+						org.apache.velocity.runtime.resource;version="1.7",
+						org.apache.velocity.runtime.resource.loader;version="1.7",
+						org.apache.velocity.util;version="1.7",
+					 	org.apache.xml.resolver.tools,
+					 	org.apache.xmlbeans;version="2.4",
+					 	org.apache.xmlbeans.impl.common;version="2.4",
+					 	org.apache.xmlbeans.impl.schema;version="2.4",
+					 	org.apache.xmlbeans.impl.values;version="2.4",
+					 	org.apache.xmlbeans.impl.xb.xsdschema;version="2.4",
+					 	org.apache.xmlbeans.xml.stream;version="2.4",
+					 	org.osgi.framework;version="1.6",
+					 	org.quartz,
+					 	org.quartz.impl,org.w3c.dom,org.xml.sax</Import-Package> 
+						<Meta-Persistence>./src/main/resources/META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
 				</configuration>
 			</plugin>

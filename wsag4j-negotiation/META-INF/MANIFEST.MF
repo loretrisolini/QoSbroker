@@ -1,14 +1,14 @@
 Manifest-Version: 1.0
 Bundle-Description: Manages QoS negotiation
 Bundle-SymbolicName: eu.betaas.net.sf.wsag4j.negotiation
-Meta-Persistence: src/main/resources/META-INF/persistence.xml
+Meta-Persistence: ./src/main/resources/META-INF/persistence.xml
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1441878523096
+Bnd-LastModified: 1442077563679
 Embed-Dependency: wsag4j-common-types;inline=true, wsag4j-negotiation-
  types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreem
  ent-types;inline=true
-Import-Package: eu.betaas.taas.bigdatamanager.database.service,eu.beta
+Import-Package: eu.beta
  as.taas.qosmanager.negotiation,eu.betaas.taas.qosmanager.velocity,jav
  ax.persistence,javax.security.auth,javax.security.auth.callback,javax
  .security.auth.login,javax.security.auth.spi,javax.security.auth.x500
@@ -26,12 +26,10 @@ Import-Package: eu.betaas.taas.bigdatamanager.database.service,eu.beta
  2.4",org.apache.xmlbeans.impl.common;version="2.4",org.apache.xmlbean
  s.impl.schema;version="2.4",org.apache.xmlbeans.impl.values;version="
  2.4",org.apache.xmlbeans.impl.xb.xsdschema;version="2.4",org.apache.x
- mlbeans.xml.stream;version="2.4",org.osgi.framework;version="1.6",org
- .osgi.service.blueprint;version="[1.0.0,2.0.0)",org.quartz,org.quartz
+ mlbeans.xml.stream;version="2.4",org.osgi.framework;version="1.6",org.quartz,org.quartz
  .impl,org.w3c.dom,org.xml.sax
 DynamicImport-Package: schemaorg_apache_xmlbeans.*
 Tool: Bnd-0.0.357
-Originally-Created-By: Apache Maven Bundle Plugin
 Export-Package: eu.betaas.taas.qosmanager.negotiation;uses:="org.apach
  e.xmlbeans,org.osgi.framework,org.apache.log4j",eu.betaas.taas.qosman
  ager.velocity;uses:="org.apache.commons.collections,org.apache.veloci
