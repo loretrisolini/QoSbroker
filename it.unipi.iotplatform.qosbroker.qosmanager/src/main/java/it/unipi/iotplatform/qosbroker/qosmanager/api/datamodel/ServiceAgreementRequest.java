@@ -11,15 +11,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceAgreementRequest extends ServiceAgreementStructure{
 	
-	@XmlElement(name = "serviceDefinitionEntityType")
-	private ArrayList<ServiceDefinition> serviceDefList;
+	@XmlElement(name = "serviceDefinition")
+	private ServiceDefinition serviceDefinition;
 
-	public ArrayList<ServiceDefinition> getServiceDefList() {
-		return serviceDefList;
+	public ServiceDefinition getServiceDefList() {
+		return serviceDefinition;
 	}
 
-	public void setServiceDefList(ArrayList<ServiceDefinition> serviceDefList) {
-		this.serviceDefList = serviceDefList;
+	public void setServiceDefList(ServiceDefinition serviceDefinition) {
+		this.serviceDefinition = serviceDefinition;
 	}
 
 }

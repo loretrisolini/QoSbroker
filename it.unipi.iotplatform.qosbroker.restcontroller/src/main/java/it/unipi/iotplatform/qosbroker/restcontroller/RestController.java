@@ -180,8 +180,6 @@ public class RestController {
 
 		logger.info(" <--- WSAG4J has received negotiation request ---> \n");
 		
-		System.out.println("schema "+qosSchema);
-		
 		if (validateMessageBody(requester, request, qosSchema)) {
 
 			ServiceAgreementResponse response = qosCore.createAgreement(request);

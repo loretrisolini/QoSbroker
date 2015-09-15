@@ -1,11 +1,17 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
+import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 /*
@@ -91,16 +97,13 @@ public class ServiceDefinition extends ServiceAgreementStructure{
 	@XmlElement(required=true)
 	private String operationType;
 	
-    @XmlElements(value = { 
-            @XmlElement(name="entityType", 
-                        type=String.class),
-            @XmlElement(name="entityID", 
-                        type=String.class),
-    })
-	private String entityInfo;
+	@XmlElementWrapper(name = "entityIdList")
+	@XmlElement(name = "entityId", required = true)
+	private List<EntityId> entityId = null;
 	
-	@XmlElement(required=true)
-	private String attributeName;
+	@XmlElementWrapper(name = "attributeList")
+	@XmlElement(name = "attribute", required = true)
+	private List<String> attribute;
 	
 	@XmlElement(required=true)
 	private Restriction restriction = null;
@@ -113,13 +116,7 @@ public class ServiceDefinition extends ServiceAgreementStructure{
 		this.operationType = operationType;
 	}
 
-	public String getAttributeName() {
-		return attributeName;
-	}
 
-	public void setAttributeName(String attributeName) {
-		this.attributeName = attributeName;
-	}
 
 	public Restriction getRestriction() {
 		return restriction;
@@ -127,14 +124,6 @@ public class ServiceDefinition extends ServiceAgreementStructure{
 
 	public void setRestriction(Restriction restriction) {
 		this.restriction = restriction;
-	}
-
-	public String getEntityInfo() {
-		return entityInfo;
-	}
-
-	public void setEntityInfo(String entityInfo) {
-		this.entityInfo = entityInfo;
 	}
 
 }

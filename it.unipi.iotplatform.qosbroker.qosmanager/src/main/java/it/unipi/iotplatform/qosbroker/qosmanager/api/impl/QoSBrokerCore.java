@@ -1,5 +1,11 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.impl;
 
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceDefinition;
+
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,11 +20,13 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRequest
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.OperationScope;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
 import eu.neclab.iotplatform.ngsi.api.datamodel.RegisterContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.RegisterContextResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 import eu.neclab.iotplatform.ngsi.api.datamodel.SubscribeContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.SubscribeContextAvailabilityResponse;
@@ -37,9 +45,6 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRespons
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
 
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
 	
@@ -711,7 +716,49 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
 //		 TODO Auto-generated method stub
 //		
-//		TODO parse the request
+//		TODO parse the request to create discovery request
+		
+		ArrayList<ServiceDefinition> serviceReqList = offer.getServiceDefList();
+		
+		/*
+		 * create associations operation scope for discovery
+		 */
+		OperationScope operationScope = new OperationScope(
+				"IncludeAssociations", "SOURCES");
+
+		/*
+		 * Create a new restriction with the same attribute expression and
+		 * operation scope as in the request.
+		 */
+		Restriction restriction = new Restriction();
+
+		if (offer.getRestriction() != null) {
+
+			if (offer.getRestriction().getOperationScope() != null) {
+				restriction.setOperationScope(new ArrayList<OperationScope>(
+						offer.getRestriction().getOperationScope()));
+			}
+
+		} else {
+
+			restriction.setAttributeExpression("");
+
+		}
+
+		/*
+		 * Add the associations operation scope to the the restriction.
+		 */
+
+		ArrayList<OperationScope> lstOperationScopes = null;
+
+		if (restriction.getOperationScope() == null) {
+			lstOperationScopes = new ArrayList<OperationScope>();
+			lstOperationScopes.add(operationScope);
+			restriction.setOperationScope(lstOperationScopes);
+		} else {
+			restriction.getOperationScope().add(operationScope);
+		}
+		
 //		TODO discovery phase
 //		TODO query to qosmonitor
 //		TODO allocation call
@@ -719,6 +766,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 //		TODO agreement
 		
 		logger.info("############## createAgreement ###############");
+		
 		
 		ServiceAgreementResponse response = new ServiceAgreementResponse();
 		
