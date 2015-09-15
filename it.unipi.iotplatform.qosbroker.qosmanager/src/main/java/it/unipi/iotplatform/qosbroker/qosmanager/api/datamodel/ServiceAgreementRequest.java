@@ -14,11 +14,11 @@ public class ServiceAgreementRequest extends ServiceAgreementStructure{
 	@XmlElement(name = "serviceDefinition")
 	private ServiceDefinition serviceDefinition;
 
-	public ServiceDefinition getServiceDefList() {
+	public ServiceDefinition getServiceDefinition() {
 		return serviceDefinition;
 	}
 
-	public void setServiceDefList(ServiceDefinition serviceDefinition) {
+	public void setServiceDefinition(ServiceDefinition serviceDefinition) {
 		this.serviceDefinition = serviceDefinition;
 	}
 
