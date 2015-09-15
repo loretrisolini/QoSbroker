@@ -36,6 +36,8 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
+							<source>1.7</source>
+							<target>1.7</target>
 							<descriptors>
 								<descriptor>assembly.xml</descriptor>
 							</descriptors>
@@ -52,8 +54,8 @@
 	<modules>
 		<module>../it.unipi.iotplatform.qosbroker.qosmanager</module>
 		<module>../it.unipi.iotplatform.qosbroker.restcontroller</module>
-		<module>../wsag4j-negotiation</module>
-      	<module>../wsag4j-types</module> 
+<!-- 		<module>../wsag4j-negotiation</module>
+      	<module>../wsag4j-types</module>  -->
 	</modules>
 
 

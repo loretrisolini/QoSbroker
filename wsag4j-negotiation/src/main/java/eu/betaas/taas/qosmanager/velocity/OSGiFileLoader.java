@@ -1,10 +1,8 @@
 package eu.betaas.taas.qosmanager.velocity;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,16 +13,9 @@ import java.util.Map;
 import org.apache.commons.collections.ExtendedProperties;
 import org.apache.log4j.Logger;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.VelocityException;
-import org.apache.velocity.io.UnicodeInputStream;
 import org.apache.velocity.runtime.resource.Resource;
 import org.apache.velocity.runtime.resource.loader.ResourceLoader;
 import org.apache.velocity.util.StringUtils;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class OSGiFileLoader extends ResourceLoader {

@@ -1,9 +1,5 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.impl;
 
-import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,8 +37,11 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRespons
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
 
-public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
+public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 
@@ -51,7 +50,7 @@ public class QoSManagerCore implements Ngsi10Interface, Ngsi9Interface, QoSManag
 			.newCachedThreadPool();
 	
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(QoSManagerCore.class);
+	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
 //	/**  Reference to the Negotiator engine */
 //	private NegotiationInterface negotiator; 

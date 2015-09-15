@@ -2,6 +2,7 @@
 <beans:beans xmlns="http://www.springframework.org/schema/mvc"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:osgi="http://www.springframework.org/schema/osgi"
 	xsi:schemaLocation="
 	http://www.springframework.org/schema/mvc 
@@ -12,7 +13,7 @@
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd
 	http://www.springframework.org/schema/osgi  
     http://www.springframework.org/schema/osgi/spring-osgi.xsd">
-	
+
 	<context:annotation-config />
 
 	<mvc:annotation-driven>
@@ -39,21 +40,17 @@
 		interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF" bean-name="QoSManagerCore"></osgi:reference>
 
 	<beans:bean id="RestController"
-		class="it.unipi.iotplatform.qosbroker.restcontroller.RestController">
+		class="it.unipi.iotplatform.qosbroker.restcontroller.RestController" >
  		<beans:property name="ngsi9Core" ref="Ngsi9Interface"></beans:property>
 		<beans:property name="ngsiCore" ref="Ngsi10Interface"></beans:property> 
 		<beans:property name="qosCore" ref="QoSManagerService"></beans:property>
 	</beans:bean>
-
+	
 	<beans:bean
 		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping" />
 
-
 	<context:property-placeholder
-		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml" />
-		
-<!-- 	<context:property-placeholder
-		location="file:///${dir.QoSconfig}/qosbrokerconfig/config/config.xml" /> -->
+		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml, file:///${dir.config}/qosbrokerconfig/config/QoSconfig.properties" />
 
 	<mvc:default-servlet-handler />
 	

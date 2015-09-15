@@ -51,6 +51,13 @@
 							org.osgi.framework;version="1.6",
 							org.springframework.beans.factory;version="${spring.version}",
 							org.springframework.beans.factory.annotation;version="${spring.version}",
+							
+							org.springframework.beans.factory.config;version="${spring.version}",
+							org.springframework.context.annotation;version="${spring.version}",
+							org.springframework.context.support;version="${spring.version}",
+							org.springframework.cglib.core;version="${spring.version}",
+							org.springframework.cglib.proxy;version="${spring.version}",
+							
 							org.springframework.http;version="${spring.version}",
 							org.springframework.http.client;version="${spring.version}",
 							org.springframework.http.converter;version="${spring.version}",

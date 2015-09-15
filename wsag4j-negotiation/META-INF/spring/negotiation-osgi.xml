@@ -6,7 +6,7 @@
        http://www.springframework.org/schema/osgi  
        http://www.springframework.org/schema/osgi/spring-osgi.xsd"> 
 		
-    <osgi:service id="negotiationService" ref="negotiationService"
+    <osgi:service id="negotiationServiceOSGI" ref="negotiationService"
         interface="eu.betaas.taas.qosmanager.negotiation.NegotiationInterface" />
 
 </beans>

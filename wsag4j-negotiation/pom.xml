@@ -155,7 +155,7 @@
 				<configuration>
 					<manifestLocation>./META-INF</manifestLocation>
 					<instructions>
-						<Export-Package>eu.betaas.taas.qosmanager.negotiation, eu.betaas.taas.qosmanager.velocity</Export-Package>
+						<Export-Package>eu.betaas.taas.qosmanager.negotiation <!--  , eu.betaas.taas.qosmanager.velocity--></Export-Package>
 						<!-- <Bundle-Activator>eu.betaas.taas.qosmanager.negotiation.NegotiationActivator</Bundle-Activator>-->
 						<Embed-Dependency>wsag4j-common-types;inline=true, wsag4j-negotiation-types;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-types;inline=true</Embed-Dependency>
 						<DynamicImport-Package>schemaorg_apache_xmlbeans.*</DynamicImport-Package>
@@ -193,7 +193,7 @@
 					 	org.apache.xmlbeans.xml.stream;version="2.4",
 					 	org.osgi.framework;version="1.6",
 					 	org.quartz,
-					 	org.quartz.impl,org.w3c.dom,org.xml.sax</Import-Package> 
+					 	org.quartz.impl,org.w3c.dom,org.xml.sax, *</Import-Package> 
 						<Meta-Persistence>./src/main/resources/META-INF/persistence.xml</Meta-Persistence>
 					</instructions>
 				</configuration>

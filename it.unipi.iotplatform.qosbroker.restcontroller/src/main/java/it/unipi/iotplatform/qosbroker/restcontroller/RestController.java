@@ -32,6 +32,9 @@ import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 /**
  * Handles requests for the application home page.
  */
+/**
+ * Handles requests for the application home page.
+ */
 @Controller
 public class RestController {
 	
@@ -44,7 +47,6 @@ public class RestController {
 	private final String CONTENT_TYPE_XML = "application/xml";
 	
 	/** The component for receiving WSAG4J requests. **/
-	@Autowired
 	private QoSManagerIF qosCore;
 	
 	/** The component for receiving NGSI9 requests. */
@@ -96,14 +98,16 @@ public class RestController {
 		this.ngsi9Core = ngsi9Core;
 	}
 
+	/** String representing the xml schema for service request. */
+//	private static String qosSchema = ConfigConstants.SCHEMA_AGREEMENT;
+	private @Value("${schema.agreement}") String qosSchema;
+	
 	/** String representing the xml schema for NGSI 10. */
 	private @Value("${schema_ngsi10_operation}") String sNgsi10schema;
 
 	/** String representing the xml schema for NGSI 9. */
 	private @Value("${schema_ngsi9_operation}") String sNgsi9schema;
 	
-	/** String representing the xml schema for service request. */
-	private @Value("${schema_serviceAgreement_operation}") String qosSchema;
 	
 	/**
 	 * Executes the Sanity Check Procedure of the IoT Broker.
@@ -151,12 +155,32 @@ public class RestController {
 	 *
 	 * @return the response entity
 	 */
+	@RequestMapping(value = "/testAgreement", method = RequestMethod.POST, consumes = { "*/*" }, produces = {
+			CONTENT_TYPE_XML})
+	public ResponseEntity<ServiceAgreementRequest> test(
+			HttpServletRequest requester,
+			@RequestBody ServiceAgreementRequest request) {
+
+		System.out.println(request);
+
+		return new ResponseEntity<ServiceAgreementRequest>(request, HttpStatus.OK);
+
+	}
+	
+	/**
+	 * Executes the test of the IoT Broker, which simply returns the request
+	 * message.
+	 *
+	 * @return the response entity
+	 */
 	@RequestMapping(value = "/createAgreement", method = RequestMethod.POST, consumes = { CONTENT_TYPE_XML }, produces = { CONTENT_TYPE_XML })
 	public ResponseEntity<ServiceAgreementResponse> createAgreement(
 			HttpServletRequest requester,
 			@RequestBody ServiceAgreementRequest request) {
 
 		logger.info(" <--- WSAG4J has received negotiation request ---> \n");
+		
+		System.out.println("schema "+qosSchema);
 		
 		if (validateMessageBody(requester, request, qosSchema)) {
 
@@ -229,10 +253,9 @@ public class RestController {
 		return qosCore;
 	}
 
-	@Autowired
 	public void setQosCore(QoSManagerIF qosCore) {
 		this.qosCore = qosCore;
 	}
-	
+
 }
 
