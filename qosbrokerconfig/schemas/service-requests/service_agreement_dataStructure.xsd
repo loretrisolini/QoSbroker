@@ -9,6 +9,7 @@
   <xs:element name="restriction" 				type="Restriction"/>
   <xs:element name="operationScope" 				type="OperationScope" />
   <xs:element name="statusCode" 				type="StatusCode" />
+  <xs:element name="entityIdList" 					type="EntityIdList" />
   <xs:element name="entityId" 					type="EntityId" />
   <xs:element name="attributeList"				type="AttributeList" />
 

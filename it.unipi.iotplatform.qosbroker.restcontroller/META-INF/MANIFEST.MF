@@ -7,15 +7,18 @@ Bundle-Name: it.unipi.iotplatform.qosbroker.restcontroller
 Bundle-SymbolicName: it.unipi.iotplatform.qosbroker.restcontroller
 Bundle-Version: 4.3.3
 Created-By: Apache Maven Bundle Plugin
-Export-Package: it.unipi.iotplatform.qosbroker.restcontroller.sanitychec
- k;version="0.0.1";uses:="javax.xml.bind.annotation",it.unipi.iotplatfor
- m.qosbroker.restcontroller;version="0.0.1";uses:="eu.neclab.iotplatform
- .ngsi.api.datamodel,eu.neclab.iotplatform.ngsi.api.ngsi10,eu.neclab.iot
- platform.ngsi.api.ngsi9,it.unipi.iotplatform.qosbroker.qosmanager.api,i
- t.unipi.iotplatform.qosbroker.qosmanager.api.datamodel,it.unipi.iotplat
- form.qosbroker.restcontroller.sanitycheck,javax.servlet.http,org.spring
- framework.http,org.springframework.stereotype,org.springframework.web.b
- ind.annotation"
+Export-Package: it.unipi.iotplatform.qosbroker.qosrestcontroller;version="0.0.1";
+  uses:="eu.neclab.iotplatform.ngsi.api.datamodel,
+   eu.neclab.iotplatform.ngsi.api.ngsi10,
+   eu.neclab.iotplatform.ngsi.api.ngsi9,
+   it.unipi.iotplatform.qosbroker.qosmanager.api,
+   it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel,
+   it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck,
+   javax.servlet.http,
+   org.springframework.http,
+   org.springframework.stereotype,
+   org.springframework.web.bind.annotation",
+ it.unipi.iotplatform.qosbroker.qosrestcontroller.sanitycheck;version="0.0.1";uses:="javax.xml.bind.annotation"
 Import-Package: eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
  eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotp
  latform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.

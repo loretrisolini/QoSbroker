@@ -714,51 +714,53 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 
 	@Override
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
-//		 TODO Auto-generated method stub
+		
 //		
 //		TODO parse the request to create discovery request
 		
-//		ServiceDefinition serviceRequest = offer.getServiceDefinition();
-//		
-//		/*
-//		 * create associations operation scope for discovery
-//		 */
-//		OperationScope operationScope = new OperationScope(
-//				"IncludeAssociations", "SOURCES");
-//
-//		/*
-//		 * Create a new restriction with the same attribute expression and
-//		 * operation scope as in the request.
-//		 */
-//		Restriction restriction = new Restriction();
-//
-//		if (offer.getRestriction() != null) {
-//
-//			if (offer.getRestriction().getOperationScope() != null) {
-//				restriction.setOperationScope(new ArrayList<OperationScope>(
-//						offer.getRestriction().getOperationScope()));
-//			}
-//
-//		} else {
-//
-//			restriction.setAttributeExpression("");
-//
-//		}
-//
-//		/*
-//		 * Add the associations operation scope to the the restriction.
-//		 */
-//
-//		ArrayList<OperationScope> lstOperationScopes = null;
-//
-//		if (restriction.getOperationScope() == null) {
-//			lstOperationScopes = new ArrayList<OperationScope>();
-//			lstOperationScopes.add(operationScope);
-//			restriction.setOperationScope(lstOperationScopes);
-//		} else {
-//			restriction.getOperationScope().add(operationScope);
-//		}
-//		
+		//always only one serviceRequest in our implementation
+		//TODO manage serviceAgreementRequest as List of serviceDefinition
+		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
+		
+		/*
+		 * create associations operation scope for discovery
+		 */
+		OperationScope operationScope = new OperationScope(
+				"IncludeAssociations", "SOURCES");
+
+		/*
+		 * Create a new restriction with the same attribute expression and
+		 * operation scope as in the request.
+		 */
+		Restriction restriction = new Restriction();
+
+		if (serviceRequest.getRestriction() != null) {
+
+			if (serviceRequest.getRestriction().getOperationScope() != null) {
+				restriction.setOperationScope(new ArrayList<OperationScope>(
+						serviceRequest.getRestriction().getOperationScope()));
+			}
+
+		} else {
+
+			restriction.setAttributeExpression("");
+
+		}
+
+		/*
+		 * Add the associations operation scope to the the restriction.
+		 */
+
+		ArrayList<OperationScope> lstOperationScopes = null;
+
+		if (restriction.getOperationScope() == null) {
+			lstOperationScopes = new ArrayList<OperationScope>();
+			lstOperationScopes.add(operationScope);
+			restriction.setOperationScope(lstOperationScopes);
+		} else {
+			restriction.getOperationScope().add(operationScope);
+		}
+		
 //		TODO discovery phase
 //		TODO query to qosmonitor
 //		TODO allocation call

@@ -15,12 +15,25 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 /*
-<serviceDefinition>
+<?xml version="1.0" encoding="UTF-8"?>
+<serviceAgreementRequest>
+	<serviceDefinition>
 	<operationType>queryContext</operationType>
-	<entityInfo>
-<entityType>Room1</entityType>
-</entityInfo>
-	<attributeName>temperature</attributeName>
+		<entityIdList> 
+		<entityId type="temperature" isPattern="false"> 
+			<id>sensor_1:temperature</id> 
+		</entityId> 
+		<entityId type="Room" isPattern="true"> 
+			<id>.*</id>			 
+		</entityId>
+		<entityId type="environment" isPattern="true"> 
+			<id>sensor_2:environment</id>			 
+		</entityId>  
+	</entityIdList> 
+	<attributeList> 
+		<attribute>temperature</attribute> 
+		<attribute>humidity</attribute> 
+	</attributeList>
 	<restriction>
 		<scope>
 			 <operationScope>
@@ -52,42 +65,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 		</scope>
 	</restriction>
 	</serviceDefinition>
-	
-	<serviceDefinition>
-	<operationType>queryContext</operationType>
-<entityInfo>
-	<entityID>sensorTemp_1:temperature</entityID>
-<entityInfo>
-	<attributeName>temperature</attributeName>
-	<restriction>
-		<scope>
-			 <operationScope>
-				 <scopeType>Location</scopeType>
-				 <scopeValue>
-					 <Altitude>30</Altitude>
-					 <Latitude>43.656998</Latitude>
-					 <Longitude>10.437418</Longitude>
-				 </scopeValue>
-				 </operationScope>
- <operationScope>
-				 <scopeType>ServiceFeatures</scopeType>
-				 <scopeValue>
-					 <feature>
-						 <featureName>accuracy</featureName>
-						 <featureValue>0.8</featureValue>
-					 </feature>
-				 </scopeValue>
-				 </operationScope> 
-			 <operationScope>
-				 <scopeType>QoS</scopeType>
-				 <scopeValue>
-					 <maxResponseTime>15</maxResponseTime>
-					 <maxRateRequest>15</maxRateRequest>
-				 </scopeValue>
-			 </operationScope>
-		</scope>
-	</restriction>
-	</serviceDefinition>
+	</serviceAgreementRequest>
 */
 
 @XmlRootElement(name = "serviceDefinition")
