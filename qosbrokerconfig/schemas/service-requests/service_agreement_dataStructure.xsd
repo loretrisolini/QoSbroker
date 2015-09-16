@@ -5,28 +5,45 @@
 	<!-- _______________________________________ Complex type instantiations 
 	___________________________________________ -->
 
-  <xs:element name="serviceDefinition"                 type="ServiceDefinition"/>
-  <xs:element name="restriction" 					   type="Restriction"/>
-  <xs:element name="operationScope" 				   type="OperationScope" />
-  <xs:element name="statusCode" 					   type="StatusCode" />
-  <xs:element name="entityInfo" 						   type="EntityInfo"/>
+  <xs:element name="serviceDefinition"                 		type="ServiceDefinition"/>
+  <xs:element name="restriction" 				type="Restriction"/>
+  <xs:element name="operationScope" 				type="OperationScope" />
+  <xs:element name="statusCode" 				type="StatusCode" />
+  <xs:element name="entityId" 					type="EntityId" />
+  <xs:element name="attributeList"				type="AttributeList" />
 
 	<!-- _________________________________ Complex type definitions ___________________________________________________ -->
 	
 	<xs:complexType name="ServiceDefinition">
 		<xs:sequence>
-			<xs:element name="operationType" 	type="xs:string"  minOccurs="1" maxOccurs="1"/>
-			<xs:element name="entityInfo" 		type="EntityInfo"  minOccurs="1" maxOccurs="1"/>						
-			<xs:element name="attributeName"	type="xs:string"  minOccurs="1" maxOccurs="1"/>
-			<xs:element name="restriction"		type="Restriction"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="operationType" 		type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityIdList" 		type="EntityIdList"  minOccurs="1" maxOccurs="1"/>						
+			<xs:element name="attributeList"		type="AttributeList"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="restriction"			type="Restriction"  minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 	
-	<xs:complexType name="EntityInfo">
-	  <xs:choice  minOccurs="1" maxOccurs="1">
-		<xs:element name="entityType" type="xs:string" />
-		<xs:element name="entityID"   type="xs:string" />
-	  </xs:choice>
+	<xs:complexType name="AttributeList">
+		<xs:sequence>
+			<xs:element name="attribute" type="xs:string" minOccurs="1"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="EntityId">
+		<xs:sequence>
+			<xs:element name="id" type="xs:string" minOccurs="1"
+				maxOccurs="1" />
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:anyURI" />
+		<xs:attribute name="isPattern" type="xs:boolean" />
+	</xs:complexType>
+
+	<xs:complexType name="EntityIdList">
+		<xs:sequence>
+			<xs:element name="entityId" type="EntityId" minOccurs="0"
+				maxOccurs="unbounded" />
+		</xs:sequence>
 	</xs:complexType>
 	
 	<xs:complexType name="Restriction">

@@ -16,7 +16,7 @@
 	<xs:complexType name="ServiceAgreementRequest">
 		<xs:sequence>
 			<xs:element name="serviceDefinition" type="ServiceDefinition"
-				minOccurs="0" />
+				minOccurs="1" />
 		</xs:sequence>
 	</xs:complexType>
 

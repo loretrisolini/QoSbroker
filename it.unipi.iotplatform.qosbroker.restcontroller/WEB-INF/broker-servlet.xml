@@ -50,7 +50,7 @@
 		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping" />
 
 	<context:property-placeholder
-		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml, file:///${dir.config}/qosbrokerconfig/config/QoSconfig.properties" />
+		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml, file:///${QoSdir.config}/config/QoSconfig.properties" ignore-unresolvable="true" />
 
 	<mvc:default-servlet-handler />
 	
