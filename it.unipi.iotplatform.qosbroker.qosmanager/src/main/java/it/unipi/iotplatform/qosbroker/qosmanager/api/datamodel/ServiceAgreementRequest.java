@@ -12,14 +12,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ServiceAgreementRequest extends ServiceAgreementStructure{
 	
 	@XmlElement(name = "serviceDefinition")
-	private ServiceDefinition serviceDefinition;
+	//in our implementation we consider always one service definition
+	private ArrayList<ServiceDefinition> serviceDefinitionList;
 
-	public ServiceDefinition getServiceDefinition() {
-		return serviceDefinition;
+	public ArrayList<ServiceDefinition> getServiceDefinitionList() {
+		return serviceDefinitionList;
 	}
 
-	public void setServiceDefinition(ServiceDefinition serviceDefinition) {
-		this.serviceDefinition = serviceDefinition;
+	public void setServiceDefinitionList(
+			ArrayList<ServiceDefinition> serviceDefinitionList) {
+		this.serviceDefinitionList = serviceDefinitionList;
 	}
 
 }

@@ -718,7 +718,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 //		
 //		TODO parse the request to create discovery request
 		
-		ArrayList<ServiceDefinition> serviceReqList = offer.getServiceDefList();
+		ServiceDefinition serviceRequest = offer.getServiceDefinition();
 		
 		/*
 		 * create associations operation scope for discovery
