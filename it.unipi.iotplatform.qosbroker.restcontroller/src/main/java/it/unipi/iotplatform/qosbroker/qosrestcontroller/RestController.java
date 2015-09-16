@@ -180,26 +180,31 @@ public class RestController {
 
 		logger.info(" <--- WSAG4J has received negotiation request ---> \n");
 		
-		if (validateMessageBody(requester, request, qosSchema)) {
-
-			ServiceAgreementResponse response = qosCore.createAgreement(request);
-
-			logger.debug("ServiceID: "+ response.getServiceID());
-
-			return new ResponseEntity<ServiceAgreementResponse>(response,
-					HttpStatus.OK);
-		} else {
-
+		try{
+			
+			//validation of the incoming request
+			validateMessageBody(requester, request, qosSchema);
+				
+			ServiceAgreementResponse response = new ServiceAgreementResponse();
+			
+			
+			response = qosCore.createAgreement(request);
+				
+			return new ResponseEntity<ServiceAgreementResponse>(response,HttpStatus.OK);
+		}
+		catch(Exception e){
+			
+			logger.debug(e.getMessage());
+			
 			ServiceAgreementResponse response = new ServiceAgreementResponse();
 			StatusCode statusCode = new StatusCode(
 					Code.BADREQUEST_400.getCode(),
-					ReasonPhrase.BADREQUEST_400.toString(), "XML syntax Error!");
+					ReasonPhrase.BADREQUEST_400.toString(), e.getMessage());
 
 			response.setErrorCode(statusCode);
 
 			return new ResponseEntity<ServiceAgreementResponse>(response,
 					HttpStatus.BAD_REQUEST);
-
 		}
 	}
 	
@@ -207,8 +212,8 @@ public class RestController {
 	 * Executes a syntax check of incoming messages. Currently supported formats
 	 * are XML and JSON.
 	 */
-	private boolean validateMessageBody(HttpServletRequest request,
-			Object objRequest, String schema) {
+	private void validateMessageBody(HttpServletRequest request,
+			Object objRequest, String schema) throws Exception{
 
 		boolean status = false;
 
@@ -243,7 +248,7 @@ public class RestController {
 
 		logger.info("Incoming request Valid:" + status);
 
-		return status;
+		if(!status) throw new Exception("syntax Error!");
 
 	}
 

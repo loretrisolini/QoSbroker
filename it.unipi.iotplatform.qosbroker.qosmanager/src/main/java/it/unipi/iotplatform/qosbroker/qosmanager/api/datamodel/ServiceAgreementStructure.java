@@ -9,6 +9,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.Node;
 
 /**
  *  Common super-type for NGSI data structure implementations.
@@ -59,6 +60,26 @@ public abstract class ServiceAgreementStructure {
 		return response;
 
 	}
+	
+	public static <T> T convertObjectToJaxbObject(Object object, T JaxbObject) {
 
+		if (JaxbObject.getClass().getSuperclass() != ServiceAgreementStructure.class) {
+			throw new RuntimeException("Cannot convert Object to "
+					+ JaxbObject.getClass().getName());
+		}
+
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(QoSscopeValue.class);
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+			JaxbObject = (T)unmarshaller.unmarshal((Node)object);
+
+		} catch (JAXBException e) {
+			logger.info("JAXBException", e);
+		}
+
+		return JaxbObject;
+
+	}
 
 }

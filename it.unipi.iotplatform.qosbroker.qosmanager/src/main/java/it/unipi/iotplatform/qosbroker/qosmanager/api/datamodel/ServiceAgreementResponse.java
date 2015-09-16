@@ -33,4 +33,13 @@ public class ServiceAgreementResponse extends ServiceAgreementStructure{
 		this.errorCode = errorCode;
 	}
 
+	@Override
+	public String toString() {
+		return "ServiceAgreementResponse [serviceID=" + serviceID
+				+ ", errorCode=" + errorCode + ", getServiceID()="
+				+ getServiceID() + ", getErrorCode()=" + getErrorCode()
+				+ ", toString()=" + super.toString() + ", getClass()="
+				+ getClass() + ", hashCode()=" + hashCode() + "]";
+	}
+
 }

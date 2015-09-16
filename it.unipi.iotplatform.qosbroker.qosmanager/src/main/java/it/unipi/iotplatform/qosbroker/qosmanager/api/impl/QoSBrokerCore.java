@@ -2,6 +2,8 @@ package it.unipi.iotplatform.qosbroker.qosmanager.api.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.QoSreq;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.QoSscopeValue;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.RestrictionConstants;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceDefinition;
@@ -50,7 +52,7 @@ import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
-
+	
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
 			.newCachedThreadPool();
@@ -714,56 +716,91 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 	}
 
 	@Override
-	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) {
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception{
 		
-//		
-//		TODO parse the request to create discovery request
+
+//		parse the request to create discovery request
 		
 		//always only one serviceRequest in our implementation
 		//TODO manage serviceAgreementRequest as List of serviceDefinition
 		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
-		
-		/*
-		 * create associations operation scope for discovery
-		 */
-		OperationScope operationScope = new OperationScope(
-				"IncludeAssociations", "SOURCES");
 
 		/*
 		 * Create a new restriction with the same attribute expression and
 		 * operation scope as in the request.
 		 */
 		Restriction restriction = new Restriction();
-
+		
+		QoSreq qosRequirementes = new QoSreq();
+		
 		if (serviceRequest.getRestriction() != null) {
-
+			
 			if (serviceRequest.getRestriction().getOperationScope() != null) {
-				restriction.setOperationScope(new ArrayList<OperationScope>(
-						serviceRequest.getRestriction().getOperationScope()));
+				
+				//get the list of opeartionScopes in the restriction object
+				ArrayList<OperationScope> operationScopeList = new ArrayList<OperationScope>(
+						serviceRequest.getRestriction().getOperationScope());
+				
+				//remove the QoS scopeValues from the operationScopes list, to store them
+				//in the QoSreq object
+				qosRequirementes = getQoSrequirements(operationScopeList);
+				
+				if(qosRequirementes == null){
+					throw new Exception("No QoS requirements for the create agreement");
+				}
+				
+				restriction.setOperationScope(operationScopeList);
 			}
 
 		} else {
 
 			restriction.setAttributeExpression("");
 		}
-
-		QoSreq qosRequirementes = getQoSscopeValues(restriction);
+		
+		/*
+		 * create associations operation scope for discovery
+		 */
+		OperationScope operationScope = new OperationScope(
+				"IncludeAssociations", "SOURCES");
 		
 		/*
 		 * Add the associations operation scope to the the restriction.
 		 */
+		restriction.getOperationScope().add(operationScope);
 
-		ArrayList<OperationScope> lstOperationScopes = null;
+		
+//		discovery phase
+		
+		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
+				serviceRequest.getEntityIdList(), serviceRequest.getAttributeList(),
+				restriction);
+		
+		logger.debug("DiscoverContextAvailabilityRequest:"
+				+ discoveryRequest.toString());
 
-		if (restriction.getOperationScope() == null) {
-			lstOperationScopes = new ArrayList<OperationScope>();
-			lstOperationScopes.add(operationScope);
-			restriction.setOperationScope(lstOperationScopes);
-		} else {
-			restriction.getOperationScope().add(operationScope);
+		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
+		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
+				.discoverContextAvailability(discoveryRequest);
+		
+		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
+				.getErrorCode().getCode() == 200)
+				&& discoveryResponse.getContextRegistrationResponse() != null) {
+
+			logger.debug("Receive discoveryResponse from Config Man:"
+					+ discoveryResponse);
+		}
+		else {
+
+			ServiceAgreementResponse response = new ServiceAgreementResponse();
+			
+			response.setServiceID(null);
+			
+			response.setErrorCode(discoveryResponse.getErrorCode());;	
+			
+			return response;
+
 		}
 		
-//		TODO discovery phase
 //		TODO query to qosmonitor
 //		TODO allocation call
 //		TODO getTemplate for two types
@@ -797,6 +834,27 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 		this.ngsi10Requester = ngsi10Requester;
 	}
 	
-	private QoSreq
+	/* function to get QoS requirements from the restriction */
+	private QoSreq getQoSrequirements(ArrayList<OperationScope> operationScopeList){
+		
+		for(OperationScope opScope : operationScopeList){
+			
+			if(opScope.getScopeType().contentEquals(RestrictionConstants.QOS)){
+				
+				QoSreq qosReq = new QoSreq();
+				
+				QoSscopeValue qosScopeValue = new QoSscopeValue();
+				
+				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject(opScope.getScopeValue(), qosScopeValue);
+				
+				//remove qosOperationScope from the operationScopeList
+				operationScopeList.remove(opScope);
+				
+				return qosReq;
+			}
+		}
+		
+		return null;
+	}
 
 }

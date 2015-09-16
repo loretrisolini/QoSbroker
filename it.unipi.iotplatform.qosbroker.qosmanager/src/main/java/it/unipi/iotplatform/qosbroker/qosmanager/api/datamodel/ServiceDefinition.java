@@ -104,4 +104,20 @@ public class ServiceDefinition extends ServiceAgreementStructure{
 		this.restriction = restriction;
 	}
 
+	public List<EntityId> getEntityIdList() {
+		return entityId;
+	}
+
+	public void setEntityIdList(List<EntityId> entityId) {
+		this.entityId = entityId;
+	}
+
+	public List<String> getAttributeList() {
+		return attribute;
+	}
+
+	public void setAttributeList(List<String> attribute) {
+		this.attribute = attribute;
+	}
+
 }
