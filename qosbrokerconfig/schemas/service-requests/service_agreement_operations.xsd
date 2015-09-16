@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		   elementFormDefault="qualified">      
+
+ <xs:include schemaLocation="service_agreement_dataStructure.xsd"/>
+ 
+<!-- _______________________________________ Complex types instantiation ___________________________________________ -->
+
+
+
+  <xs:element name="serviceAgreementRequest"                        type="ServiceAgreementRequest"/>
+  <xs:element name="serviceAgreementResponse"                        type="ServiceAgreementResponse"/>
+
+<!-- ________________________________________ Methods messages ________________________________________________ -->
+
+	<xs:complexType name="ServiceAgreementRequest">
+		<xs:sequence>
+			<xs:element name="serviceDefinition" type="ServiceDefinition"
+				minOccurs="0" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ServiceAgreementResponse">
+		<xs:sequence>
+			<xs:element name="serviceID" type="xs:string"
+				minOccurs="0" />
+			<xs:element name="errorCode" type="StatusCode" minOccurs="1"
+				maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	
+</xs:schema>

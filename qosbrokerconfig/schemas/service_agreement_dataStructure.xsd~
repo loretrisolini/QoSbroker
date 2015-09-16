@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="unqualified">
+	
+	<!-- _______________________________________ Complex type instantiations 
+	___________________________________________ -->
+
+  <xs:element name="serviceDefinition"                 type="ServiceDefinition"/>
+  <xs:element name="restriction" 					   type="Restriction"/>
+  <xs:element name="operationScope" 				   type="OperationScope" />
+  <xs:element name="statusCode" 					   type="StatusCode" />
+  <xs:element name="EntityInfo" 						   type="EntityInfo"/>
+
+	<!-- _________________________________ Complex type definitions ___________________________________________________ -->
+	
+	<xs:complexType name="ServiceDefinition">
+		<xs:sequence>
+			<xs:element name="operationType" 	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityInfo" 		type="EntityInfo"  minOccurs="1" maxOccurs="1"/>						
+			<xs:element name="attributeName"	type="xs:string"  minOccurs="1" maxOccurs="1"/>
+			<xs:element name="restriction"		type="Restriction"  minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="EntityInfo">
+	  <xs:choice  minOccurs="1" maxOccurs="1">
+		<xs:element name="entityType" type="xs:string" />
+		<xs:element name="entityID"   type="xs:string" />
+	  </xs:choice>
+	</xs:complexType>
+	
+	<xs:complexType name="Restriction">
+		<xs:sequence>
+			<xs:element name="scope" type="OperationScopeList"
+				minOccurs="0" maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	
+ 	<xs:complexType name="OperationScopeList">
+		<xs:sequence>
+			<xs:element name="operationScope" type="OperationScope"
+				minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="OperationScope">
+		<xs:sequence>
+			<xs:element name="scopeType" type="xs:string" minOccurs="1"
+				maxOccurs="1" />
+			<xs:element name="scopeValue" type="xs:anyType" maxOccurs="1"
+				minOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<!-- scopeValues elements -->
+	<xs:complexType name="point">
+		<xs:sequence>
+			<xs:element name="Altitude" type="xs:float" minOccurs="1"
+				maxOccurs="1" />
+			<xs:element name="Longitude" type="xs:float" maxOccurs="1"
+				minOccurs="1" />
+			<xs:element name="Latitude" type="xs:float" maxOccurs="1"
+				minOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="circle">
+		<xs:sequence>
+			<xs:element name="centerLatitude" type="xs:float" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="centerLongitude" type="xs:float" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="radius" type="xs:float" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="polygon">
+		<xs:sequence>
+			<xs:element name="vertexList" type="vertexList" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="vertexList">
+		<xs:sequence>
+			<xs:element name="vertex" type="vertex" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="vertex">
+		<xs:sequence>
+			<xs:element name="latitude" type="xs:float" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="longitude" type="xs:float" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="segment">
+		<xs:sequence>
+			<xs:element name="NW_Corner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="SE_Corner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Height" type="xs:double" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="featureList">
+		<xs:sequence>
+			<xs:element name="feature" type="feature" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="feature">
+		<xs:sequence>
+			<xs:element name="featureName" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="featureValue" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:complexType name="StatusCode">
+		<xs:sequence>
+			<xs:element name="code" type="xs:int" minOccurs="1"
+				maxOccurs="1" />
+			<xs:element name="reasonPhrase" type="xs:string"
+				minOccurs="1" maxOccurs="1" />
+			<xs:element name="details" type="xs:anyType" minOccurs="0"
+				maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	
+</xs:schema>
