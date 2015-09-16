@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceDefinition;
@@ -744,9 +745,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 		} else {
 
 			restriction.setAttributeExpression("");
-
 		}
 
+		QoSreq qosRequirementes = getQoSscopeValues(restriction);
+		
 		/*
 		 * Add the associations operation scope to the the restriction.
 		 */
@@ -794,5 +796,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 	public void setNgsi10Requester(Ngsi10Requester ngsi10Requester) {
 		this.ngsi10Requester = ngsi10Requester;
 	}
+	
+	private QoSreq
 
 }
