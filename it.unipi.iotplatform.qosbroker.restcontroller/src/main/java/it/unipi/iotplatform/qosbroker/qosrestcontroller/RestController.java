@@ -1,8 +1,8 @@
 package it.unipi.iotplatform.qosbroker.qosrestcontroller;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementRequest;
-import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementResponse;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosrestcontroller.sanitycheck.SanityCheck;
 
 import java.io.BufferedReader;

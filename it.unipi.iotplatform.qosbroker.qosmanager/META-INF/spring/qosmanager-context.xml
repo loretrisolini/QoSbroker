@@ -11,7 +11,7 @@
 	<context:property-placeholder
 		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml" />
 
-	<bean id="QoSManagerCore" class="it.unipi.iotplatform.qosbroker.qosmanager.api.impl.QoSBrokerCore">
+	<bean id="QoSManagerCore" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSBrokerCore">
  		<property name="ngsi9Impl" ref="QoSNgsi9Interface"></property>
 		<property name="ngsi10Requestor" ref="QoSNgsi10Requester"></property> 
 <!-- 		<property name="negotiator" ref="negotiationServiceOSGI"></property>  -->

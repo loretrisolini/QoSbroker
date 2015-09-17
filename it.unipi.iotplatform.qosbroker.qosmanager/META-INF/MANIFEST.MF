@@ -11,11 +11,8 @@ DynamicImport-Package: schemaorg_apache_xmlbeans.*
 Embed-Dependency: wsag4j-common-types;inline=true, wsag4j-negotiation-ty
  pes;inline=true, wsag4j-addressing-types;inline=true, wsag4j-agreement-
  types;inline=true
-Export-Package: it.unipi.iotplatform.qosbroker.qosmanager.api;version="4
- .3.3";uses:="it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel",i
- t.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;version="4.3.3";
- uses:="eu.neclab.iotplatform.ngsi.api.datamodel,javax.xml.bind.annotati
- on"
+Export-Package: it.unipi.iotplatform.qosbroker.qosmanager.api;version="4.3.3";uses:="it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel",
+ it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;version="4.3.3";uses:="eu.neclab.iotplatform.ngsi.api.datamodel,javax.xml.bind.annotation"
 Import-Package: eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3"
  ,eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotpla
  tform.ngsi.api.ngsi9;version="4.3.3",javax.xml.bind,javax.xml.bind.anno
