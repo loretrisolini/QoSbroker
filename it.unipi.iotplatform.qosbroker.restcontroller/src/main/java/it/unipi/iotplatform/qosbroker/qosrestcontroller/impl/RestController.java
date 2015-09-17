@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.qosbroker.qosrestcontroller;
+package it.unipi.iotplatform.qosbroker.qosrestcontroller.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;

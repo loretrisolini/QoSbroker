@@ -7,7 +7,7 @@ Bundle-Name: it.unipi.iotplatform.qosbroker.restcontroller
 Bundle-SymbolicName: it.unipi.iotplatform.qosbroker.restcontroller
 Bundle-Version: 4.3.3
 Created-By: Apache Maven Bundle Plugin
-Export-Package: it.unipi.iotplatform.qosbroker.qosrestcontroller;version="0.0.1";
+Export-Package: it.unipi.iotplatform.qosbroker.qosrestcontroller.impl;version="0.0.1";
   uses:="eu.neclab.iotplatform.ngsi.api.datamodel,
    eu.neclab.iotplatform.ngsi.api.ngsi10,
    eu.neclab.iotplatform.ngsi.api.ngsi9,
