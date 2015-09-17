@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosrestcontroller.impl;
 
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
@@ -47,7 +48,7 @@ public class RestController {
 	private final String CONTENT_TYPE_XML = "application/xml";
 	
 	/** The component for receiving WSAG4J requests. **/
-	private QoSManagerIF qosCore;
+	private QoSBrokerIF qosCore;
 	
 	/** The component for receiving NGSI9 requests. */
 	@Autowired
@@ -251,14 +252,15 @@ public class RestController {
 		if(!status) throw new Exception("syntax Error!");
 
 	}
-
-	public QoSManagerIF getQosCore() {
+	
+	public QoSBrokerIF getQosCore() {
 		return qosCore;
 	}
-
-	public void setQosCore(QoSManagerIF qosCore) {
+	public void setQosCore(QoSBrokerIF qosCore) {
 		this.qosCore = qosCore;
 	}
+
+
 
 }
 

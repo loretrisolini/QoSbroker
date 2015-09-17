@@ -1,6 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RestrictionConstants;
@@ -57,7 +57,7 @@ import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 
-public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
+public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 	
@@ -938,12 +938,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 			}
 		}
 		
-		return null;
-	}
-
-	@Override
-	public String getTemplate() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

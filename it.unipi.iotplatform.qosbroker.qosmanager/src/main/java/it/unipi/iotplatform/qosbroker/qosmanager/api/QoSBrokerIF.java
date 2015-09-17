@@ -6,13 +6,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRespo
 import javax.annotation.Resource;
 
 @Resource
-public interface QoSManagerIF {
-
-	/**
-	 * It is called by RestController to get the standard template for the Fiware platform
-	 * @return The template as a string
-	 */
-	public String getTemplate();
+public interface QoSBrokerIF {
 	
 	/**
 	 * It is called by RestController to send the Offer. The function returns a valid AgreemntEPR
@@ -23,6 +17,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public void createAgreement(String offer);
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception;
 	
 }
