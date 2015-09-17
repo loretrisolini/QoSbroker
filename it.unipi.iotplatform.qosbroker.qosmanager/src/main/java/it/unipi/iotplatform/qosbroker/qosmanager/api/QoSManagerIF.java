@@ -23,6 +23,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public void createAgreement(String offer);
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception;
 	
 }

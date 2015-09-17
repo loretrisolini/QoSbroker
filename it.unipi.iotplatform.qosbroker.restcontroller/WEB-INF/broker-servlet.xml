@@ -34,10 +34,10 @@
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface"></osgi:reference>
 
 	<osgi:reference id="Ngsi9Interface"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface"></osgi:reference>  
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" bean-name="QoSManagerCore"></osgi:reference>  
 		
 	<osgi:reference id="QoSManagerService"
-		interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF" bean-name="QoSManagerCore"></osgi:reference>
+		interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF" ></osgi:reference>
 
 	<beans:bean id="RestController"
 		class="it.unipi.iotplatform.qosbroker.qosrestcontroller.RestController" >

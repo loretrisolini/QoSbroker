@@ -70,9 +70,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
-//	/**  Reference to the Negotiator engine */
-//	private NegotiationInterface negotiator; 
-	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
 	private Ngsi9Interface ngsi9Impl;
@@ -720,12 +717,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 	}
 
 	@Override
-	public String getTemplate() {
-
-		return null;
-	}
-
-	@Override
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception{
 		
 
@@ -953,6 +944,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 			}
 		}
 		
+		return null;
+	}
+
+	@Override
+	public String getTemplate() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
