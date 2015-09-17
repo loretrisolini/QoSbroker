@@ -52,6 +52,7 @@
 
 
 	<modules>
+		<module>../it.unipi.iotplatform.qosbroker.qosmonitor</module>
 		<module>../it.unipi.iotplatform.qosbroker.qosmanager</module>
 		<module>../it.unipi.iotplatform.qosbroker.restcontroller</module>
 <!-- 		<module>../wsag4j-negotiation</module>

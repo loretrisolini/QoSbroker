@@ -443,6 +443,12 @@
 		<dependencies>
 			<dependency>
 				<groupId>it.unipi.iotplatform</groupId>
+				<artifactId>qosbroker.qosmonitor</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>it.unipi.iotplatform</groupId>
 				<artifactId>qosbroker.qosmanager</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -453,7 +459,7 @@
 				<version>${project.version}</version>
 			</dependency>
 			
-		    <dependency>
+		    	<dependency>
 				  <groupId>eu.betaas.net.sf.wsag4j</groupId>
 				  <artifactId>wsag4j-negotiation</artifactId>
 				  <version>0.0.1-SNAPSHOT</version>
