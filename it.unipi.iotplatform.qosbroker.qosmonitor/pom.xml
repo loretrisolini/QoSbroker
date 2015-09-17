@@ -5,9 +5,8 @@
     <artifactId>QoSbrokerParent</artifactId>
     <version>4.3.3</version>
   </parent>
-  <groupId>it.unipi.iotplatform</groupId>
+
   <artifactId>qosbroker.qosmonitor</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <name>it.unipi.iotplatform.qosbroker.qosmonitor</name>
   
@@ -31,8 +30,8 @@
 			<configuration>
 				<manifestLocation>META-INF</manifestLocation>
 				<instructions>
-					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
-					<Import-Package>it.unipi.iotplatform.qosbroker.qosmanager.api;version="${pom.version}",
+					<Private-Package>it.unipi.iotplatform.qosbroker.qosmonitor.*</Private-Package>
+					<Import-Package>
 							it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
@@ -48,13 +47,6 @@
 							org.osgi.framework;version="1.6",
 							org.springframework.beans.factory;version="${spring.version}",
 							org.springframework.beans.factory.annotation;version="${spring.version}",
-							
-							org.springframework.beans.factory.config;version="${spring.version}",
-							org.springframework.context.annotation;version="${spring.version}",
-							org.springframework.context.support;version="${spring.version}",
-							org.springframework.cglib.core;version="${spring.version}",
-							org.springframework.cglib.proxy;version="${spring.version}",
-							
 							org.springframework.http;version="${spring.version}",
 							org.springframework.http.client;version="${spring.version}",
 							org.springframework.http.converter;version="${spring.version}",
@@ -88,8 +80,6 @@
 							org.springframework.web.servlet.support;version="${spring.version}",
 							org.springframework.web.servlet.view;version="${spring.version}"
 					</Import-Package>
-					<Include-Resource>src/main/webapp</Include-Resource>
-					<Web-ContextPath>/QoSbroker</Web-ContextPath>
 				</instructions>
 			</configuration>
 		</plugin>

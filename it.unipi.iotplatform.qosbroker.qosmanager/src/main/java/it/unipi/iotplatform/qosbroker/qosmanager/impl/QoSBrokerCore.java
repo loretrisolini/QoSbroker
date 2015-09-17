@@ -7,6 +7,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RestrictionConstants;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +21,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
-//import eu.betaas.taas.qosmanager.negotiation.NegotiationInterface;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
@@ -69,6 +69,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
+	
+	private QoSMonitorIF qosMonitor;
 	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
@@ -799,6 +801,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						transactionID, equivalentContextRegResp);
 		
 //		TODO query to qosmonitor
+		
+		
+		
 //		TODO allocation call
 //		TODO getTemplate for two types
 //		TODO agreement
@@ -939,6 +944,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 		
 		return null;
+	}
+
+	public QoSMonitorIF getQosMonitor() {
+		return qosMonitor;
+	}
+
+	public void setQosMonitor(QoSMonitorIF qosMonitor) {
+		this.qosMonitor = qosMonitor;
 	}
 
 }

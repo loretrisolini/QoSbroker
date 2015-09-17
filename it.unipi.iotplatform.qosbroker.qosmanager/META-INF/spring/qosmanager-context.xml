@@ -13,7 +13,8 @@
 
 	<bean id="QoSBrokerCore" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSBrokerCore">
  		<property name="ngsi9Impl" ref="QoSNgsi9Interface"></property>
-		<property name="ngsi10Requestor" ref="QoSNgsi10Requester"></property> 
+		<property name="ngsi10Requestor" ref="QoSNgsi10Requester"></property>
+		<property name="qosMonitor" ref="QoSMonitorService"></property>  
 <!-- 		<property name="negotiator" ref="negotiationServiceOSGI"></property>  -->
 	</bean>
 </beans>
