@@ -819,13 +819,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 		return response;
 	}
 
-//	public NegotiationInterface getNegotiator() {
-//		return negotiator;
-//	}
-//
-//	public void setNegotiator(NegotiationInterface negotiator) {
-//		this.negotiator = negotiator;
-//	}
+
 
 	private StatusCode discoveryEquivalentContextRegResp(
 			List<EntityId> entityIdList, List<String> attributeList, Restriction restriction,
