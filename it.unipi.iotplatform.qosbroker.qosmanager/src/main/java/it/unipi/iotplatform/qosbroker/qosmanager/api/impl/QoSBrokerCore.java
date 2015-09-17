@@ -9,16 +9,24 @@ import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceAgreementR
 import it.unipi.iotplatform.qosbroker.qosmanager.api.datamodel.ServiceDefinition;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 //import eu.betaas.taas.qosmanager.negotiation.NegotiationInterface;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
@@ -52,6 +60,8 @@ import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManagerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
+	
+	private final AtomicInteger serviceRequestCounter = new AtomicInteger();
 	
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
@@ -724,11 +734,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 		//always only one serviceRequest in our implementation
 		//TODO manage serviceAgreementRequest as List of serviceDefinition
 		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
-
-		/*
-		 * Create a new restriction with the same attribute expression and
-		 * operation scope as in the request.
-		 */
+		
+		String operationType = serviceRequest.getOperationType();
+		
+		//TODO parse serviceRequest, check two equal attributes
+		
+		//Create a new restriction with the same attribute expression and
+		//operation scope as in the request.
 		Restriction restriction = new Restriction();
 		
 		QoSreq qosRequirementes = new QoSreq();
@@ -757,49 +769,43 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 			restriction.setAttributeExpression("");
 		}
 		
-		/*
-		 * create associations operation scope for discovery
-		 */
-		OperationScope operationScope = new OperationScope(
-				"IncludeAssociations", "SOURCES");
-		
-		/*
-		 * Add the associations operation scope to the the restriction.
-		 */
-		restriction.getOperationScope().add(operationScope);
+//		/*
+//		 * create associations operation scope for discovery
+//		 */
+//		OperationScope operationScope = new OperationScope(
+//				"IncludeAssociations", "SOURCES");
+//		
+//		/*
+//		 * Add the associations operation scope to the the restriction.
+//		 */
+//		restriction.getOperationScope().add(operationScope);
 
 		
 //		discovery phase
 		
-		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
-				serviceRequest.getEntityIdList(), serviceRequest.getAttributeList(),
-				restriction);
+		HashMap<String, ArrayList<ContextRegistrationResponse>> equivalentContextRegResp = new HashMap<>();
 		
-		logger.debug("DiscoverContextAvailabilityRequest:"
-				+ discoveryRequest.toString());
-
-		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
-		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
-				.discoverContextAvailability(discoveryRequest);
+		StatusCode discoveryStatusCode = discoveryEquivalentContextRegResp(
+				serviceRequest.getEntityIdList(), serviceRequest.getAttributeList(), restriction, 
+				equivalentContextRegResp);
 		
-		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
-				.getErrorCode().getCode() == 200)
-				&& discoveryResponse.getContextRegistrationResponse() != null) {
-
-			logger.debug("Receive discoveryResponse from Config Man:"
-					+ discoveryResponse);
-		}
-		else {
-
+		if(discoveryStatusCode.getCode() != 200){
+			
 			ServiceAgreementResponse response = new ServiceAgreementResponse();
 			
 			response.setServiceID(null);
 			
-			response.setErrorCode(discoveryResponse.getErrorCode());;	
+			response.setErrorCode(discoveryStatusCode);
 			
 			return response;
-
 		}
+
+		//transactionID to identify the service request
+		String transactionID = UUID.randomUUID().toString();
+		
+		Pair<String, HashMap<String, ArrayList<ContextRegistrationResponse>>> requestStatus = 
+				new Pair<String, HashMap<String, ArrayList<ContextRegistrationResponse>>>(
+						transactionID, equivalentContextRegResp);
 		
 //		TODO query to qosmonitor
 //		TODO allocation call
@@ -830,6 +836,95 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 //		this.negotiator = negotiator;
 //	}
 
+	private StatusCode discoveryEquivalentContextRegResp(
+			List<EntityId> entityIdList, List<String> attributeList, Restriction restriction,
+			HashMap<String, ArrayList<ContextRegistrationResponse>> mappingAttrEquivalentContRegResponseList){
+		
+		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
+				entityIdList, attributeList,restriction);
+		
+		logger.debug("DiscoverContextAvailabilityRequest:"
+				+ discoveryRequest.toString());
+		
+		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
+		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
+				.discoverContextAvailability(discoveryRequest);
+		
+		StatusCode statusCode;
+		
+		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
+				.getErrorCode().getCode() == 200)
+				&& discoveryResponse.getContextRegistrationResponse() != null) {
+			
+			//generate mapping attr->List<ContextRegistrationResponse>
+			mappingAttrEquivalentContRegResponseList = 
+					getMappingAttrEquivalentContRegResponseList(attributeList, 
+							discoveryResponse.getContextRegistrationResponse());
+			
+			//check if the service can be establish for all attribute (services)
+			if(mappingAttrEquivalentContRegResponseList == null){
+				
+				statusCode = new StatusCode(
+						Code.CONTEXTELEMENTNOTFOUND_404.getCode(),
+						ReasonPhrase.CONTEXTELEMENTNOTFOUND_404.toString(), "Cannot establish service");
+			}
+			else{
+				logger.debug("Receive discoveryResponse from Config Man:"
+						+ discoveryResponse);
+				
+				statusCode = discoveryResponse.getErrorCode();
+			}
+		}
+		else{
+			statusCode = discoveryResponse.getErrorCode();
+		}
+		
+		//can be context element not found or success operation
+		return statusCode;
+	}
+	
+	/* function to get mapping attr->EquivalentContextRegistrationRespList */
+	private HashMap<String, ArrayList<ContextRegistrationResponse>> getMappingAttrEquivalentContRegResponseList(
+			List<String> attributeList, List<ContextRegistrationResponse> contextRegistrationResponse) {
+
+		HashMap<String, ArrayList<ContextRegistrationResponse>> mappingAttrEquivalentContRegResponseList = new HashMap<>();
+		
+		//itearte over the list of AttributeList
+		for(String attr : attributeList){
+			
+			ArrayList<ContextRegistrationResponse> crRespList = new ArrayList<>();
+			
+			//iterate over the list of Context Registration Resp
+			for(ContextRegistrationResponse crr : contextRegistrationResponse){
+				
+				//get the List of ContextRegistrationAttribute 
+				//in the ContextRegistration element
+				List<ContextRegistrationAttribute> crAttrList = crr.getContextRegistration().getContextRegistrationAttribute();
+				
+				//iterate over the list of Context Registration attr
+				for(ContextRegistrationAttribute crAttr: crAttrList){
+					
+					//if the ContextRegistrationResponse crr has the attribute attr,
+					//add crr to the contextRegistrationResponseList crRespList
+					if(crAttr.getName().contentEquals(attr)){
+						
+						crRespList.add(crr);
+						break;
+					}
+				}
+			}
+			
+			//if an attribute attr has a contextRegistrationResponseList crRespList
+			//empty, the service cannot be establish because for one
+			//attribute attr, There aren't resourses (ContextRegistrationResp Entities)
+			if(crRespList.isEmpty()) return null;
+			else
+				mappingAttrEquivalentContRegResponseList.put(attr, crRespList);
+		}
+			
+		return mappingAttrEquivalentContRegResponseList;
+	}
+
 	public void setNgsi10Requester(Ngsi10Requester ngsi10Requester) {
 		this.ngsi10Requester = ngsi10Requester;
 	}
@@ -846,6 +941,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSManage
 				QoSscopeValue qosScopeValue = new QoSscopeValue();
 				
 				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject(opScope.getScopeValue(), qosScopeValue);
+				
+				qosReq.setMaxResponseTime(qosScopeValue.getMaxResponseTime());
+				
+				qosReq.setMaxRateRequest(qosScopeValue.getMaxRateRequest());
 				
 				//remove qosOperationScope from the operationScopeList
 				operationScopeList.remove(opScope);

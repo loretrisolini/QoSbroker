@@ -67,6 +67,8 @@ public abstract class ServiceAgreementStructure {
 			throw new RuntimeException("Cannot convert Object to "
 					+ JaxbObject.getClass().getName());
 		}
+		
+
 
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(QoSscopeValue.class);
