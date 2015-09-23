@@ -1,7 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 
 public class Thing {
 
@@ -9,9 +9,9 @@ public class Thing {
 	//and ContElem
 	private String id;
 	
-	private ContextElement contElem;
+	private ContextRegistrationAttribute serviceSpec;
 	
-	private ContextRegistrationResponse contRegResp;
+	private ContextAttribute batteryLevel;
 
 	public String getId() {
 		return id;
@@ -21,20 +21,20 @@ public class Thing {
 		this.id = id;
 	}
 
-	public ContextElement getContElem() {
-		return contElem;
+	public ContextRegistrationAttribute getServiceSpec() {
+		return serviceSpec;
 	}
 
-	public void setContElem(ContextElement contElem) {
-		this.contElem = contElem;
+	public void setServiceSpec(ContextRegistrationAttribute serviceSpec) {
+		this.serviceSpec = serviceSpec;
 	}
 
-	public ContextRegistrationResponse getContRegResp() {
-		return contRegResp;
+	public ContextAttribute getBatteryLevel() {
+		return batteryLevel;
 	}
 
-	public void setContRegResp(ContextRegistrationResponse contRegResp) {
-		this.contRegResp = contRegResp;
+	public void setBatteryLevel(ContextAttribute batteryLevel) {
+		this.batteryLevel = batteryLevel;
 	}
 	
 }

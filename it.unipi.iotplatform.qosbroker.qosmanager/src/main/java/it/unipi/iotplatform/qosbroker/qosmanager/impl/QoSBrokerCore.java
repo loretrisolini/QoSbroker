@@ -7,6 +7,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RestrictionConstants;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
-	private QoSMonitorIF qosMonitor;
+	private Ngsi10Interface qosMonitor;
 	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
@@ -720,8 +721,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	@Override
 	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception{
-		
 
+		//transactionID to identify the service request
+		String transactionID = UUID.randomUUID().toString();
+		
 //		parse the request to create discovery request
 		
 		//always only one serviceRequest in our implementation
@@ -734,78 +737,48 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		//Create a new restriction with the same attribute expression and
 		//operation scope as in the request.
-		Restriction restriction = new Restriction();
+		Restriction restriction = getRestriction(serviceRequest);
+		
+		if(restriction == null){
+			throw new Exception("No restrictions in ServiceAgreementRequest");
+		}
 		
 		QoSreq qosRequirementes = new QoSreq();
 		
-		if (serviceRequest.getRestriction() != null) {
-			
-			if (serviceRequest.getRestriction().getOperationScope() != null) {
-				
-				//get the list of opeartionScopes in the restriction object
-				ArrayList<OperationScope> operationScopeList = new ArrayList<OperationScope>(
-						serviceRequest.getRestriction().getOperationScope());
-				
-				//remove the QoS scopeValues from the operationScopes list, to store them
-				//in the QoSreq object
-				qosRequirementes = getQoSrequirements(operationScopeList);
-				
-				if(qosRequirementes == null){
-					throw new Exception("No QoS requirements for the create agreement");
-				}
-				
-				restriction.setOperationScope(operationScopeList);
-			}
-
-		} else {
-
-			restriction.setAttributeExpression("");
-		}
+		//remove the QoS scopeValues from the operationScopes list, to store them
+		//in the QoSreq object
+		qosRequirementes = getQoSrequirements(restriction.getOperationScope());
 		
-//		/*
-//		 * create associations operation scope for discovery
-//		 */
-//		OperationScope operationScope = new OperationScope(
-//				"IncludeAssociations", "SOURCES");
-//		
-//		/*
-//		 * Add the associations operation scope to the the restriction.
-//		 */
-//		restriction.getOperationScope().add(operationScope);
+		if(qosRequirementes == null){
+			throw new Exception("No QoS requirements in ServiceAgreementRequest");
+		}
 
+		StatusCode statusCode = new StatusCode();
 		
 //		discovery phase
 		
-		HashMap<String, ArrayList<ContextRegistrationResponse>> equivalentContextRegResp = new HashMap<>();
+		//get list of equivalentThings
+		List<Thing> equivalentThings = discoverEquivalentThings(
+				serviceRequest.getEntityIdList(), serviceRequest.getAttributeList(), restriction, statusCode);
 		
-		StatusCode discoveryStatusCode = discoveryEquivalentContextRegResp(
-				serviceRequest.getEntityIdList(), serviceRequest.getAttributeList(), restriction, 
-				equivalentContextRegResp);
-		
-		if(discoveryStatusCode.getCode() != 200){
+		if(equivalentThings == null){
 			
 			ServiceAgreementResponse response = new ServiceAgreementResponse();
 			
 			response.setServiceID(null);
 			
-			response.setErrorCode(discoveryStatusCode);
+			response.setErrorCode(statusCode);
 			
 			return response;
 		}
-
-		//transactionID to identify the service request
-		String transactionID = UUID.randomUUID().toString();
 		
-		Pair<String, HashMap<String, ArrayList<ContextRegistrationResponse>>> requestStatus = 
-				new Pair<String, HashMap<String, ArrayList<ContextRegistrationResponse>>>(
-						transactionID, equivalentContextRegResp);
-		
-//		TODO query to qosmonitor
+		//TODO create serviceRequestList
+		//TODO create servExecFeature
+		//TODO create mappingServThing
 		
 		
-		
+//		TODO getTemplate for two types		
 //		TODO allocation call
-//		TODO getTemplate for two types
 //		TODO agreement
 		
 		logger.info("############## createAgreement ###############");
@@ -815,7 +788,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		response.setServiceID("home_service");
 		
-		StatusCode statusCode = new StatusCode(
+		StatusCode statusCodeEx = new StatusCode(
 				Code.OK_200.getCode(),
 				ReasonPhrase.OK_200.toString(), "Succes Operation");
 		
@@ -825,10 +798,39 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 
+	/* get Restriction from serviceRequest */
+	private Restriction getRestriction(
+			ServiceDefinition serviceRequest) {
+		
+		if (serviceRequest.getRestriction() != null) {
+			
+			Restriction restriction = new Restriction();
+			
+			if (serviceRequest.getRestriction().getOperationScope() != null) {
+				
+				//get the list of opeartionScopes in the restriction object
+				ArrayList<OperationScope> operationScopeList = new ArrayList<OperationScope>(
+						serviceRequest.getRestriction().getOperationScope());
+				
+				restriction.setOperationScope(operationScopeList);
+				
+			}
+			else {
+	
+				restriction.setAttributeExpression("");
+			}
+			
+			return restriction;
+		}
+		else{
+			return null;
+		}
 
-	private StatusCode discoveryEquivalentContextRegResp(
-			List<EntityId> entityIdList, List<String> attributeList, Restriction restriction,
-			HashMap<String, ArrayList<ContextRegistrationResponse>> mappingAttrEquivalentContRegResponseList){
+	}
+
+	/* discover <ContextElement, ConteRegResp> given entityIdList, attributeList, restriction */
+	private List<Thing> discoverEquivalentThings(
+			List<EntityId> entityIdList, List<String> attributeList, Restriction restriction, StatusCode statusCode){
 		
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
 				entityIdList, attributeList,restriction);
@@ -840,39 +842,94 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
 				.discoverContextAvailability(discoveryRequest);
 		
-		StatusCode statusCode;
-		
 		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
 				.getErrorCode().getCode() == 200)
 				&& discoveryResponse.getContextRegistrationResponse() != null) {
 			
-			//generate mapping attr->List<ContextRegistrationResponse>
-			mappingAttrEquivalentContRegResponseList = 
-					getMappingAttrEquivalentContRegResponseList(attributeList, 
-							discoveryResponse.getContextRegistrationResponse());
+			//response from the iotDiscovery
+			List<ContextRegistrationResponse> ContextRegistrationResponseList = 
+					discoveryResponse.getContextRegistrationResponse();
 			
-			//check if the service can be establish for all attribute (services)
-			if(mappingAttrEquivalentContRegResponseList == null){
+			//build request to QoSmonitor from List<ContextRegistrationResponse>
+			QueryContextRequest queryRequest = setRequestToQoSMonitor(ContextRegistrationResponseList);
+			
+			//request to the QoSmonitor
+			QueryContextResponse qosMonitorResponse = qosMonitor.queryContext(queryRequest);
+			
+			if(qosMonitorResponse == null){
 				
-				statusCode = new StatusCode(
-						Code.CONTEXTELEMENTNOTFOUND_404.getCode(),
-						ReasonPhrase.CONTEXTELEMENTNOTFOUND_404.toString(), "Cannot establish service");
+				statusCode =  new StatusCode(
+						Code.BADREQUEST_400.getCode(),
+						ReasonPhrase.BADREQUEST_400.toString(), "No response from QoSMonitor");
+				
+				return null;
 			}
-			else{
-				logger.debug("Receive discoveryResponse from Config Man:"
-						+ discoveryResponse);
+			
+			//create equivalentThing List and check if there is at least one resource for
+			//each service requested
+			List<Thing> equivalentThings = createEquivalentThingsList(attributeList, ContextRegistrationResponseList, qosMonitorResponse);
+			
+			if(equivalentThings == null){
 				
+				statusCode =  new StatusCode(
+						Code.BADREQUEST_400.getCode(),
+						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
+				
+				return null;
+			}
+			
+			if(discoveryResponse.getErrorCode() != null){
 				statusCode = discoveryResponse.getErrorCode();
 			}
+			else{
+				statusCode =  new StatusCode(
+						Code.OK_200.getCode(),
+						ReasonPhrase.OK_200.toString(), "Result");
+			}
+			
+			return equivalentThings;
 		}
 		else{
+			
+			//no elements found in the iotDiscovery
 			statusCode = discoveryResponse.getErrorCode();
+			return null;
 		}
-		
-		//can be context element not found or success operation
-		return statusCode;
 	}
 	
+	private List<Thing> createEquivalentThingsList(List<String> attributeList,
+			List<ContextRegistrationResponse> contextRegistrationResponseList,
+			QueryContextResponse qosMonitorResponse) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private QueryContextRequest setRequestToQoSMonitor(
+			List<ContextRegistrationResponse> contextRegistrationResponseList) {
+
+		QueryContextRequest request = new QueryContextRequest();
+		
+		//list of entityId taken from the response of the iotDiscovery
+		List<EntityId> responseEntIdList = new ArrayList<>();
+		
+		//list of entityId stored in the ContReg 
+		//inside the contextRegistrationResponseList
+		List<EntityId> contRegEntityIdList = new ArrayList<>();
+		
+		for(ContextRegistrationResponse crr: contextRegistrationResponseList){
+			
+			contRegEntityIdList = crr.getContextRegistration().getListEntityId();
+			
+			for(EntityId eId: contRegEntityIdList){
+				responseEntIdList.add(eId);
+			}
+		}
+		
+		request.setEntityIdList(responseEntIdList);
+		
+		return request;
+	}
+
 	/* function to get mapping attr->EquivalentContextRegistrationRespList */
 	private HashMap<String, ArrayList<ContextRegistrationResponse>> getMappingAttrEquivalentContRegResponseList(
 			List<String> attributeList, List<ContextRegistrationResponse> contextRegistrationResponse) {
@@ -920,7 +977,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 	
 	/* function to get QoS requirements from the restriction */
-	private QoSreq getQoSrequirements(ArrayList<OperationScope> operationScopeList){
+	private QoSreq getQoSrequirements(List<OperationScope> operationScopeList){
 		
 		for(OperationScope opScope : operationScopeList){
 			
@@ -946,12 +1003,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return null;
 	}
 
-	public QoSMonitorIF getQosMonitor() {
+	public Ngsi10Interface getQosMonitor() {
 		return qosMonitor;
 	}
 
-	public void setQosMonitor(QoSMonitorIF qosMonitor) {
+	public void setQosMonitor(Ngsi10Interface qosMonitor) {
 		this.qosMonitor = qosMonitor;
 	}
+
+
 
 }
