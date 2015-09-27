@@ -91,13 +91,13 @@
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
-			<version>4.4.1</version>
+			<version>4.3.3</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
-			<version>4.4.1</version>
+			<version>4.3.3</version>
 		</dependency>
 		
 	</dependencies>

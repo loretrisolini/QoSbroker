@@ -135,4 +135,12 @@ public class QoSMonitor implements Ngsi10Interface{
 		return null;
 	}
 
+	public BigDataRepository getBigDataRepository() {
+		return bigDataRepository;
+	}
+
+	public void setBigDataRepository(BigDataRepository bigDataRepository) {
+		this.bigDataRepository = bigDataRepository;
+	}
+
 }

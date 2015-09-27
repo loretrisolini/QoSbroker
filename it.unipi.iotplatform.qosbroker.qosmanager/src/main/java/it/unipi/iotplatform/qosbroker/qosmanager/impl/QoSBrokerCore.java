@@ -8,7 +8,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementReque
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
+//import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -864,9 +864,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				
 				return null;
 			}
-			
-			//create equivalentThing List and check if there is at least one resource for
-			//each service requested
+//			
+//			//create equivalentThing List and check if there is at least one resource for
+//			//each service requested
 			List<Thing> equivalentThings = createEquivalentThingsList(attributeList, ContextRegistrationResponseList, qosMonitorResponse);
 			
 			if(equivalentThings == null){
@@ -886,8 +886,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						Code.OK_200.getCode(),
 						ReasonPhrase.OK_200.toString(), "Result");
 			}
-			
-			return equivalentThings;
+			return null;
+//			return equivalentThings;
 		}
 		else{
 			

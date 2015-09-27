@@ -48,6 +48,7 @@ public class RestController {
 	private final String CONTENT_TYPE_XML = "application/xml";
 	
 	/** The component for receiving WSAG4J requests. **/
+	@Autowired
 	private QoSBrokerIF qosCore;
 	
 	/** The component for receiving NGSI9 requests. */
