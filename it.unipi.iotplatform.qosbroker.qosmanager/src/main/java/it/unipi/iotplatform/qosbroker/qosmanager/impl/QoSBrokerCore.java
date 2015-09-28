@@ -5,6 +5,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RestrictionConstants;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
@@ -66,7 +67,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 	
-	private final AtomicInteger serviceRequestCounter = new AtomicInteger();
+	private static final AtomicInteger requestIdCounter = new AtomicInteger();
+	private static final AtomicInteger serviceIdCounter = new AtomicInteger();
 	
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
@@ -74,6 +76,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
+	
+	private final QoSManager qosManager = new QoSManager();
 	
 	private Ngsi10Interface qosMonitor;
 	
@@ -735,7 +739,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//TODO manage serviceAgreementRequest as List of serviceDefinition
 		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
 		
-		String operationType = serviceRequest.getOperationType();
+		String opType = serviceRequest.getOperationType();
 		
 		//TODO parse serviceRequest, check two equal attributes
 		
@@ -757,6 +761,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			throw new Exception("No QoS requirements in ServiceAgreementRequest");
 		}
 
+		//create list of services
+		List<Service> serviceList = createServiceList(serviceRequest.getAttributeList());
+		
+		//object to store the details of the service Request
+		Request request = new Request(requestIdCounter.getAndIncrement(), opType, qosRequirements, restriction, serviceRequest.getEntityIdList(), serviceList);
+		
+		
 		StatusCode statusCode = new StatusCode();
 		
 //		discovery phase
@@ -776,16 +787,17 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return response;
 		}
 		
+		//TODO filtering based on latency, MaxRespTime, MaxRateReq
+		
 		//TODO create serviceRequestList
 		List<Request> serviceReqList = createServiceRequestList(serviceRequest.getAttributeList(), qosRequirements);
 		
-		//TODO create servExecFeature
-		//TODO create mappingServThing
+		//TODO String offer = qosManager.getTemplate();
+		//TODO prepare offer
+		//TODO store Pair<TransactionID, <EquivalentThings, SeviceRequest>>
 		
+//		qosManager.createAgreement(offer);
 		
-//		TODO getTemplate for two types		
-//		TODO allocation call
-//		TODO agreement
 		
 		logger.info("############## createAgreement ###############");
 		
@@ -801,6 +813,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		response.setErrorCode(statusCode);
 		
 		return response;
+	}
+
+	private List<Service> createServiceList(List<String> attributeList) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	//function to create the list of services requested
@@ -1024,6 +1041,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 								if(t.getBatteryLevel() == null) return null;
 								
 								equivalentThingsList.add(t);
+
 							}
 						}
 					}
