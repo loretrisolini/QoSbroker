@@ -7,6 +7,9 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRespo
 import it.unipi.iotplatform.qosbroker.qosrestcontroller.sanitycheck.SanityCheck;
 
 import java.io.BufferedReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,12 +25,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import eu.neclab.iotplatform.iotbroker.commons.GenerateMetadata;
 import eu.neclab.iotplatform.iotbroker.commons.JsonValidator;
 import eu.neclab.iotplatform.iotbroker.commons.XmlValidator;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
+import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextRequest;
+import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextResponse;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 /**
@@ -48,7 +55,6 @@ public class RestController {
 	private final String CONTENT_TYPE_XML = "application/xml";
 	
 	/** The component for receiving WSAG4J requests. **/
-	@Autowired
 	private QoSBrokerIF qosCore;
 	
 	/** The component for receiving NGSI9 requests. */
@@ -166,6 +172,97 @@ public class RestController {
 		System.out.println(request);
 
 		return new ResponseEntity<ServiceAgreementRequest>(request, HttpStatus.OK);
+
+	}
+	
+	/**
+	 * Executes the standard NGSI 10 UpdateContext method.
+	 *
+	 * @param requester
+	 *            Represents the HTTP request message.
+	 * @param request
+	 *            The request body.
+	 * @return The response body.
+	 */
+	@RequestMapping(value = "/updateContext", method = RequestMethod.POST, consumes = {
+			CONTENT_TYPE_XML, CONTENT_TYPE_JSON }, produces = {
+			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
+	public ResponseEntity<UpdateContextResponse> updateContextResponse(
+			HttpServletRequest requester,
+			@RequestBody UpdateContextRequest request) {
+
+		logger.info(" <--- NGSI-10 has received request for Update Context resource ---> \n");
+
+		try{
+
+			validateMessageBody(requester, request, sNgsi10schema);
+			
+//			for (int i = 0; i < request.getContextElement().size(); i++) {
+//
+//				/*
+//				 * Add metadata to each context element contained by the update.
+//				 */
+//				if (!requester.getContentType().contains("application/json")) {
+//					if (request.getContextElement().get(i).getDomainMetadata() != null) {
+//						request.getContextElement()
+//						.get(i)
+//						.setDomainMetadata(
+//								new ArrayList<ContextMetadata>());
+//					}
+//
+//					try {
+//
+//						request.getContextElement()
+//						.get(i)
+//						.getDomainMetadata()
+//						.add(GenerateMetadata
+//								.createSourceIPMetadata(new URI(
+//										requester.getRequestURL()
+//										.toString())));
+//
+//						request.getContextElement()
+//						.get(i)
+//						.getDomainMetadata()
+//						.add(GenerateMetadata
+//								.createDomainTimestampMetadata());
+//					} catch (URISyntaxException e) {
+//						logger.info(" URI Syntax Exception ", e);
+//					}
+//
+//				}
+//			}
+//			
+//			
+//
+//			UpdateContextResponse response = qosCore.updateContext(request);
+//
+//			System.out.println("########## Response to Converter ##########"
+//					+ response);
+//
+//			return new ResponseEntity<UpdateContextResponse>(response,
+//					HttpStatus.OK);
+			
+			UpdateContextResponse response = new UpdateContextResponse(
+					new StatusCode(Code.BADREQUEST_400.getCode(),
+							ReasonPhrase.BADREQUEST_400.toString(),
+							"XML syntax Error!"), null);
+			
+			return new ResponseEntity<UpdateContextResponse>(response,
+					HttpStatus.OK);
+
+		} 
+		catch(Exception e){ 
+
+			logger.debug(e.getMessage());
+			
+			UpdateContextResponse response = new UpdateContextResponse(
+					new StatusCode(Code.BADREQUEST_400.getCode(),
+							ReasonPhrase.BADREQUEST_400.toString(),
+							"XML syntax Error!"), null);
+
+			return new ResponseEntity<UpdateContextResponse>(response,
+					HttpStatus.OK);
+		}
 
 	}
 	

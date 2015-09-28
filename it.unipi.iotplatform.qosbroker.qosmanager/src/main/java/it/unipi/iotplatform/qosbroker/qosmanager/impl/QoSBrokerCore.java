@@ -21,8 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
@@ -846,9 +848,21 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				.getErrorCode().getCode() == 200)
 				&& discoveryResponse.getContextRegistrationResponse() != null) {
 			
-			//response from the iotDiscovery
+			//filtered response from the iotDiscovery
+//			List<ContextRegistrationResponse> ContextRegistrationResponseList = 
+//					filterResults(attributeList, discoveryResponse.getContextRegistrationResponse());
+			
 			List<ContextRegistrationResponse> ContextRegistrationResponseList = 
 					discoveryResponse.getContextRegistrationResponse();
+			
+//			if(ContextRegistrationResponseList == null){
+//				
+//				statusCode =  new StatusCode(
+//						Code.BADREQUEST_400.getCode(),
+//						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
+//				
+//				return null;
+//			}
 			
 			//build request to QoSmonitor from List<ContextRegistrationResponse>
 			QueryContextRequest queryRequest = setRequestToQoSMonitor(ContextRegistrationResponseList);
@@ -867,7 +881,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 //			
 //			//create equivalentThing List and check if there is at least one resource for
 //			//each service requested
-			List<Thing> equivalentThings = createEquivalentThingsList(attributeList, ContextRegistrationResponseList, qosMonitorResponse);
+			List<Thing> equivalentThings = createEquivalentThingsList(attributeList, ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse());
 			
 			if(equivalentThings == null){
 				
@@ -886,8 +900,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						Code.OK_200.getCode(),
 						ReasonPhrase.OK_200.toString(), "Result");
 			}
-			return null;
-//			return equivalentThings;
+//			return null;
+			return equivalentThings;
 		}
 		else{
 			
@@ -896,12 +910,124 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return null;
 		}
 	}
-	
+
+	//filter discovery result so that every ContextRegistration
+	//had only the attribute requested
+	private List<ContextRegistrationResponse> filterResults(
+			List<String> attributeList,
+			List<ContextRegistrationResponse> contextRegistrationResponse) {
+			
+		for(ContextRegistrationResponse crr: contextRegistrationResponse){
+			
+			List<ContextRegistrationAttribute> crAttrList = 
+					crr.getContextRegistration().getContextRegistrationAttribute();
+			
+			List<ContextRegistrationAttribute> crAttrListFiltered = new ArrayList<>();
+			
+			for(String attr: attributeList){
+				
+				for(ContextRegistrationAttribute crAttr: crAttrList){
+					
+					//Matching attr is stored in the new 
+					//ContextAttributeList
+					if(crAttr.getName().contentEquals(attr)){
+						crAttrListFiltered.add(crAttr);
+					}
+				}
+			}
+			
+			//ContextRegistrationResponse that doesn't have at least
+			//one attribute(taken from attributeList)
+			if(crAttrListFiltered.isEmpty()) return null;
+			
+			crr.getContextRegistration().setListContextRegistrationAttribute(crAttrListFiltered);
+		}
+		
+		return contextRegistrationResponse;
+	}
+
 	private List<Thing> createEquivalentThingsList(List<String> attributeList,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
-			QueryContextResponse qosMonitorResponse) {
-		// TODO Auto-generated method stub
+			List<ContextElementResponse> qosMonitorResponse) {
+		
+		List<Thing> equivalentThingsList = new ArrayList<>();
+		
+		for(String attr: attributeList){
+			
+			//var to check if for each attr it is created at least
+			//one thing
+			boolean atLeastOneThingForService = false;
+			
+			//look for ContextRegistrationResponse that has attribute attr
+			for(ContextRegistrationResponse crr: contextRegistrationResponseList){
+				
+				//look for ContextElementResponse associated to the ContextRegistrationResponse
+				for(ContextElementResponse contElemResp: qosMonitorResponse){
+					
+					//check if the ContextElementResponse is
+					//associated with the ContextRegistrationResponse
+					if(matchEntityId(contElemResp, crr)){
+						
+						List<ContextRegistrationAttribute> crAttrList = 
+								crr.getContextRegistration().getContextRegistrationAttribute();
+						
+						//given ContextRegistrationResponseElement look if it has
+						//the attribute attr
+						for(ContextRegistrationAttribute crAttr: crAttrList){
+							
+							if(crAttr.getName().contentEquals(attr)){
+								
+								atLeastOneThingForService = true;
+								
+								Thing t = new Thing();
+								
+								t.setId(contElemResp.getContextElement().getEntityId().getId());
+								
+								t.setServiceSpec(crAttr);
+								
+								List<ContextAttribute> contElemRespAttrList = contElemResp.getContextElement().getContextAttributeList();
+										
+								for(ContextAttribute cAttr: contElemRespAttrList){
+									
+									if(cAttr.getName().contentEquals("battery")){
+										t.setBatteryLevel(cAttr);
+									}
+								}
+								
+								//problem battery can't be null if It has been found
+								//a ContextElement associated with the ContextRegistrationResponse
+								if(t.getBatteryLevel() == null) return null;
+								
+								equivalentThingsList.add(t);
+							}
+						}
+					}
+				}
+			}
+			
+			//check if is created at least one thing for that attribute
+			if(!atLeastOneThingForService) return null;
+		}
+		
 		return null;
+	}
+
+	//function to look for an entityId, in the ContextRegistrationResponse entityId List,
+	//that match with the EntityId in the ContextElementResponse
+	private boolean matchEntityId(ContextElementResponse contElemResp,
+			ContextRegistrationResponse crr) {
+		
+		EntityId contElemEntId = contElemResp.getContextElement().getEntityId();
+		
+		List<EntityId> contRegEntIdList = crr.getContextRegistration().getListEntityId();
+		
+		for(EntityId contRegEntId: contRegEntIdList){
+			
+			if(EntityIDMatcher.matcher(contElemEntId, contRegEntId)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private QueryContextRequest setRequestToQoSMonitor(
