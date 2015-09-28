@@ -3,12 +3,14 @@ package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RestrictionConstants;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 //import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -745,13 +747,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			throw new Exception("No restrictions in ServiceAgreementRequest");
 		}
 		
-		QoSreq qosRequirementes = new QoSreq();
+		QoSreq qosRequirements = new QoSreq();
 		
 		//remove the QoS scopeValues from the operationScopes list, to store them
 		//in the QoSreq object
-		qosRequirementes = getQoSrequirements(restriction.getOperationScope());
+		qosRequirements = getQoSrequirements(restriction.getOperationScope());
 		
-		if(qosRequirementes == null){
+		if(qosRequirements == null){
 			throw new Exception("No QoS requirements in ServiceAgreementRequest");
 		}
 
@@ -775,6 +777,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 		
 		//TODO create serviceRequestList
+		List<Request> serviceReqList = createServiceRequestList(serviceRequest.getAttributeList(), qosRequirements);
+		
 		//TODO create servExecFeature
 		//TODO create mappingServThing
 		
@@ -799,6 +803,27 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return response;
 	}
 
+	//function to create the list of services requested
+	private List<Request> createServiceRequestList(List<String> attributeList,
+			QoSreq qosRequirements) {
+
+		List<Request> serviceReqList = new ArrayList<>();
+		
+		for(String service: attributeList){
+			
+			Request r = new Request();
+			
+			r.setServId(serviceRequestCounter.incrementAndGet());
+			
+			r.setService(service);
+			
+			r.setQosRequirements(qosRequirements);
+			
+			serviceReqList.add(r);
+		}
+		
+		return serviceReqList;
+	}
 
 	/* get Restriction from serviceRequest */
 	private Restriction getRestriction(
@@ -913,38 +938,38 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	//filter discovery result so that every ContextRegistration
 	//had only the attribute requested
-	private List<ContextRegistrationResponse> filterResults(
-			List<String> attributeList,
-			List<ContextRegistrationResponse> contextRegistrationResponse) {
-			
-		for(ContextRegistrationResponse crr: contextRegistrationResponse){
-			
-			List<ContextRegistrationAttribute> crAttrList = 
-					crr.getContextRegistration().getContextRegistrationAttribute();
-			
-			List<ContextRegistrationAttribute> crAttrListFiltered = new ArrayList<>();
-			
-			for(String attr: attributeList){
-				
-				for(ContextRegistrationAttribute crAttr: crAttrList){
-					
-					//Matching attr is stored in the new 
-					//ContextAttributeList
-					if(crAttr.getName().contentEquals(attr)){
-						crAttrListFiltered.add(crAttr);
-					}
-				}
-			}
-			
-			//ContextRegistrationResponse that doesn't have at least
-			//one attribute(taken from attributeList)
-			if(crAttrListFiltered.isEmpty()) return null;
-			
-			crr.getContextRegistration().setListContextRegistrationAttribute(crAttrListFiltered);
-		}
-		
-		return contextRegistrationResponse;
-	}
+//	private List<ContextRegistrationResponse> filterResults(
+//			List<String> attributeList,
+//			List<ContextRegistrationResponse> contextRegistrationResponse) {
+//			
+//		for(ContextRegistrationResponse crr: contextRegistrationResponse){
+//			
+//			List<ContextRegistrationAttribute> crAttrList = 
+//					crr.getContextRegistration().getContextRegistrationAttribute();
+//			
+//			List<ContextRegistrationAttribute> crAttrListFiltered = new ArrayList<>();
+//			
+//			for(String attr: attributeList){
+//				
+//				for(ContextRegistrationAttribute crAttr: crAttrList){
+//					
+//					//Matching attr is stored in the new 
+//					//ContextAttributeList
+//					if(crAttr.getName().contentEquals(attr)){
+//						crAttrListFiltered.add(crAttr);
+//					}
+//				}
+//			}
+//			
+//			//ContextRegistrationResponse that doesn't have at least
+//			//one attribute(taken from attributeList)
+//			if(crAttrListFiltered.isEmpty()) return null;
+//			
+//			crr.getContextRegistration().setListContextRegistrationAttribute(crAttrListFiltered);
+//		}
+//		
+//		return contextRegistrationResponse;
+//	}
 
 	private List<Thing> createEquivalentThingsList(List<String> attributeList,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
