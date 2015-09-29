@@ -70,7 +70,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 @XmlRootElement(name = "serviceDefinition")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ServiceDefinition extends ServiceAgreementStructure{
+public class ServiceDefinition extends DataStructure{
 
 	@XmlElement(required=true)
 	private String operationType;

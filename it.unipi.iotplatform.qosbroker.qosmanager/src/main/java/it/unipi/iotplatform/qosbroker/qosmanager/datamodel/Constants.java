@@ -1,6 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
-public final class RestrictionConstants {
+public final class Constants {
 
 //	private final static String LOCATION = "Location";
 //	private final static String SIMPLE_GEO_LOCATION = "SimpleGeoLocation";

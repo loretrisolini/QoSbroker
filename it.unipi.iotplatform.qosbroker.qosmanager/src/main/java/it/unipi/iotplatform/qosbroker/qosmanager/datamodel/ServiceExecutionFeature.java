@@ -2,23 +2,15 @@ package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 public class ServiceExecutionFeature {
 
-	//id inside the structure EntityId of the ContRegResp
-	//and ContElem
-	private String id;
+	//Id created as ThingId_ThingSrviceId
+	//it identifies a thingService on a Thing
+	private String featureId;
 	
 	//f_ij
 	private double normalizedEnergyCost;
 	
 	//u_ij
 	private double utilization;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public double getNormalizedEnergyCost() {
 		return normalizedEnergyCost;
@@ -34,6 +26,14 @@ public class ServiceExecutionFeature {
 
 	public void setUtilization(double utilization) {
 		this.utilization = utilization;
+	}
+
+	public String getFeatureId() {
+		return featureId;
+	}
+
+	public void setFeatureId(String featureId) {
+		this.featureId = featureId;
 	}
 	
 	

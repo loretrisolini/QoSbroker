@@ -21,10 +21,10 @@ import org.w3c.dom.Node;
 
 @XmlRootElement(name = "scopeValue")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class QoSscopeValue extends ServiceAgreementStructure {
+public class QoSscopeValue extends DataStructure {
 	
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(ServiceAgreementStructure.class);
+	private static Logger logger = Logger.getLogger(DataStructure.class);
 	
 	@XmlElement(name = "maxResponseTime", required = true)
 	private double maxResponseTime;

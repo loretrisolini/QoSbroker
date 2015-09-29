@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "serviceAgreementRequest")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ServiceAgreementRequest extends ServiceAgreementStructure{
+public class ServiceAgreementRequest extends DataStructure{
 	
 	@XmlElement(name = "serviceDefinition")
 	//in our implementation we consider always one service definition

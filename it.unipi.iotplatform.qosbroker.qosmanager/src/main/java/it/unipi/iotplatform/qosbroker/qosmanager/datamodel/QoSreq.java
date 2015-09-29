@@ -2,6 +2,13 @@ package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /*
 <scopeType>QoS</scopeType>
 <scopeValue>
@@ -10,17 +17,21 @@ import java.io.Serializable;
 </scopeValue>
 */
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 /* class to store qos requirements for a request */
-public class QoSreq implements Serializable {
-
-	private static final long serialVersionUID = 1L;
+public class QoSreq extends DataStructure {
 	
+	@XmlElement(name = "maxResponseTime")
+	@JsonProperty("maxResponseTime")
 	private double maxResponseTime;
 	
+	@XmlElement(name = "maxRateRequest")
+	@JsonProperty("maxRateRequest")
 	private double maxRateRequest;
 
 	public QoSreq() {
-		super();
+
 		this.maxResponseTime = 0.0;
 		this.maxRateRequest = 0.0;
 	}
@@ -40,15 +51,5 @@ public class QoSreq implements Serializable {
 	public void setMaxRateRequest(double maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
 	}
-
-	@Override
-	public String toString() {
-		return "QoSreq [maxResponseTime=" + maxResponseTime
-				+ ", maxRateRequest=" + maxRateRequest
-				+ ", getMaxResponseTime()=" + getMaxResponseTime()
-				+ ", getMaxRateRequest()=" + getMaxRateRequest()
-				+ ", toString()=" + super.toString() + "]";
-	}
-	
 	
 }

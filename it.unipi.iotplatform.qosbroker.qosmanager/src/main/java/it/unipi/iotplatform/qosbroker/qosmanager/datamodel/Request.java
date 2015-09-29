@@ -2,39 +2,62 @@ package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
 //class to represent the request
 //that is sent through the ServiceAgreementRequest
-public class Request {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Request extends DataStructure{
 
-	private Integer reqId;
-	private String opType;
-	private QoSreq qosRequirements;
-	private Restriction restriction;
-	//entityId List in the serviceRequest
-	private List<EntityId> entityIdList;
-	private List<Service> servicesRequested;
-	
-	public Request(Integer reqId, String opType, QoSreq qosRequirements,
+	public Request(String transactionId, String opType, QoSreq qosRequirements,
 			Restriction restriction, List<EntityId> entityIdList,
-			List<Service> servicesRequested) {
-
-		this.reqId = reqId;
+			List<Service> requestedServiceList) {
+		super();
+		this.transactionId = transactionId;
 		this.opType = opType;
 		this.qosRequirements = qosRequirements;
 		this.restriction = restriction;
 		this.entityIdList = entityIdList;
-		this.servicesRequested = servicesRequested;
+		this.requestedServiceList = requestedServiceList;
 	}
+	@XmlElement(name = "requestId")
+	@JsonProperty("requestId")
+	private String transactionId;
 	
-	public Integer getReqId() {
-		return reqId;
-	}
-	public void setReqId(Integer reqId) {
-		this.reqId = reqId;
-	}
+	@XmlElement(name = "operationType")
+	@JsonProperty("operationType")
+	private String opType;
+	
+	@XmlElement(name = "qosRequirements")
+	@JsonProperty("qosRequirements")
+	private QoSreq qosRequirements;
+	
+	@XmlElement(name = "restriction")
+	@JsonProperty("restriction")
+	private Restriction restriction;
+	
+	@XmlElementWrapper(name = "entityIdList")
+	@XmlElement(name = "entityId")
+	@JsonProperty("entities")
+	//entityId List in the serviceRequest
+	private List<EntityId> entityIdList;
+	
+	@XmlElementWrapper(name = "requestedServiceList")
+	@XmlElement(name = "service")
+	@JsonProperty("requestedServices")
+	private List<Service> requestedServiceList;
+	
+
 	public String getOpType() {
 		return opType;
 	}
@@ -59,11 +82,19 @@ public class Request {
 	public void setEntityIdList(List<EntityId> entityIdList) {
 		this.entityIdList = entityIdList;
 	}
-	public List<Service> getServicesRequested() {
-		return servicesRequested;
+
+	public List<Service> getRequestedServiceList() {
+		return requestedServiceList;
 	}
-	public void setServicesRequested(List<Service> servicesRequested) {
-		this.servicesRequested = servicesRequested;
+
+	public void setRequestedServiceList(List<Service> requestedServiceList) {
+		this.requestedServiceList = requestedServiceList;
+	}
+	public String getTransactionId() {
+		return transactionId;
+	}
+	public void setTransactionId(String transactionId) {
+		this.transactionId = transactionId;
 	}
 	
 }

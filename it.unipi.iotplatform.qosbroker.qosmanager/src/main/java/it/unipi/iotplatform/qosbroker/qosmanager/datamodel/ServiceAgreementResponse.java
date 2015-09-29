@@ -9,7 +9,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 @XmlRootElement(name = "serviceResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ServiceAgreementResponse extends ServiceAgreementStructure{
+public class ServiceAgreementResponse extends DataStructure{
 	
 	@XmlElement(name = "serviceID")
 	private String serviceID = null;

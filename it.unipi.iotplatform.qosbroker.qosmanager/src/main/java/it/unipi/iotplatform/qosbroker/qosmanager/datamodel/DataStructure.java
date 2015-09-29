@@ -14,10 +14,10 @@ import org.w3c.dom.Node;
 /**
  *  Common super-type for NGSI data structure implementations.
  */
-public abstract class ServiceAgreementStructure {
+public abstract class DataStructure {
 
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(ServiceAgreementStructure.class);
+	private static Logger logger = Logger.getLogger(DataStructure.class);
 
 	@Override
 	public String toString() {
@@ -40,7 +40,7 @@ public abstract class ServiceAgreementStructure {
 
 	public static Object convertStringToXml(String xml, Class<?> type) {
 
-		if (type.getSuperclass() != ServiceAgreementStructure.class) {
+		if (type.getSuperclass() != DataStructure.class) {
 			throw new RuntimeException("Cannot convert String to "
 					+ type.getName());
 		}
@@ -63,7 +63,7 @@ public abstract class ServiceAgreementStructure {
 	
 	public static <T> T convertObjectToJaxbObject(Object object, T JaxbObject) {
 
-		if (JaxbObject.getClass().getSuperclass() != ServiceAgreementStructure.class) {
+		if (JaxbObject.getClass().getSuperclass() != DataStructure.class) {
 			throw new RuntimeException("Cannot convert Object to "
 					+ JaxbObject.getClass().getName());
 		}

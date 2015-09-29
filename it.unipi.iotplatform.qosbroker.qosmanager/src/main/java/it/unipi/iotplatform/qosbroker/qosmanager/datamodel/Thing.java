@@ -1,40 +1,43 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+import java.util.HashMap;
 
-public class Thing {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
-	//id inside the structure EntityId of the ContRegResp
-	//and ContElem
-	private String id;
+import org.codehaus.jackson.annotate.JsonProperty;
+
+@XmlRootElement(name = "thing")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Thing extends DataStructure{
 	
-	private ContextRegistrationAttribute serviceSpec;
-	
-	private ContextAttribute batteryLevel;
+	@XmlElement(name = "batteryLevel")
+	@JsonProperty("batteryLevel")
+	private double batteryLevel;
 
-	public String getId() {
-		return id;
-	}
+	@XmlElementWrapper(name = "thingServiceList")
+	@XmlElement(name = "thingService")
+	@JsonProperty("thingServices")
+	//Map<ThingServiceId, ThingServiceFeatures>
+	private HashMap<Integer, ThingService> thingServices;
 
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public ContextRegistrationAttribute getServiceSpec() {
-		return serviceSpec;
-	}
-
-	public void setServiceSpec(ContextRegistrationAttribute serviceSpec) {
-		this.serviceSpec = serviceSpec;
-	}
-
-	public ContextAttribute getBatteryLevel() {
+	public double getBatteryLevel() {
 		return batteryLevel;
 	}
 
-	public void setBatteryLevel(ContextAttribute batteryLevel) {
+	public void setBatteryLevel(double batteryLevel) {
 		this.batteryLevel = batteryLevel;
+	}
+
+	public HashMap<Integer, ThingService> getThingServices() {
+		return thingServices;
+	}
+
+	public void setThingServices(HashMap<Integer, ThingService> thingServices) {
+		this.thingServices = thingServices;
 	}
 	
 }
