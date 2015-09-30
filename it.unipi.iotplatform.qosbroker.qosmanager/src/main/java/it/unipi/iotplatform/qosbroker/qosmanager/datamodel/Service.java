@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+/* class that represent a request service from the
+ * ServiceAgreementRequest */
 @XmlRootElement(name = "service")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Service {

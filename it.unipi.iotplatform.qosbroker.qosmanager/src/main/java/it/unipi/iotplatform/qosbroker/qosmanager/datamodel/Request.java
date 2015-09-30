@@ -13,8 +13,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 
-//class to represent the request
-//that is sent through the ServiceAgreementRequest
+/* class to represent the request
+   that is sent through the ServiceAgreementRequest */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Request extends DataStructure{

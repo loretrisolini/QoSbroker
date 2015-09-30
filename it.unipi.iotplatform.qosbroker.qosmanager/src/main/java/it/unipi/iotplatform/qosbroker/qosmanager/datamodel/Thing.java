@@ -10,9 +10,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+/* class that represents a Thing (associated 
+ * to a ContextRegistrationResponse element) */
 @XmlRootElement(name = "thing")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Thing extends DataStructure{
+	
+	//id (in the entityId Stricture) of the contRegResp
+	//associated to the thing and used to create
+	//the allocation schema
+	@XmlElement(name = "contexRegRespId")
+	@JsonProperty("contexRegRespId")
+	private String contexRegRespId;
 	
 	@XmlElement(name = "batteryLevel")
 	@JsonProperty("batteryLevel")

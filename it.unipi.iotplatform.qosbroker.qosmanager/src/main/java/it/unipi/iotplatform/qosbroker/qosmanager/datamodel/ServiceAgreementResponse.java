@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
+/* class that represents an xml instance of a
+ * response to a service agreement request */
 @XmlRootElement(name = "serviceResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceAgreementResponse extends DataStructure{

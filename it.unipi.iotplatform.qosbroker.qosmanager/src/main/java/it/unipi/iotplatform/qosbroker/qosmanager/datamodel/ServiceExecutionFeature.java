@@ -1,5 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
+/* class that represents the info about the execution of a service
+ * on a thing */
 public class ServiceExecutionFeature {
 
 	//Id created as ThingId_ThingSrviceId

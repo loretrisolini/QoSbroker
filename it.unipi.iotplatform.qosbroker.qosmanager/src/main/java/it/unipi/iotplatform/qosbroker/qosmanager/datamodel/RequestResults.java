@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+/* class used to store the results of a discovery and a query
+ * based on the info in the request object */
 @XmlRootElement(name = "requestResults")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RequestResults extends DataStructure{

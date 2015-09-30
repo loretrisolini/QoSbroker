@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+/* class that represents the execution features of a service
+ * on a thing */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ThingServiceFeatures extends DataStructure{

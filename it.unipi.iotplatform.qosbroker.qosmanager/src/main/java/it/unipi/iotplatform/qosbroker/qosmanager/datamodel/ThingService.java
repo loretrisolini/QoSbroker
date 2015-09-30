@@ -7,6 +7,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+/* class that represents a service on a thing with the
+ * associated info about the execution of the service
+ * (latency, energy_cost) */
 @XmlRootElement(name = "thingService")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ThingService extends DataStructure{
