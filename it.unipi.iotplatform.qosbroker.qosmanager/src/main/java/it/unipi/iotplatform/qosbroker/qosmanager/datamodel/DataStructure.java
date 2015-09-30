@@ -2,6 +2,7 @@ package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -84,4 +85,5 @@ public abstract class DataStructure {
 
 	}
 
+	
 }

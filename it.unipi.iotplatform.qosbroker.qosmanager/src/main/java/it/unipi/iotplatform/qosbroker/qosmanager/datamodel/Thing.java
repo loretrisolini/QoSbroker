@@ -21,7 +21,7 @@ public class Thing extends DataStructure{
 	//the allocation schema
 	@XmlElement(name = "contexRegRespId")
 	@JsonProperty("contexRegRespId")
-	private String contexRegRespId;
+	private String contextEntityId;
 	
 	@XmlElement(name = "batteryLevel")
 	@JsonProperty("batteryLevel")
@@ -47,6 +47,14 @@ public class Thing extends DataStructure{
 
 	public void setThingServices(HashMap<Integer, ThingService> thingServices) {
 		this.thingServices = thingServices;
+	}
+
+	public String getContextEntityId() {
+		return contextEntityId;
+	}
+
+	public void setContextEntityId(String contextEntityId) {
+		this.contextEntityId = contextEntityId;
 	}
 	
 }
