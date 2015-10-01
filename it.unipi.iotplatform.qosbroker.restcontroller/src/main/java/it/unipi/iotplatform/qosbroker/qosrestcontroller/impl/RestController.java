@@ -245,9 +245,9 @@ public class RestController {
 			logger.debug("UPDATE QOS BROKER");
 			
 			UpdateContextResponse response = new UpdateContextResponse(
-					new StatusCode(Code.BADREQUEST_400.getCode(),
-							ReasonPhrase.BADREQUEST_400.toString(),
-							"XML syntax Error!"), null);
+					new StatusCode(Code.OK_200.getCode(),
+							ReasonPhrase.OK_200.toString(),
+							"DA IMPLEMENTARE"), null);
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);

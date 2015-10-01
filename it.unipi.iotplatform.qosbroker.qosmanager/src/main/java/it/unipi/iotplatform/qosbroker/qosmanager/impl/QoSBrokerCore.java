@@ -5,6 +5,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Constants;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResults;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
@@ -790,13 +791,20 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			response.setErrorCode(statusCode);
 			
 			return response;
-		}
+		}		
 		
-		//TODO String offer = qosManager.getTemplate();
-		//TODO prepare offer
-		//TODO store Pair<TransactionID, <EquivalentThings, SeviceRequest>>
+		//object RequestResult that contains the Request object and
+		//the map of equivalent things
+		RequestResults reqResult = new RequestResults();
 		
-//		qosManager.createAgreement(offer);
+		reqResult.setTransactionId(transactionID);
+		reqResult.setRequest(request);
+		reqResult.setThingsMap(thingsMap);
+		
+		String negotiationOffer = qosManager.getTemplate();
+		//TODO set values in the template
+		
+		qosManager.createAgreement(negotiationOffer, reqResult);
 		
 		
 		logger.info("############## createAgreement ###############");
@@ -871,7 +879,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//and check if there is at least one ContextRegistrationResponse for
 			//each service (checking if the ContextRegistrationResponse has an ContextAttribute = requested service)
 			//and if each ContextRegistrationResponse element has an associated ContextElement object
-			HashMap<Integer, Thing> thingsMap = createThingsMap(requestedServicesNameList, ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse());
+			
+			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+			
+			HashMap<Integer, Thing> thingsMap = createThingsMap(requestedServicesNameList, ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
 			
 			if(thingsMap == null){
 				
@@ -904,13 +915,15 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/* function to create a map of things that can satisfy the requested services */
 	private HashMap<Integer, Thing> createThingsMap(List<String> requestedServicesNameList,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
-			List<ContextElementResponse> qosMonitorResponse) {
+			List<ContextElementResponse> qosMonitorResponse, double maxResponseTime) {
 		
 		//no ContextElement so no batteryLevel
 		if(qosMonitorResponse.isEmpty()) return null;
 		
 		HashMap<Integer, Thing> thingsMap = new HashMap<>();
-
+		
+		HashMap<String, Map<Integer, List<Integer>>>
+		
 		//first check if for each
 		//contextRegResp (Thing) object there is 
 		//an associated ContextElement (Thing battery level) object
@@ -998,11 +1011,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			for(String requestedServiceName : requestedServicesNameList){
 				
 				if(contRegAttrsMap.get(requestedServiceName) != null){
-					
-					//set the bool associated to requestedServiceName, to
-					//indicate that the requestedServiceName has at
-					//least an associated Thing
-					serviceAvailableAtLeastOnOneThing.put(requestedServiceName, true);
+
 					
 					ContextRegistrationAttribute contRegAttr  = contRegAttrsMap.get(requestedServiceName);
 					
@@ -1022,6 +1031,23 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					
 					ThingServiceFeatures thingServFeat = new ThingServiceFeatures();
 					
+					Double latency = Double.valueOf(String.valueOf(contMetadata.get("latency").getValue()));
+					
+					if(latency == null){
+						
+						logger.error("latency object null");
+						return null;
+					}
+					
+					//The ThingService has a latency greater than the maxResponseTime
+					//so it is not taken
+					if(latency > maxResponseTime) continue;
+					
+					//set the bool associated to requestedServiceName, to
+					//indicate that the requestedServiceName has at
+					//least an associated Thing
+					serviceAvailableAtLeastOnOneThing.put(requestedServiceName, true);
+					
 					Double energyCost = Double.valueOf(String.valueOf(contMetadata.get("energy_cost").getValue()));
 					
 					if(energyCost == null){
@@ -1030,13 +1056,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						return null;
 					}
 					
-					Double latency = Double.valueOf(String.valueOf(contMetadata.get("latency").getValue()));
-					
-					if(latency == null){
-						
-						logger.error("latency object null");
-						return null;
-					}
+
 					
 					thingServFeat.setEnergyCost(energyCost);
 					thingServFeat.setLatency(latency);

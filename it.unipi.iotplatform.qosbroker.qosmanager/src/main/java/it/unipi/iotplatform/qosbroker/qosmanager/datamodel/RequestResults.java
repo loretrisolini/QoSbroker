@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 import java.util.HashMap;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,6 +31,13 @@ public class RequestResults extends DataStructure{
 	//Map<ThingId, Thing>
 	private HashMap<Integer, Thing> thingsMap;
 
+	@XmlElementWrapper(name = "eqThingsListPerServiceList")
+	@XmlElement(name = "eqThingsListPerService")
+	@JsonProperty("eqThingsListPerService")
+	//used to re-compute the mapping Service-EquivalentThings
+	//Map<ServId, List<ThingId, ThingServiceId>>
+	private HashMap<Integer, ThingIdThingServiceIdPair> eqThingsListPerService;
+	
 	public HashMap<Integer, Thing> getThingsMap() {
 		return thingsMap;
 	}
