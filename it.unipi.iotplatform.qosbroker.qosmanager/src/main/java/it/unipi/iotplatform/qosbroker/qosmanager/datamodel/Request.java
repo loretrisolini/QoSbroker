@@ -19,17 +19,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Request extends DataStructure{
 
-	public Request(String transactionId, String opType, QoSreq qosRequirements,
-			Restriction restriction, List<EntityId> entityIdList,
-			List<Service> requestedServiceList) {
-		super();
-		this.transactionId = transactionId;
-		this.opType = opType;
-		this.qosRequirements = qosRequirements;
-		this.restriction = restriction;
-		this.entityIdList = entityIdList;
-		this.requestedServiceList = requestedServiceList;
-	}
+
 	@XmlElement(name = "requestId")
 	@JsonProperty("requestId")
 	private String transactionId;
@@ -56,7 +46,6 @@ public class Request extends DataStructure{
 	@XmlElement(name = "service")
 	@JsonProperty("requestedServices")
 	private List<Service> requestedServiceList;
-	
 
 	public String getOpType() {
 		return opType;

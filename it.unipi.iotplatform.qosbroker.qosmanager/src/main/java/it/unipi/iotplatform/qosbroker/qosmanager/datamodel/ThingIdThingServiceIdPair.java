@@ -13,7 +13,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * and the id of the associated ThingService.
  * This class is used to build the Mapping Service-EquivalentThings
  * whose values have to be compute every time (f_ij, u_ij) */
-public class ThingIdThingServiceIdPair {
+public class ThingIdThingServiceIdPair extends DataStructure{
 	
 	@XmlElement(name = "thingId")
 	@JsonProperty("thingId")

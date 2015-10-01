@@ -25,26 +25,9 @@ public class RequestResults extends DataStructure{
 	@JsonProperty("request")
 	private Request request;
 	
-	@XmlElementWrapper(name = "thingsList")
-	@XmlElement(name = "thing")
-	@JsonProperty("things")
-	//Map<ThingId, Thing>
-	private HashMap<Integer, Thing> thingsMap;
-
-	@XmlElementWrapper(name = "eqThingsListPerServiceList")
-	@XmlElement(name = "eqThingsListPerService")
-	@JsonProperty("eqThingsListPerService")
-	//used to re-compute the mapping Service-EquivalentThings
-	//Map<ServId, List<ThingId, ThingServiceId>>
-	private HashMap<Integer, ThingIdThingServiceIdPair> eqThingsListPerService;
-	
-	public HashMap<Integer, Thing> getThingsMap() {
-		return thingsMap;
-	}
-
-	public void setThingsMap(HashMap<Integer, Thing> thingsMap) {
-		this.thingsMap = thingsMap;
-	}
+	@XmlElement(name = "equivalentThingsMappings")
+	@JsonProperty("equivalentThingsMappings")
+	private EquivalentThingsMappings equivalentThingsMappings;
 
 	public String getTransactionId() {
 		return transactionId;
@@ -60,5 +43,14 @@ public class RequestResults extends DataStructure{
 
 	public void setRequest(Request request) {
 		this.request = request;
+	}
+
+	public EquivalentThingsMappings getEquivalentThingsMappings() {
+		return equivalentThingsMappings;
+	}
+
+	public void setEquivalentThingsMappings(
+			EquivalentThingsMappings equivalentThingsMappings) {
+		this.equivalentThingsMappings = equivalentThingsMappings;
 	}
 }

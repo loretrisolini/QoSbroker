@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * ServiceAgreementRequest */
 @XmlRootElement(name = "service")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Service {
+public class Service extends DataStructure{
 
 	@XmlElement(name = "serviceId")
 	@JsonProperty("serviceId")
