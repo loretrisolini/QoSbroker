@@ -25,7 +25,7 @@ public class Thing extends DataStructure{
 	
 	@XmlElement(name = "batteryLevel")
 	@JsonProperty("batteryLevel")
-	private double batteryLevel;
+	private Integer batteryLevel;
 
 	@XmlElementWrapper(name = "thingServiceList")
 	@XmlElement(name = "thingService")
@@ -33,11 +33,11 @@ public class Thing extends DataStructure{
 	//Map<ThingServiceId, ThingServiceFeatures>
 	private HashMap<Integer, ThingService> thingServices;
 
-	public double getBatteryLevel() {
+	public Integer getBatteryLevel() {
 		return batteryLevel;
 	}
 
-	public void setBatteryLevel(double batteryLevel) {
+	public void setBatteryLevel(Integer batteryLevel) {
 		this.batteryLevel = batteryLevel;
 	}
 

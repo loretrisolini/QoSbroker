@@ -1019,7 +1019,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			t.setContextEntityId(thingInfoContainer.getContextEntityId());
 			
-			Double batteryLevel = Double.valueOf(String.valueOf(contAttrsMap.get("battery").getcontextValue()));
+			Integer batteryLevel = Integer.valueOf(String.valueOf(contAttrsMap.get("battery").getcontextValue()));
 			
 			t.setBatteryLevel(batteryLevel);
 			

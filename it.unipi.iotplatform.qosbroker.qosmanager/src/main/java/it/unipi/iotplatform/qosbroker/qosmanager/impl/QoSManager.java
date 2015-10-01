@@ -2,10 +2,17 @@ package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResults;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -62,15 +69,81 @@ public class QoSManager implements QoSManagerIF {
 		
 		//TODO Parse Offer
 		
+		List<RequestResults> requestResultsList = new ArrayList<>();
 		//TODO Get old List of RequestResults
 		
+		requestResultsList.add(reqResult);
+		
+		//Map<transId_ServiId, List<<tId_tsId,f_ij,u_ij>>
+		HashMap<String, List<ServiceExecutionFeature>> mappingServEqThings = new HashMap<>();
+		HashMap<String, Integer> coefficientMap = new HashMap<>();
+		HashMap<String, Integer> periodsMap = new HashMap<>();
+		
+		ArrayList<Integer> periods = new ArrayList<>();
+		
+		for(RequestResults requestResult: requestResultsList){
+			
+			Integer period = requestResult.getRequest().getQosRequirements().getMaxRateRequest();
+			
+			periodsMap.put(requestResult.getTransactionId(), period);
+			periods.add(period);
+		}
+		
 		//TODO compute H hyperperiod
+		long hyperPeriod = lcms(periods);
 		
+		for(RequestResults requestResult: requestResultsList){
+			
+			String transactionId = requestResult.getTransactionId();
+			Integer period = periodsMap.get(transactionId);
+			
+			Long coeff = hyperPeriod/period;
+			
+			coefficientMap.put(transactionId, coeff.intValue());
+			
+			List<Service> requestedServicesList = requestResult.getRequest().getRequestedServiceList();
+			
+			for(Service service: requestedServicesList){
+				
+				List<ServiceExecutionFeature> servExecFeatList = new ArrayList<>();
+				
+				HashMap<Integer, Thing> thingsMap = 
+						requestResult.getEquivalentThingsMappings().getThingsMap();
+				
+				List<ThingIdThingServiceIdPair> equivalentThingsId = 
+						requestResult.getEquivalentThingsMappings().getEqThingsListPerService()
+						.get(service.getServId()).getEquivalentThingsId();
+				
+				for(ThingIdThingServiceIdPair thingsIdThingServiceId: equivalentThingsId){
+					
+					Integer thingId = thingsIdThingServiceId.getThingId();
+					Integer thingServiceId = thingsIdThingServiceId.getThingServiceId();
+					
+					Thing t = thingsMap.get(thingId);
+					ThingService ts = t.getThingServices().get(thingServiceId);
+					
+					Integer batteryLev = t.getBatteryLevel();
+					Double energyCost = ts.getThingServFeatures().getEnergyCost();
+					Double latency = ts.getThingServFeatures().getLatency();
+					
+					Double normalizedEnergyCost = hyperPeriod/period * energyCost/batteryLev;
+					Double utilization = latency/period;
+					
+					ServiceExecutionFeature servExecFeat = new ServiceExecutionFeature();
+					
+					String feautureId =  String.valueOf(thingId)+"_"+String.valueOf(thingServiceId);
+					servExecFeat.setFeatureId(feautureId);
+					servExecFeat.setNormalizedEnergyCost(normalizedEnergyCost);
+					servExecFeat.setUtilization(utilization);
+					servExecFeatList.add(servExecFeat);
+				}
+				
+				String transId_servId = transactionId+"_"+String.valueOf(service.getServId());
+				mappingServEqThings.put(transId_servId, servExecFeatList);
+			}
+		}
 		
-		
-		//TODO create servExecFeature
-		//TODO create mappingServThing
-		
+		//TODO heuristic algorithm
 //		HashMap<Integer, List<ServiceExecutionFeature>> mappingServiceThing =
 //				createMappingServiceThing();
 		
@@ -84,6 +157,10 @@ public class QoSManager implements QoSManagerIF {
 //		update_data(allocation_schema);
 		
 //		reservationResults = qosCalculator.
+		
+		//TODO store new request Result if allocation feasible
+		
+		//TODO store new allocation schemas if allocation is feasible
 	}
 	
 //	public NegotiationInterface getNegotiator() {
@@ -94,13 +171,13 @@ public class QoSManager implements QoSManagerIF {
 //	this.negotiator = negotiator;
 //}
 	
-	private static long lcms(ArrayList<Double> periods){
+	private long lcms(ArrayList<Integer> periods){
 	    long result = (long) Math.ceil(periods.get(0));
 	    for(int i = 1; i < periods.size(); i++) result = lcm(result, (long) Math.ceil(periods.get(i)));
 	    return result;
 	}
 	
-	private static long gcd(long a, long b){
+	private long gcd(long a, long b){
 	    while (b > 0)
 	    {
 	        long temp = b;
@@ -110,7 +187,7 @@ public class QoSManager implements QoSManagerIF {
 	    return a;
 	}
 
-	private static long lcm(long a, long b){
+	private long lcm(long a, long b){
 	    return a * (b / gcd(a, b));
 	}
 }

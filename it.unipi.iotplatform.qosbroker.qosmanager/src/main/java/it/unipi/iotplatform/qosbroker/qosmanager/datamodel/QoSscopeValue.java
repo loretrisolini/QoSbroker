@@ -27,10 +27,10 @@ public class QoSscopeValue extends DataStructure {
 	private static Logger logger = Logger.getLogger(DataStructure.class);
 	
 	@XmlElement(name = "maxResponseTime", required = true)
-	private int maxResponseTime;
+	private Integer maxResponseTime;
 	
 	@XmlElement(name = "maxRateRequest", required = true)
-	private int maxRateRequest;
+	private Integer maxRateRequest;
 
 	public static Logger getLogger() {
 		return logger;
@@ -40,19 +40,19 @@ public class QoSscopeValue extends DataStructure {
 		QoSscopeValue.logger = logger;
 	}
 
-	public int getMaxResponseTime() {
+	public Integer getMaxResponseTime() {
 		return maxResponseTime;
 	}
 
-	public void setMaxResponseTime(int maxResponseTime) {
+	public void setMaxResponseTime(Integer maxResponseTime) {
 		this.maxResponseTime = maxResponseTime;
 	}
 
-	public int getMaxRateRequest() {
+	public Integer getMaxRateRequest() {
 		return maxRateRequest;
 	}
 
-	public void setMaxRateRequest(int maxRateRequest) {
+	public void setMaxRateRequest(Integer maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
 	}
 
