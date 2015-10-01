@@ -58,7 +58,7 @@ public class ThingInfoContainer {
 			List<ContextMetadata> contMetadata = contRegAttr.getMetaData();
 			
 		    if(contMetadata.isEmpty()){
-		    	return null;
+		    	continue;
 		    }
 			
 		    Map<String,ContextMetadata> mappedContMetadata = 

@@ -194,9 +194,9 @@ public class RestController {
 		logger.info(" <--- NGSI-10 has received request for Update Context resource ---> \n");
 
 		try{
-
-			validateMessageBody(requester, request, sNgsi10schema);
-			
+//
+//			validateMessageBody(requester, request, sNgsi10schema);
+//			
 //			for (int i = 0; i < request.getContextElement().size(); i++) {
 //
 //				/*
@@ -234,31 +234,32 @@ public class RestController {
 //			
 //			
 //
-//			UpdateContextResponse response = qosCore.updateContext(request);
+//			UpdateContextResponse response = ngsiCore.updateContext(request);
 //
 //			System.out.println("########## Response to Converter ##########"
 //					+ response);
 //
 //			return new ResponseEntity<UpdateContextResponse>(response,
 //					HttpStatus.OK);
+
+			logger.debug("UPDATE QOS BROKER");
 			
 			UpdateContextResponse response = new UpdateContextResponse(
 					new StatusCode(Code.BADREQUEST_400.getCode(),
 							ReasonPhrase.BADREQUEST_400.toString(),
 							"XML syntax Error!"), null);
-			
+
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);
-
 		} 
 		catch(Exception e){ 
 
 			logger.debug(e.getMessage());
 			
 			UpdateContextResponse response = new UpdateContextResponse(
-					new StatusCode(Code.BADREQUEST_400.getCode(),
-							ReasonPhrase.BADREQUEST_400.toString(),
-							"XML syntax Error!"), null);
+					new StatusCode(Code.OK_200.getCode(),
+							ReasonPhrase.OK_200.toString(),
+							"Da Implementare"), null);
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);

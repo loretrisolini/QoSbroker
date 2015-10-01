@@ -779,7 +779,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 //		discovery phase
 		
 		//get list of equivalentThings
-		HashMap<Integer, Thing> thingsMap = discoverThings(request, statusCode, true);
+		HashMap<Integer, Thing> thingsMap = discoverThings(request, statusCode);
 		
 		if(thingsMap == null){
 			
@@ -817,7 +817,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	/* discover a list of equivalent things given the request object.
 	 * the flag value indicates if the requestResult structures must be updated by the monitoring task */
-	private HashMap<Integer, Thing> discoverThings(Request request, StatusCode statusCode, boolean updateRequestResult){
+	private HashMap<Integer, Thing> discoverThings(Request request, StatusCode statusCode){
 		
 		//list of requested services names
 		List<String> requestedServicesNameList = new ArrayList<>();
@@ -936,13 +936,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					List<ContextRegistrationAttribute> contRegAttrsList = crr.getContextRegistration().getContextRegistrationAttribute();
 					List<ContextAttribute> contAttrsList = contElemResp.getContextElement().getContextAttributeList();
 					
+					//All the list passed in the getThingInfoContainer function
+					//are converted in maps
+					//The assumption is that all attributes names in the lists are unique
+					//that is every ContextRegistrationAttribute_Name is unique
+					//the same assumption is true for ContextAttribute_Name
 					ThingInfoContainer thingInfoContainer = 
 							ThingInfoContainer.getThingInfoContainer(id, contRegAttrsList, contAttrsList);
 					
 					if(thingInfoContainer == null){
 						
 						logger.error("thingInfoContainer object null");
-						continue;
+						return null;
 					}
 					
 					thingInfoContainersList.add(thingInfoContainer);
@@ -982,6 +987,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			Thing t = new Thing();				
 			HashMap<Integer, ThingService> thingServicesMap = new HashMap<>();	
+			
+			t.setContextEntityId(thingInfoContainer.getContextEntityId());
 			
 			Double batteryLevel = Double.valueOf(String.valueOf(contAttrsMap.get("battery").getcontextValue()));
 			
