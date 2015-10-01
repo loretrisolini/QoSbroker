@@ -27,26 +27,36 @@ public class QoSscopeValue extends DataStructure {
 	private static Logger logger = Logger.getLogger(DataStructure.class);
 	
 	@XmlElement(name = "maxResponseTime", required = true)
-	private double maxResponseTime;
+	private int maxResponseTime;
 	
 	@XmlElement(name = "maxRateRequest", required = true)
-	private double maxRateRequest;
+	private int maxRateRequest;
 
-	public double getMaxResponseTime() {
+	public static Logger getLogger() {
+		return logger;
+	}
+
+	public static void setLogger(Logger logger) {
+		QoSscopeValue.logger = logger;
+	}
+
+	public int getMaxResponseTime() {
 		return maxResponseTime;
 	}
 
-	public void setMaxResponseTime(double maxResponseTime) {
+	public void setMaxResponseTime(int maxResponseTime) {
 		this.maxResponseTime = maxResponseTime;
 	}
 
-	public double getMaxRateRequest() {
+	public int getMaxRateRequest() {
 		return maxRateRequest;
 	}
 
-	public void setMaxRateRequest(double maxRateRequest) {
+	public void setMaxRateRequest(int maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
 	}
+
+
 	
 //	public static QoSscopeValue convertObjectToQoSscopeValue(Object object) {
 //

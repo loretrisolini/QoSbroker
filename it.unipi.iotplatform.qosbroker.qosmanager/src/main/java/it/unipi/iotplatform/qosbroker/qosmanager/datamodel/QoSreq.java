@@ -24,32 +24,34 @@ public class QoSreq extends DataStructure {
 	
 	@XmlElement(name = "maxResponseTime")
 	@JsonProperty("maxResponseTime")
-	private double maxResponseTime;
+	private int maxResponseTime;
 	
 	@XmlElement(name = "maxRateRequest")
 	@JsonProperty("maxRateRequest")
-	private double maxRateRequest;
+	private int maxRateRequest;
 
 	public QoSreq() {
 
-		this.maxResponseTime = 0.0;
-		this.maxRateRequest = 0.0;
+		this.maxResponseTime = 0;
+		this.maxRateRequest = 0;
 	}
-	
-	public double getMaxResponseTime() {
+
+	public int getMaxResponseTime() {
 		return maxResponseTime;
 	}
 
-	public void setMaxResponseTime(double maxResponseTime) {
+	public void setMaxResponseTime(int maxResponseTime) {
 		this.maxResponseTime = maxResponseTime;
 	}
 
-	public double getMaxRateRequest() {
+	public int getMaxRateRequest() {
 		return maxRateRequest;
 	}
 
-	public void setMaxRateRequest(double maxRateRequest) {
+	public void setMaxRateRequest(int maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
 	}
+	
+
 	
 }
