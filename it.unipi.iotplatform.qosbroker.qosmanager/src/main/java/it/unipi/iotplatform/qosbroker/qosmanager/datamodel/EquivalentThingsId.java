@@ -13,6 +13,10 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
+/* class that enclose the list of thingId_thingServId
+ * pair that is for each service Id there is a thing
+ * that offer that service through a thingService
+ * with that id */
 public class EquivalentThingsId extends DataStructure{
 
 	@XmlElementWrapper(name = "equivalentThingsIdList")

@@ -12,6 +12,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
+/* class that enclose all the maps about the equivalent
+ * things */
 public class EquivalentThingsMappings extends DataStructure{
 
 	@XmlElementWrapper(name = "thingsList")

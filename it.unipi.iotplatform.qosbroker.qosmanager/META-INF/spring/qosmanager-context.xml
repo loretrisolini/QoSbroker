@@ -17,4 +17,8 @@
   		<property name="qosMonitor" ref="QoSMonitorService"></property>    
 <!-- 		<property name="negotiator" ref="negotiationServiceOSGI"></property>  -->
 	</bean>
+	
+	<bean id="QoSManager" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSManager">
+ 		<property name="bigDataRepository" ref="BigDataRepositoryInterface"></property>
+	</bean>
 </beans>

@@ -24,12 +24,16 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 
+import eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository;
+
 public class QoSManager implements QoSManagerIF {
 
 //	/**  Reference to the Negotiator engine */
 //	private NegotiationInterface negotiator; 
 	
 //	private QoSCalculatorIF qosCalculator;
+	
+	private BigDataRepository bigDataRepository;
 	
 	@Override
 	public String getTemplate() {
@@ -76,11 +80,19 @@ public class QoSManager implements QoSManagerIF {
 		
 		//Map<transId_ServiId, List<<tId_tsId,f_ij,u_ij>>
 		HashMap<String, List<ServiceExecutionFeature>> mappingServEqThings = new HashMap<>();
+		
+		//Map<transId, h/p_j> to compute number of things
+		//to which assign a service
 		HashMap<String, Integer> coefficientMap = new HashMap<>();
+		
+		//Map<transId, p_j>
 		HashMap<String, Integer> periodsMap = new HashMap<>();
 		
+		//List<p_j>
 		ArrayList<Integer> periods = new ArrayList<>();
 		
+		//iterate over the list of RequestResults objects
+		//to build the list of periods
 		for(RequestResults requestResult: requestResultsList){
 			
 			Integer period = requestResult.getRequest().getQosRequirements().getMaxRateRequest();
@@ -89,31 +101,43 @@ public class QoSManager implements QoSManagerIF {
 			periods.add(period);
 		}
 		
-		//TODO compute H hyperperiod
+		//h hyperperiod computed as least common multiple
+		//of the list of periods
 		long hyperPeriod = lcms(periods);
 		
+		//iterate over the list of RequestResult to build the
+		//MappingServEqThings
 		for(RequestResults requestResult: requestResultsList){
 			
 			String transactionId = requestResult.getTransactionId();
 			Integer period = periodsMap.get(transactionId);
 			
+			//compute the coefficient h/p_j
 			Long coeff = hyperPeriod/period;
-			
 			coefficientMap.put(transactionId, coeff.intValue());
 			
+			//get the list of service requested for that
+			//RequestResult object
 			List<Service> requestedServicesList = requestResult.getRequest().getRequestedServiceList();
 			
+			//iterate on the list of service identify by the services ids
+			//for that request identify by the transactionId
 			for(Service service: requestedServicesList){
 				
 				List<ServiceExecutionFeature> servExecFeatList = new ArrayList<>();
 				
+				//Map<thingId, Thing> for that request
 				HashMap<Integer, Thing> thingsMap = 
 						requestResult.getEquivalentThingsMappings().getThingsMap();
 				
+				//list of pairs ThingId_ThingServiceId for that serviceId
+				//in that list of services in that request with
+				//id transactionId
 				List<ThingIdThingServiceIdPair> equivalentThingsId = 
 						requestResult.getEquivalentThingsMappings().getEqThingsListPerService()
 						.get(service.getServId()).getEquivalentThingsId();
 				
+				//compute the serviceExecutionFeature for each service id for that transactionId
 				for(ThingIdThingServiceIdPair thingsIdThingServiceId: equivalentThingsId){
 					
 					Integer thingId = thingsIdThingServiceId.getThingId();
@@ -138,6 +162,8 @@ public class QoSManager implements QoSManagerIF {
 					servExecFeatList.add(servExecFeat);
 				}
 				
+				//put list of serviceExecutionFeatures for that
+				//service identify by TransactionId_ServiceId
 				String transId_servId = transactionId+"_"+String.valueOf(service.getServId());
 				mappingServEqThings.put(transId_servId, servExecFeatList);
 			}
@@ -189,5 +215,13 @@ public class QoSManager implements QoSManagerIF {
 
 	private long lcm(long a, long b){
 	    return a * (b / gcd(a, b));
+	}
+
+	public BigDataRepository getBigDataRepository() {
+		return bigDataRepository;
+	}
+
+	public void setBigDataRepository(BigDataRepository bigDataRepository) {
+		this.bigDataRepository = bigDataRepository;
 	}
 }
