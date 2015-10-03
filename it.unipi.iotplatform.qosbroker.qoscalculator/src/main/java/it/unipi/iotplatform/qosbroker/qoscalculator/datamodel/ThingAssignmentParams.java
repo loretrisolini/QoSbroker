@@ -1,6 +1,6 @@
-package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
+package it.unipi.iotplatform.qosbroker.qoscalculator.datamodel;
 
-public class AssignmentParams {
+public class ThingAssignmentParams {
 
 	private double totalUtilization;
 	
