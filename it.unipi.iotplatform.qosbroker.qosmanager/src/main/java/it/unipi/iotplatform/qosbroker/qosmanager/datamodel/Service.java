@@ -17,10 +17,18 @@ public class Service extends DataStructure{
 	@JsonProperty("serviceId")
 	private int servId;
 	
-	@XmlElement(name = "service")
-	@JsonProperty("service")
+	@XmlElement(name = "serviceName")
+	@JsonProperty("serviceName")
 	//Service = attr.name
-	private String service;
+	private String requestedServiceName;
+
+	public String getRequestedServiceName() {
+		return requestedServiceName;
+	}
+
+	public void setRequestedServiceName(String requestedServiceName) {
+		this.requestedServiceName = requestedServiceName;
+	}
 
 	public int getServId() {
 		return servId;
@@ -30,11 +38,4 @@ public class Service extends DataStructure{
 		this.servId = servId;
 	}
 
-	public String getService() {
-		return service;
-	}
-
-	public void setService(String service) {
-		this.service = service;
-	}
 }

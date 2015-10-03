@@ -14,7 +14,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @XmlAccessorType(XmlAccessType.FIELD)
 /* class that enclose all the maps about the equivalent
  * things */
-public class EquivalentThingsMappings extends DataStructure{
+public class EquivalentThingsInfoContainer extends DataStructure{
 
 	@XmlElementWrapper(name = "thingsList")
 	@XmlElement(name = "thing")
@@ -27,7 +27,7 @@ public class EquivalentThingsMappings extends DataStructure{
 	@JsonProperty("eqThingsListPerService")
 	//used to re-compute the mapping Service-EquivalentThings
 	//Map<ServId, List<ThingId, ThingServiceId>>
-	private HashMap<Integer, EquivalentThingsId> eqThingsListPerService;
+	private HashMap<Integer, EquivalentThingsList> eqThingsListPerService;
 
 	public HashMap<Integer, Thing> getThingsMap() {
 		return thingsMap;
@@ -37,12 +37,12 @@ public class EquivalentThingsMappings extends DataStructure{
 		this.thingsMap = thingsMap;
 	}
 
-	public HashMap<Integer, EquivalentThingsId> getEqThingsListPerService() {
+	public HashMap<Integer, EquivalentThingsList> getEqThingsListPerService() {
 		return eqThingsListPerService;
 	}
 
 	public void setEqThingsListPerService(
-			HashMap<Integer, EquivalentThingsId> eqThingsListPerService) {
+			HashMap<Integer, EquivalentThingsList> eqThingsListPerService) {
 		this.eqThingsListPerService = eqThingsListPerService;
 	} 
 }

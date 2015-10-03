@@ -4,9 +4,8 @@ package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
  * on a thing */
 public class ServiceExecutionFeature {
 
-	//Id created as ThingId_ThingSrviceId
 	//it identifies a thingService on a Thing
-	private String featureId;
+	private Integer thingServiceId;
 	
 	//f_ij
 	private double normalizedEnergyCost;
@@ -30,13 +29,12 @@ public class ServiceExecutionFeature {
 		this.utilization = utilization;
 	}
 
-	public String getFeatureId() {
-		return featureId;
+	public Integer getThingServiceId() {
+		return thingServiceId;
 	}
 
-	public void setFeatureId(String featureId) {
-		this.featureId = featureId;
-	}
-	
+	public void setThingServiceId(Integer thingServiceId) {
+		this.thingServiceId = thingServiceId;
+	}	
 	
 }

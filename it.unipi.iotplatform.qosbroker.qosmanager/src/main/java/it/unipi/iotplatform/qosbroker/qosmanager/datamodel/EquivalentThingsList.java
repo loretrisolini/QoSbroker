@@ -17,14 +17,14 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * pair that is for each service Id there is a thing
  * that offer that service through a thingService
  * with that id */
-public class EquivalentThingsId extends DataStructure{
+public class EquivalentThingsList extends DataStructure{
 
 	@XmlElementWrapper(name = "equivalentThingsIdList")
 	@XmlElement(name = "equivalentThingsId")
 	@JsonProperty("equivalentThingsId")
 	private List<ThingIdThingServiceIdPair> equivalentThingsId;
 
-	public EquivalentThingsId(){
+	public EquivalentThingsList(){
 		equivalentThingsId = new ArrayList<>();
 	}
 	

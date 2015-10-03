@@ -2,24 +2,24 @@ package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Constants;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsId;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsMappings;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsList;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsInfoContainer;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResults;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
-//import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingServiceFeatures;
 import it.unipi.iotplatform.qosbroker.qosmanager.utils.ThingInfoContainer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,6 +71,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRespons
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
+//import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
@@ -771,8 +772,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 //		CREATE THE REQUEST FROM THE INFO TAKEN FROM SERVICE_AGREEMENT_REQUEST
 		
-		//create list of services
-		List<Service> serviceList = createServiceList(serviceRequest.getAttributeList());
+		//create Map<ServId, Service> of services
+		HashMap<Integer, Service> serviceMap = createServiceList(serviceRequest.getAttributeList());
 		
 		//object to store the details of the service Request
 		Request request = new Request();
@@ -781,14 +782,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		request.setQosRequirements(qosRequirements);
 		request.setRestriction(restriction);
 		request.setEntityIdList(serviceRequest.getEntityIdList());
-		request.setRequestedServiceList(serviceList);
+		request.setRequestedServiceMap(serviceMap);
 		
 		StatusCode statusCode = new StatusCode();
 		
 //		discovery phase
 		
 		//get list of equivalentThings
-		RequestResults reqResult = discoverThings(request, statusCode);
+		RequestResult reqResult = discoverThings(request, statusCode);
 		
 		if(reqResult == null){
 			
@@ -827,18 +828,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	/* discover a list of equivalent things given the request object.
 	 * the flag value indicates if the requestResult structures must be updated by the monitoring task */
-	private RequestResults discoverThings(Request request, StatusCode statusCode){
+	private RequestResult discoverThings(Request request, StatusCode statusCode){
 		
 		//list of requested services names
 		List<String> requestedServicesNameList = new ArrayList<>();
 		
 		//list of objects that represents the requested Services <servId, requestedServiceName>
-		List<Service> servicesRequestsList = request.getRequestedServiceList();
-		
+		Collection<Service> servicesRequestsList = request.getRequestedServiceMap().values();
+
 		//get the list of services names (attributes names) for the request to IoTDiscovery
 		for(Service serv: servicesRequestsList){
 			
-			requestedServicesNameList.add(serv.getService());
+			requestedServicesNameList.add(serv.getRequestedServiceName());
 		}
 		
 		//create a discovery request object to get ContextRegResp List (list of things)
@@ -884,7 +885,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
 			
-			EquivalentThingsMappings equivalentThingsMappings = 
+			EquivalentThingsInfoContainer equivalentThingsMappings = 
 					createThingsMap(servicesRequestsList, ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
 			
 			if(equivalentThingsMappings == null){
@@ -907,9 +908,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 			//object RequestResult that contains the Request object and
 			//the map of equivalent things
-			RequestResults reqResult = new RequestResults();
+			RequestResult reqResult = new RequestResult();
 			
-			reqResult.setTransactionId(request.getTransactionId());
 			reqResult.setRequest(request);
 			reqResult.setEquivalentThingsMappings(equivalentThingsMappings);
 			
@@ -924,7 +924,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	/* function to create a map of things that can satisfy the requested services */
-	private EquivalentThingsMappings createThingsMap(List<Service> servicesRequestsList,
+	private EquivalentThingsInfoContainer createThingsMap(Collection<Service> servicesRequestsList,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
 			List<ContextElementResponse> qosMonitorResponse, double maxResponseTime) {
 		
@@ -934,7 +934,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		HashMap<Integer, Thing> thingsMap = new HashMap<>();
 		
 		//Map<ServId, List<ThingId, ThingServiceId>>
-		HashMap<Integer, EquivalentThingsId> eqThingsListPerService = new HashMap<>();
+		HashMap<Integer, EquivalentThingsList> eqThingsListPerService = new HashMap<>();
 		
 		//first check if for each
 		//contextRegResp (Thing) object there is 
@@ -994,13 +994,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//given by the key
 		HashMap<String, Boolean> serviceAvailableAtLeastOnOneThing = new HashMap<>();
 		
-		for(Service serviceRequest: servicesRequestsList){
-			
-			serviceAvailableAtLeastOnOneThing.put(serviceRequest.getService(), false);
+		for (Service service : servicesRequestsList) {
+		    
+			serviceAvailableAtLeastOnOneThing.put(service.getRequestedServiceName(), false);
 			
 			//for each service there is a list of equivalent things with a a thing service
 			//that satisfy that service requested
-			eqThingsListPerService.put(serviceRequest.getServId(), new EquivalentThingsId());
+			eqThingsListPerService.put(service.getServId(), new EquivalentThingsList());
 		}
 		
 		//iterate on the List<ThingInfoContainer> to create the 
@@ -1019,20 +1019,20 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			t.setContextEntityId(thingInfoContainer.getContextEntityId());
 			
-			Integer batteryLevel = Integer.valueOf(String.valueOf(contAttrsMap.get("battery").getcontextValue()));
+			Double batteryLevel = Double.valueOf(String.valueOf(contAttrsMap.get("battery").getcontextValue()));
 			
 			t.setBatteryLevel(batteryLevel);
 			
 			Integer thingId = thingIdCounter.getAndIncrement();
 			
 			//look for what services are exposed by the ContextRegistration(Thing)
-			for(Service serviceRequest : servicesRequestsList){
+			for(Service service : servicesRequestsList){
 				
 				//the Thing exposes the service requested serviceRequest
-				if(contRegAttrsMap.get(serviceRequest.getService()) != null){
+				if(contRegAttrsMap.get(service.getRequestedServiceName()) != null){
 
-					Integer serviceId = serviceRequest.getServId();
-					String requestedServiceName = serviceRequest.getService();
+					Integer serviceId = service.getServId();
+					String requestedServiceName = service.getRequestedServiceName();
 					
 					ContextRegistrationAttribute contRegAttr  = contRegAttrsMap.get(requestedServiceName);
 					
@@ -1109,13 +1109,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//check if every requestedService has an associated Thing
 		for(Service serviceRequest: servicesRequestsList){
 			
-			if(!serviceAvailableAtLeastOnOneThing.get(serviceRequest.getService())){
+			if(!serviceAvailableAtLeastOnOneThing.get(serviceRequest.getRequestedServiceName())){
 				
 				return null;
 			}
 		}
 		
-		EquivalentThingsMappings equivalentThingsMappings = new EquivalentThingsMappings();
+		EquivalentThingsInfoContainer equivalentThingsMappings = new EquivalentThingsInfoContainer();
 		
 		equivalentThingsMappings.setThingsMap(thingsMap);
 		
@@ -1127,25 +1127,27 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	/* function to create a list of requested services from the
 	   attribute list taken from serviceRequestAgreement */
-	private List<Service> createServiceList(List<String> attributeList) {
+	private HashMap<Integer, Service> createServiceList(List<String> attributeList) {
 
 		//get a list of unique service names
 		List<String> requestedServiceNames = new ArrayList<String>(new LinkedHashSet<String>(attributeList));
 		
-		List<Service> serviceList = new ArrayList<>();
+		HashMap<Integer, Service> serviceMap = new HashMap<>();
 		
 		for(String serviceName: requestedServiceNames){
 			
 			Service service = new Service();
 			
-			service.setServId(serviceIdCounter.getAndIncrement());
+			service.setRequestedServiceName(serviceName);
 			
-			service.setService(serviceName);
+			int servId = serviceIdCounter.getAndIncrement();
 			
-			serviceList.add(service);
+			service.setServId(servId);
+			
+			serviceMap.put(servId, service);
 		}
 		
-		return serviceList;
+		return serviceMap;
 	}
 
 	/* get Restriction from serviceRequest */

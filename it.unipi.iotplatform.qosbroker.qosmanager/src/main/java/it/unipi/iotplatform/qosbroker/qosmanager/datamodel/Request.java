@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -42,10 +43,10 @@ public class Request extends DataStructure{
 	//entityId List in the serviceRequest
 	private List<EntityId> entityIdList;
 	
-	@XmlElementWrapper(name = "requestedServiceList")
+	@XmlElementWrapper(name = "requestedServiceMap")
 	@XmlElement(name = "service")
 	@JsonProperty("requestedServices")
-	private List<Service> requestedServiceList;
+	private HashMap<Integer, Service> requestedServiceMap;
 
 	public String getOpType() {
 		return opType;
@@ -72,18 +73,17 @@ public class Request extends DataStructure{
 		this.entityIdList = entityIdList;
 	}
 
-	public List<Service> getRequestedServiceList() {
-		return requestedServiceList;
-	}
-
-	public void setRequestedServiceList(List<Service> requestedServiceList) {
-		this.requestedServiceList = requestedServiceList;
-	}
 	public String getTransactionId() {
 		return transactionId;
 	}
 	public void setTransactionId(String transactionId) {
 		this.transactionId = transactionId;
+	}
+	public HashMap<Integer, Service> getRequestedServiceMap() {
+		return requestedServiceMap;
+	}
+	public void setRequestedServiceMap(HashMap<Integer, Service> requestedServiceMap) {
+		this.requestedServiceMap = requestedServiceMap;
 	}
 	
 }

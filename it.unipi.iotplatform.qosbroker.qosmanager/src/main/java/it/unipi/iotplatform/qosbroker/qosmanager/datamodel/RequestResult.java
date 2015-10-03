@@ -15,11 +15,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * based on the info in the request object */
 @XmlRootElement(name = "requestResults")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class RequestResults extends DataStructure{
-
-	@XmlElement(name = "transactionId")
-	@JsonProperty("transactionId")
-	private String transactionId;
+public class RequestResult extends DataStructure{
 	
 	@XmlElement(name = "request")
 	@JsonProperty("request")
@@ -27,15 +23,7 @@ public class RequestResults extends DataStructure{
 	
 	@XmlElement(name = "equivalentThingsMappings")
 	@JsonProperty("equivalentThingsMappings")
-	private EquivalentThingsMappings equivalentThingsMappings;
-
-	public String getTransactionId() {
-		return transactionId;
-	}
-
-	public void setTransactionId(String transactionId) {
-		this.transactionId = transactionId;
-	}
+	private EquivalentThingsInfoContainer equivalentThingsMappings;
 
 	public Request getRequest() {
 		return request;
@@ -45,12 +33,12 @@ public class RequestResults extends DataStructure{
 		this.request = request;
 	}
 
-	public EquivalentThingsMappings getEquivalentThingsMappings() {
+	public EquivalentThingsInfoContainer getEquivalentThingsMappings() {
 		return equivalentThingsMappings;
 	}
 
 	public void setEquivalentThingsMappings(
-			EquivalentThingsMappings equivalentThingsMappings) {
+			EquivalentThingsInfoContainer equivalentThingsMappings) {
 		this.equivalentThingsMappings = equivalentThingsMappings;
 	}
 }

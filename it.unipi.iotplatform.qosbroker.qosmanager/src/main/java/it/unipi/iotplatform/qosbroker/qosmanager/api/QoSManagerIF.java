@@ -1,6 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResults;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
 
@@ -24,6 +24,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public void createAgreement(String offer, RequestResults reqResult);
+	public void createAgreement(String offer, RequestResult reqResult);
 	
 }
