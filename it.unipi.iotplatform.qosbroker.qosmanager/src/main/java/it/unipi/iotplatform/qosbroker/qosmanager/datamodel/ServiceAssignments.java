@@ -8,18 +8,11 @@ import java.util.HashMap;
  * that service  */
 public class ServiceAssignments {
 
-	private String transId_servId;
+	private Integer servId;
 	
 	//Map<thingId, <thingServiceId, f_ij, u_ij>>
 	private HashMap<Integer, ServiceExecutionFeature> thingServiceExecFeatureMap;
 
-	public String getTransId_servId() {
-		return transId_servId;
-	}
-
-	public void setTransId_servId(String transId_servId) {
-		this.transId_servId = transId_servId;
-	}
 
 	public HashMap<Integer, ServiceExecutionFeature> getThingServiceExecFeatureMap() {
 		return thingServiceExecFeatureMap;
@@ -28,5 +21,13 @@ public class ServiceAssignments {
 	public void setThingServiceExecFeatureMap(
 			HashMap<Integer, ServiceExecutionFeature> thingServiceExecFeatureMap) {
 		this.thingServiceExecFeatureMap = thingServiceExecFeatureMap;
+	}
+
+	public Integer getServId() {
+		return servId;
+	}
+
+	public void setServId(Integer servId) {
+		this.servId = servId;
 	}
 }

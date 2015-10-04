@@ -9,10 +9,15 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeatu
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 
 public class QoSCalculator implements QoSCalculatorIF {
 
@@ -29,7 +34,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap;
 		
-		HashMap<String, AllocationObj> allocationSchema;
+		//Map<transId, List<ServId, List<tId_tsId>>>
+		HashMap<String, HashMap<Integer, AllocationObj>> allocationSchema;
 
 		Reserveobj() {
 			allocationSchema = new HashMap<>();
@@ -39,7 +45,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 	private class AllocationObj{
 		
-		String transId_servId;
+		String transId;
+		
+		Integer servId;
 		
 		ArrayList<ThingIdThingServiceIdPair> thingIdThingServiceIdAssignments;
 		
@@ -52,7 +60,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 	@Override
 	public ReservationResults computeAllocation(
-			List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
 			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			HashMap<String, RequestResult> requestResultsMap,
@@ -79,11 +87,46 @@ public class QoSCalculator implements QoSCalculatorIF {
 			ret.setFeas(true);
 
 			//TODO create list<ContextRegistration>
+			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax]);
+			
+			ret.setAllocationSchema(ngsiAllocationSchema);
 			
 			ret.setWhich(imax);
 		}
 		
 		return ret;
+	}
+
+	private List<ContextRegistration> createNgsiAllocationSchema(
+			Reserveobj reserveobj) {
+		
+		HashMap<String, HashMap<Integer, AllocationObj>> allocationSchema = reserveobj.allocationSchema;
+		
+		for(Map.Entry<String, HashMap<Integer, AllocationObj>> entry : allocationSchema.entrySet()){
+			
+			String transId = entry.getKey();
+			ContextRegistration contReg = new ContextRegistration();
+			
+			List<EntityId> entityIdList = new ArrayList<>();
+			EntityId entId = new EntityId();
+			entId.setId(transId);
+			entId.setIsPattern(false);
+			entId.setType(URI.create("Allocation"));
+			entityIdList.add(entId);
+			
+			contReg.setListEntityId(entityIdList);
+			
+			HashMap<Integer, AllocationObj> servicesAllocation = entry.getValue();
+			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
+			
+			for(Map.Entry<Integer, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
+				
+				
+				
+			}
+		}
+		
+		return null;
 	}
 
 	private HashMap<Integer, ThingAssignmentParams> createAssignmentsParamsMap(
@@ -121,7 +164,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param epsilon the tolerance used to stop iterations
 	 * @return the reserve object
 	 */
-	private Reserveobj ABGAP(List<ServiceAssignments> mappingServEqThings,
+	private Reserveobj ABGAP(HashMap<String, List<ServiceAssignments>> mappingServEqThings,
 			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			double epsilon, int priorityIndex, boolean battery){
@@ -189,14 +232,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param teta the teta
 	 * @return the reserveobj
 	 */
-	private Reserveobj GAP(List<ServiceAssignments> mappingServEqThings,
+	private Reserveobj GAP(HashMap<String, List<ServiceAssignments>> mappingServEqThings,
 			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			int priorityIndex, double teta, boolean battery, boolean[] policy) {
 	
 		Reserveobj res = new Reserveobj();
 		
-		List<ServiceAssignments> mappingServEqThingsBck = cloneMappingServEqThings(mappingServEqThings);
+		HashMap<String, List<ServiceAssignments>> mappingServEqThingsBck = cloneMappingServEqThings(mappingServEqThings);
 		
 		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap = createAssignmentsParamsMap(thingsMap);
 		
@@ -227,172 +270,191 @@ public class QoSCalculator implements QoSCalculatorIF {
 			int serviceIndex = 0;
 			int j = 0;
 			
-			//iterate over the equivalent things params for that service request
-			for(ServiceAssignments servAssignment: mappingServEqThings){
+			for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThings.entrySet()){
 				
-				//map of equivalent thing services associated to the thing
-				//with the params <f_ij, u_ij, p_ij>
-				HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = servAssignment.getThingServiceExecFeatureMap();
+				String transId = entry.getKey();
+				List<ServiceAssignments> servAssignmentsList = entry.getValue();
 				
-				//id that identify the single service request
-				//inside a request composed by a list
-				//of service requests
-				String[] transId_servId = servAssignment.getTransId_servId().split("_");
-				
-				//coefficientMap ha as key the transId
-				//so i get the first elem of array transId_servId
-				List<Integer> Sj = factorization(coefficientMap.get(transId_servId[0]));
-				
-				while(!res.feasible || !Sj.isEmpty()){
+				//iterate over the equivalent things params for that service request
+				for(ServiceAssignments servAssignment: servAssignmentsList){
 					
-					//s_p says to how many things assign the service
-					int s_p = chooseFactor(Sj, policy);
+					//map of equivalent thing services associated to the thing
+					//with the params <f_ij, u_ij, p_ij>
+					HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = servAssignment.getThingServiceExecFeatureMap();
 					
-					//R is used iterate in case of 
-					//assignment to multiple things
-					int R = s_p;
+					//id that identify the single service request
+					//inside a request composed by a list
+					//of service requests
+					Integer servId = servAssignment.getServId();
 					
-					while(res.feasible && R!=0){
+					//coefficientMap ha as key the transId
+					//so i get the first elem of array transId_servId
+					List<Integer> Sj = factorization(coefficientMap.get(transId));
+					
+					while(!res.feasible || !Sj.isEmpty()){
 						
-						ds = -1 * INF;
+						//s_p says to how many things assign the service
+						int s_p = chooseFactor(Sj, policy);
 						
-						for(int r = 0; r<R; r++){
-
-							//List of thingId that satisfy
-							//the constraints about
-							//utilization and residual battery
-							Fjr = checkConstraints(equivalentThingsParamsMap, assignmentsParamsMap, 
-																	s_p, ni, teta, null);
+						//R is used iterate in case of 
+						//assignment to multiple things
+						int R = s_p;
+						
+						while(res.feasible && R!=0){
 							
-							if(Fjr.isEmpty()){
-								res.feasible = false;
-								break;
+							ds = -1 * INF;
+							
+							for(int r = 0; r<R; r++){
+	
+								//List of thingId that satisfy
+								//the constraints about
+								//utilization and residual battery
+								Fjr = checkConstraints(equivalentThingsParamsMap, assignmentsParamsMap, 
+																		s_p, ni, teta, null);
+								
+								if(Fjr.isEmpty()){
+									res.feasible = false;
+									break;
+								}
+								
+								//get the id of the Thing that have max priority
+								Integer tID_maxPriority = getArgMaxPriority(equivalentThingsParamsMap, Fjr, priorityIndex);
+								
+								//only one thing satisfy the constraints
+								//about utilization and residual battery
+								if(Fjr.size() == 1){
+									d = INF;
+								}
+								else{
+									//difference between the max and the second max priority
+									d = getDiffMaxAndSecondMax(tID_maxPriority, equivalentThingsParamsMap, Fjr, priorityIndex);
+								}
+								
+								if(d > ds){
+									ds = d;
+									
+									//allocation of the service given by transId_servId 
+									//to a thing with a thingService thingId, thingServiceId
+									allocationTemp.transId = transId;
+									allocationTemp.servId = servAssignment.getServId();
+									
+									ThingIdThingServiceIdPair tId_tsId = new ThingIdThingServiceIdPair();
+									tId_tsId.setThingId(tID_maxPriority);
+									Integer thingServiceId = equivalentThingsParamsMap.get(tID_maxPriority).getThingServiceId();
+									tId_tsId.setThingServiceId(thingServiceId);
+									
+									allocationTemp.thingIdThingServiceIdAssignments.add(tId_tsId);
+									
+									//value of the split of the service
+									allocationTemp.split = s_p;
+									
+									//store the index of the service for which
+									//a list of things has been assigned
+									serviceIndex = j;
+								}
+								
+								Fjr.clear();
 							}
 							
-							//get the id of the Thing that have max priority
-							Integer tID_maxPriority = getArgMaxPriority(equivalentThingsParamsMap, Fjr, priorityIndex);
-							
-							//only one thing satisfy the constraints
-							//about utilization and residual battery
-							if(Fjr.size() == 1){
-								d = INF;
-							}
-							else{
-								//difference between the max and the second max priority
-								d = getDiffMaxAndSecondMax(tID_maxPriority, equivalentThingsParamsMap, Fjr, priorityIndex);
-							}
-							
-							if(d > ds){
-								ds = d;
-								
-								//allocation of the service given by transId_servId 
-								//to a thing with a thingService thingId, thingServiceId
-								allocationTemp.transId_servId = servAssignment.getTransId_servId();
-								
-								ThingIdThingServiceIdPair tId_tsId = new ThingIdThingServiceIdPair();
-								tId_tsId.setThingId(tID_maxPriority);
-								Integer thingServiceId = equivalentThingsParamsMap.get(tID_maxPriority).getThingServiceId();
-								tId_tsId.setThingServiceId(thingServiceId);
-								
-								allocationTemp.thingIdThingServiceIdAssignments.add(tId_tsId);
-								
-								//value of the split of the service
-								allocationTemp.split = s_p;
-								
-								//store the index of the service for which
-								//a list of things has been assigned
-								serviceIndex = j;
-							}
-							
-							Fjr.clear();
+							if(res.feasible)
+								R--;
+	
 						}
+						//if a feasible allocation is found
+						//stop the cicle here
+						if(res.feasible) break;
 						
-						if(res.feasible)
-							R--;
-
+						//remove a split factor from the list
+						Sj.remove(s_p);
 					}
-					//if a feasible allocation is found
-					//stop the cicle here
-					if(res.feasible) break;
 					
-					//remove a split factor from the list
-					Sj.remove(s_p);
+					//index of the Service taken in consideration
+					j++;
 				}
-				
-				//index of the Service taken in consideration
-				j++;
 			}
+				
 			if(res.feasible){
 				
-				//update the allocationSchema with the new allocation for the service transId_servId
-				res.allocationSchema.put(allocationTemp.transId_servId, allocationTemp);
+				if(res.allocationSchema.get(allocationTemp.transId) == null){
+					res.allocationSchema.put(allocationTemp.transId, new HashMap<Integer, AllocationObj>());
+				}
+				
+				//update the allocationSchema with the new allocation for the service servId
+				//Map<transId, List<servId, List<tId_tsId>>
+				res.allocationSchema.get(allocationTemp.transId).put(allocationTemp.servId, allocationTemp);
+
 				
 				//update assignments params c_i+(u_ij/s_p), z_i-(f_ij/s_p)
 				updateAssignmentsParams(assignmentsParamsMap, 
-						mappingServEqThings.get(serviceIndex).getThingServiceExecFeatureMap(), 
+						mappingServEqThings.get(allocationTemp.transId).get(serviceIndex).getThingServiceExecFeatureMap(), 
 						allocationTemp.thingIdThingServiceIdAssignments,
 						allocationTemp.split);
 				
 				
 				//remove ServiceAssignments object from the mapping
-				mappingServEqThings.remove(serviceIndex);
+				mappingServEqThings.get(allocationTemp.transId).remove(serviceIndex);
 			}
 			else return null;
 			
 			//Local optimization
 			if(!battery && res.feasible){
 				
-				for(int i = 0; i< mappingServEqThingsBck.size(); i++){
+				for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThings.entrySet()){
 					
-					//map of equivalent thing services associated to the thing
-					//with the params <f_ij, u_ij, p_ij>
-					HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = mappingServEqThingsBck.get(i).getThingServiceExecFeatureMap();
+					String transId = entry.getKey();
+					List<ServiceAssignments> servAssignmentList = entry.getValue();
 					
-					String transId_servId = mappingServEqThingsBck.get(i).getTransId_servId();
-					
-					AllocationObj allocation = res.allocationSchema.get(transId_servId);
-					
-					int split = allocation.split;
-					
-					for(int s = 0; s<split; s++){
-					
-						int thingId_sub = allocation.thingIdThingServiceIdAssignments.get(s).getThingId();
+					for(ServiceAssignments servAssignment: servAssignmentList){
+						//map of equivalent thing services associated to the thing
+						//with the params <f_ij, u_ij, p_ij>
+						HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = servAssignment.getThingServiceExecFeatureMap();
 						
-						Fjr = checkConstraints(equivalentThingsParamsMap, 
-								assignmentsParamsMap, split, ni, teta, 
-								allocation.thingIdThingServiceIdAssignments.get(s).getThingId());
+						Integer servId = servAssignment.getServId();
 						
-						int thingId_star = getArgMaxResidualBattery(assignmentsParamsMap, Fjr);
-						Double maxResidualBattery = assignmentsParamsMap.get(thingId_star).getResidualBattery();
+						AllocationObj allocation = res.allocationSchema.get(transId).get(servId);
 						
-						//z_i'-f_i'j
-						double residualBatt_sub = assignmentsParamsMap.get(thingId_sub).getResidualBattery();
+						int split = allocation.split;
 						
-						if(maxResidualBattery > residualBatt_sub){
+						for(int s = 0; s<split; s++){
+						
+							int thingId_sub = allocation.thingIdThingServiceIdAssignments.get(s).getThingId();
 							
-							ThingIdThingServiceIdPair tId_tsId_star = new ThingIdThingServiceIdPair();
-							tId_tsId_star.setThingId(thingId_star);
-							Integer thingServiceId = equivalentThingsParamsMap.get(thingId_star).getThingServiceId();
-							tId_tsId_star.setThingServiceId(thingServiceId);
+							Fjr = checkConstraints(equivalentThingsParamsMap, 
+									assignmentsParamsMap, split, ni, teta, 
+									allocation.thingIdThingServiceIdAssignments.get(s).getThingId());
 							
-							allocation.thingIdThingServiceIdAssignments.add(tId_tsId_star);
+							int thingId_star = getArgMaxResidualBattery(assignmentsParamsMap, Fjr);
+							Double maxResidualBattery = assignmentsParamsMap.get(thingId_star).getResidualBattery();
 							
-							allocation.thingIdThingServiceIdAssignments
-										.remove(allocation.thingIdThingServiceIdAssignments.get(s));
+							//z_i'-f_i'j
+							double residualBatt_sub = assignmentsParamsMap.get(thingId_sub).getResidualBattery();
 							
-							res.allocationSchema.put(transId_servId, allocation);
-							
-							ArrayList<ThingIdThingServiceIdPair> tId_tsIdList = new ArrayList<>();
-							ThingIdThingServiceIdPair tId_tsId_sub = new ThingIdThingServiceIdPair();
-							tId_tsId_sub.setThingId(thingId_sub);
-							tId_tsId_sub.setThingServiceId(thingServiceId);
-							tId_tsIdList.add(tId_tsId_sub);
-							
-							updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, -split);
-							
-							tId_tsIdList.clear();
-							tId_tsIdList.add(tId_tsId_star);
-							updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, split);
+							if(maxResidualBattery > residualBatt_sub){
+								
+								ThingIdThingServiceIdPair tId_tsId_star = new ThingIdThingServiceIdPair();
+								tId_tsId_star.setThingId(thingId_star);
+								Integer thingServiceId = equivalentThingsParamsMap.get(thingId_star).getThingServiceId();
+								tId_tsId_star.setThingServiceId(thingServiceId);
+								
+								allocation.thingIdThingServiceIdAssignments.add(tId_tsId_star);
+								
+								allocation.thingIdThingServiceIdAssignments
+											.remove(allocation.thingIdThingServiceIdAssignments.get(s));
+								
+								res.allocationSchema.get(transId).put(servId, allocation);
+								
+								ArrayList<ThingIdThingServiceIdPair> tId_tsIdList = new ArrayList<>();
+								ThingIdThingServiceIdPair tId_tsId_sub = new ThingIdThingServiceIdPair();
+								tId_tsId_sub.setThingId(thingId_sub);
+								tId_tsId_sub.setThingServiceId(thingServiceId);
+								tId_tsIdList.add(tId_tsId_sub);
+								
+								updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, -split);
+								
+								tId_tsIdList.clear();
+								tId_tsIdList.add(tId_tsId_star);
+								updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, split);
+							}
 						}
 					}
 					
@@ -469,18 +531,26 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 
 	/* function to clone mappingServiceEquivalentThings */
-	private List<ServiceAssignments> cloneMappingServEqThings(
-			List<ServiceAssignments> mappingServEqThings) {
+	private HashMap<String, List<ServiceAssignments>> cloneMappingServEqThings(
+			HashMap<String, List<ServiceAssignments>> mappingServEqThings) {
 
-		List<ServiceAssignments> mappingServEqThingsBck = new ArrayList<>();
+		HashMap<String, List<ServiceAssignments>> mappingServEqThingsBck = new HashMap<>();
 		
-		for(ServiceAssignments serviceAssignment: mappingServEqThings){
+		for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThings.entrySet()){
 			
-			ServiceAssignments servAssBck = new ServiceAssignments();
+			String transId = entry.getKey();
+			List<ServiceAssignments> servAssigmentsList = new ArrayList<>();
 			
-			servAssBck.setTransId_servId(serviceAssignment.getTransId_servId());
-			servAssBck.setThingServiceExecFeatureMap(serviceAssignment.getThingServiceExecFeatureMap());
-			mappingServEqThingsBck.add(servAssBck);
+			for(ServiceAssignments serviceAssignment: entry.getValue()){
+				
+				ServiceAssignments servAssBck = new ServiceAssignments();
+				
+				servAssBck.setServId(serviceAssignment.getServId());
+				servAssBck.setThingServiceExecFeatureMap(serviceAssignment.getThingServiceExecFeatureMap());
+				servAssigmentsList.add(servAssBck);
+			}
+			
+			mappingServEqThingsBck.put(transId, servAssigmentsList);
 		}
 		
 		return mappingServEqThingsBck;

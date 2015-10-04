@@ -84,8 +84,8 @@ public class QoSManager implements QoSManagerIF {
 		
 		requestResultsMap.put(reqResult.getRequest().getTransactionId(), reqResult);
 		
-		//Map<transId_ServiId, Map<tId <tsId,f_ij,u_ij>>
-		List<ServiceAssignments> mappingServEqThings = new ArrayList<>();
+		//Map<transId ,List<ServiId, Map<tId <tsId,f_ij,u_ij>>>
+		HashMap<String, List<ServiceAssignments>> mappingServEqThings = new HashMap<>();
 		
 		//Map<transId, h/p_j> to compute number of things
 		//to which assign a service
@@ -125,6 +125,8 @@ public class QoSManager implements QoSManagerIF {
 			//get the list of service requested for that
 			//RequestResult object
 			Collection<Service> requestedServicesList = requestResult.getRequest().getRequestedServiceMap().values();
+			
+			List<ServiceAssignments> servAssignmentsList = new ArrayList<>();
 			
 			//iterate on the list of service identify by the services ids
 			//for that request identify by the transactionId
@@ -166,28 +168,28 @@ public class QoSManager implements QoSManagerIF {
 					servExecFeat.setNormalizedEnergyCost(normalizedEnergyCost);
 					servExecFeat.setUtilization(utilization);
 					
-					//set array of priorities
 					ArrayList<Double> priority = new ArrayList<>();
 					priority.add(normalizedEnergyCost);
 					priority.add(utilization);
-					priority.add((new Random()).nextDouble());
-					servExecFeat.setPriority(priority);
+					priority.add(new Random().nextDouble());
 					
 					servExecFeatMap.put(thingId, servExecFeat);
 				}
 
-				//put list of serviceExecutionFeatures for that
-				//service identify by TransactionId_ServiceId
-				String transId_servId = transactionId+"_"+String.valueOf(service.getServId());
+//				//put list of serviceExecutionFeatures for that
+//				//service identify by TransactionId_ServiceId
+//				String transId_servId = transactionId+"_"+String.valueOf(service.getServId());
 				
 				//Set the object that represents the list of things that
 				//can satisfy a requested service identified by transId_servId
 				ServiceAssignments servAssigments = new ServiceAssignments();
-				servAssigments.setTransId_servId(transId_servId);
+				servAssigments.setServId(service.getServId());
 				servAssigments.setThingServiceExecFeatureMap(servExecFeatMap);
 				
-				mappingServEqThings.add(servAssigments);
+				servAssignmentsList.add(servAssigments);
 			}
+			
+			mappingServEqThings.put(transactionId, servAssignmentsList);
 		}
 		
 		//TODO heuristic algorithm

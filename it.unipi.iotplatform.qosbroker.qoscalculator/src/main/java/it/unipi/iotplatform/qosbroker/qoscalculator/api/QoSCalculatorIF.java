@@ -11,7 +11,7 @@ import java.util.List;
 public interface QoSCalculatorIF {
 
 	public ReservationResults computeAllocation(
-			List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
 			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			HashMap<String, RequestResult> requestResultsMap,
