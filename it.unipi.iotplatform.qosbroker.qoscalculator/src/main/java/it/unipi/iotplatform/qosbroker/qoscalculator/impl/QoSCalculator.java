@@ -5,6 +5,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		/** The z. */
 		Double z = 0.0;
 		
-		HashMap<String, ArrayList<String>> allocationSchema;
+		HashMap<String, ArrayList<ThingIdThingServiceIdPair>> allocationSchema;
 
 		Reserveobj() {
 			allocationSchema = new HashMap<>();
@@ -37,6 +38,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	@Override
 	public List<ContextRegistration> computeAllocation(
 			List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			HashMap<String, RequestResult> requestResultsMap) {
 		
@@ -58,9 +60,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param epsilon the tolerance used to stop iterations
 	 * @return the reserve object
 	 */
-	private Reserveobj ABGAP(HashMap<String, List<ServiceExecutionFeature>> mappingServEqThings,
-			HashMap<Integer,Map<String,Double>> P, HashMap<String, Integer> coefficientMap,
-			HashMap<Integer, Thing> thingsMap, double epsilon, boolean battery){
+	private Reserveobj ABGAP(List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, Integer> coefficientMap,
+			double epsilon, boolean battery){
 
 		Reserveobj res = null;
 		double upper = 1.0;
@@ -118,9 +120,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param teta the teta
 	 * @return the reserveobj
 	 */
-	private Reserveobj GAP(HashMap<String, List<ServiceExecutionFeature>> mappingServEqThings,
-			HashMap<Integer,Map<String,Double>> P, HashMap<String, Integer> coefficientMap,
-			HashMap<Integer, Thing> thingsMap, double teta, boolean battery) {
+	private Reserveobj GAP(List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, Integer> coefficientMap,
+			int priorityIndex, double teta, boolean battery) {
 	
 		Reserveobj res = new Reserveobj();
 		

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,6 +79,7 @@ public class QoSManager implements QoSManagerIF {
 		
 		//Map<transId, RequestResults>
 		HashMap<String, RequestResult> requestResultsMap = new HashMap<>();
+		
 		//TODO Get old List of RequestResults
 		
 		requestResultsMap.put(reqResult.getRequest().getTransactionId(), reqResult);
@@ -163,6 +165,14 @@ public class QoSManager implements QoSManagerIF {
 					servExecFeat.setThingServiceId(thingServiceId);
 					servExecFeat.setNormalizedEnergyCost(normalizedEnergyCost);
 					servExecFeat.setUtilization(utilization);
+					
+					//set array of priorities
+					ArrayList<Double> priority = new ArrayList<>();
+					priority.add(normalizedEnergyCost);
+					priority.add(utilization);
+					priority.add((new Random()).nextDouble());
+					servExecFeat.setPriority(priority);
+					
 					servExecFeatMap.put(thingId, servExecFeat);
 				}
 

@@ -1,5 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
+import java.util.ArrayList;
+
 /* class that represents the info about the execution of a service
  * on a thing */
 public class ServiceExecutionFeature {
@@ -12,6 +14,9 @@ public class ServiceExecutionFeature {
 	
 	//u_ij
 	private double utilization;
+	
+	//p_ij
+	private ArrayList<Double> priority;
 
 	public double getNormalizedEnergyCost() {
 		return normalizedEnergyCost;
@@ -35,6 +40,14 @@ public class ServiceExecutionFeature {
 
 	public void setThingServiceId(Integer thingServiceId) {
 		this.thingServiceId = thingServiceId;
-	}	
+	}
+
+	public ArrayList<Double> getPriority() {
+		return priority;
+	}
+
+	public void setPriority(ArrayList<Double> priority) {
+		this.priority = priority;
+	}
 	
 }

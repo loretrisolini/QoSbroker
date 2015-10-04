@@ -14,6 +14,7 @@ public interface QoSCalculatorIF {
 
 	public List<ContextRegistration> computeAllocation(
 			List<ServiceAssignments> mappingServEqThings,
+			HashMap<String, Integer> coefficientMap,
 			HashMap<Integer, Thing> thingsMap,
 			HashMap<String, RequestResult> requestResultsMap);
 }
