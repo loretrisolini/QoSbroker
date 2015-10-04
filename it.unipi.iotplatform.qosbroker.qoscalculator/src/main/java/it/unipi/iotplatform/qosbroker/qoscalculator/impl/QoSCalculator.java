@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
@@ -87,7 +88,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			ret.setFeas(true);
 
 			//TODO create list<ContextRegistration>
-			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax]);
+			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax], thingsMap, requestResultsMap);
 			
 			ret.setAllocationSchema(ngsiAllocationSchema);
 			
@@ -98,10 +99,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 
 	private List<ContextRegistration> createNgsiAllocationSchema(
-			Reserveobj reserveobj) {
+			Reserveobj reserveobj, HashMap<Integer, Thing> thingsMap, HashMap<String, RequestResult> requestResultsMap) {
 		
 		HashMap<String, HashMap<Integer, AllocationObj>> allocationSchema = reserveobj.allocationSchema;
 		
+		List<ContextRegistration> contRegList = new ArrayList<>();
+		
+		//for each transId
 		for(Map.Entry<String, HashMap<Integer, AllocationObj>> entry : allocationSchema.entrySet()){
 			
 			String transId = entry.getKey();
@@ -119,14 +123,46 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<Integer, AllocationObj> servicesAllocation = entry.getValue();
 			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
 			
+			ContextRegistrationAttribute contRegAttr = new ContextRegistrationAttribute();
+			
+			//for each servId in a request identify by transId
 			for(Map.Entry<Integer, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
 				
+				Integer servId = entryAllocation.getKey();
+				String serviceName = requestResultsMap.get(transId).getRequest().getRequestedServiceMap()
+										.get(servId).getRequestedServiceName();
 				
+				contRegAttr.setName(serviceName);
+				contRegAttr.setType(URI.create("service"));
 				
+				List<ContextMetadata> contMetadataList = new ArrayList<>();
+				
+				List<ThingIdThingServiceIdPair> allocationList = 
+						entryAllocation.getValue().thingIdThingServiceIdAssignments;
+				for(ThingIdThingServiceIdPair tId_tsId: allocationList){
+					
+					ContextMetadata contMetadata = new ContextMetadata();
+					
+					String contextEntityId = thingsMap.get(tId_tsId.getThingId()).getContextEntityId();
+					String attrName = thingsMap.get(tId_tsId.getThingId()).getThingServices()
+										.get(tId_tsId.getThingServiceId()).getServiceName();
+					
+					contMetadata.setName(String.valueOf(tId_tsId.getThingId()));
+					contMetadata.setType(URI.create("string"));
+					contMetadata.setValue(contextEntityId+"::"+attrName);
+					
+					contMetadataList.add(contMetadata);
+				}
+				
+				contRegAttr.setMetaData(contMetadataList);
 			}
+			
+			contRegAttrList.add(contRegAttr);
+			contReg.setListContextRegistrationAttribute(contRegAttrList);
+			contRegList.add(contReg);
 		}
 		
-		return null;
+		return contRegList;
 	}
 
 	private HashMap<Integer, ThingAssignmentParams> createAssignmentsParamsMap(
