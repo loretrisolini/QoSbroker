@@ -10,7 +10,7 @@ public class ServiceAssignments {
 
 	private Integer servId;
 	
-	//Map<thingId, <thingServiceId, f_ij, u_ij>>
+	//Map<thingId, <thingServiceId, f_ij, u_ij, priority[]>>
 	private HashMap<Integer, ServiceExecutionFeature> thingServiceExecFeatureMap;
 
 

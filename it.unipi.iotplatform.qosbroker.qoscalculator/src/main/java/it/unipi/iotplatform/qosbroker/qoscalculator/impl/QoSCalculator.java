@@ -9,6 +9,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
 import it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSBrokerCore;
 
 import java.net.URI;
@@ -34,12 +35,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 */
 	private class Reserveobj {
 		
-		/** The feasible. */
+		//feasible
 		boolean feasible = false;
 		
-		/** The z. */
+		//theta value
 		Double z = 0.0;
 		
+		//Map<thingId, <c_i, z_i>>
 		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap;
 		
 		//Map<transId, Map<ServId, List<tId_tsId>>>
@@ -47,10 +49,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 		Reserveobj() {
 			allocationSchema = new HashMap<>();
+
 		}
 		
 	}
 	
+	/* allocation class to store a single service
+	 * allocation transId,ServId -> tId, tsId */
 	private class AllocationObj{
 		
 		String transId;
@@ -211,6 +216,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<Integer, Thing> totalThingsMap,
 			int priorityIndex, double teta, boolean battery, boolean[] policy) {
 	
+		printInputGap(k, mappingServEqThings, coefficientMap, totalThingsMap, priorityIndex, teta, battery, policy);
+		
 		Reserveobj res = new Reserveobj();
 		
 		//Backup of the mapping of services and equivalent things
@@ -500,8 +507,90 @@ public class QoSCalculator implements QoSCalculatorIF {
 			}
 		}
 		
+		res.assignmentsParamsMap = assignmentsParamsMap;
+		
 		return res;
 	}
+
+	/* function to print the parameters of the GAP function */
+	private void printInputGap(int k,
+			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
+			HashMap<String, Integer> coefficientMap,
+			HashMap<Integer, Thing> totalThingsMap, int priorityIndex,
+			double teta, boolean battery, boolean[] policy) {
+		
+		logger.debug("number of service requests="+String.valueOf(k));
+		
+		logger.debug("priorityIndex="+String.valueOf(priorityIndex));
+		
+		logger.debug("teta="+String.valueOf(teta));
+		
+		logger.debug("local optimization: "+String.valueOf(battery));
+		
+		logger.debug("policy");
+		logger.debug("start with split factor 1: "+String.valueOf(policy[0]));
+		logger.debug("start with min split factor: "+String.valueOf(policy[1]));
+		
+		logger.debug("<------------------------>");
+		logger.debug("Coefficients Map");
+		
+		for(Map.Entry<String, Integer> entryCoeff: coefficientMap.entrySet()){
+			
+			logger.debug("transactionId="+entryCoeff.getKey());
+			logger.debug("coefficient="+String.valueOf(entryCoeff.getValue()));
+		}
+		logger.debug("<------------------------>");
+		
+		logger.debug("<------------------------>");
+		logger.debug("totalThingsMap");
+		
+		for(Map.Entry<Integer, Thing> entryThing: totalThingsMap.entrySet()){
+			
+			logger.debug("thingId="+ entryThing.getKey().toString());
+			logger.debug("batteryLevel="+ String.valueOf(entryThing.getValue().getBatteryLevel()));
+			
+			HashMap<Integer, ThingService> thingServicesMap = entryThing.getValue().getThingServices();
+			
+			for(Map.Entry<Integer, ThingService> entryThingServ: thingServicesMap.entrySet()){
+				logger.debug("thingServiceId="+entryThingServ.getKey().toString());
+				logger.debug("ThingServiceName="+entryThingServ.getValue().getServiceName());
+				
+				logger.debug("latency="+String.valueOf(entryThingServ.getValue().getThingServFeatures().getLatency()));
+				logger.debug("energy_cost="+String.valueOf(entryThingServ.getValue().getThingServFeatures().getEnergyCost()));
+			}
+		}
+		logger.debug("<------------------------>");
+		
+		logger.debug("<------------------------>");
+		logger.debug("mappingServEqThings");
+		
+		for(Map.Entry<String, List<ServiceAssignments>> entryMapping: mappingServEqThings.entrySet()){
+			
+			logger.debug("transId="+entryMapping.getKey());
+			List<ServiceAssignments> servAssignmentsList = entryMapping.getValue();
+			
+			for(ServiceAssignments servAss: servAssignmentsList){
+				
+				logger.debug("serviceId="+String.valueOf(servAss.getServId()));
+				
+				HashMap<Integer, ServiceExecutionFeature> eqThings = servAss.getThingServiceExecFeatureMap();
+				
+				for(Map.Entry<Integer, ServiceExecutionFeature> entryServExceFeat: eqThings.entrySet()){
+					
+					logger.debug("thingId="+entryServExceFeat.getKey());
+					logger.debug("thingServiceId="+entryServExceFeat.getValue().getThingServiceId().toString());
+					
+					logger.debug("f_ij="+entryServExceFeat.getValue().getNormalizedEnergyCost());
+					logger.debug("u_ij="+entryServExceFeat.getValue().getUtilization());
+					
+					logger.debug("p_ij="+entryServExceFeat.getValue().getPriority().get(priorityIndex));
+				}
+			}
+		}
+		logger.debug("<------------------------>");
+	}
+
+
 
 	/* function to create the ngsi allocation schema from the Reserveobj object */
 	private List<ContextRegistration> createNgsiAllocationSchema(
@@ -675,6 +764,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 		HashMap<String, List<ServiceAssignments>> mappingServEqThingsBck = new HashMap<>();
 		
+		logger.debug("mappingServEqThings Map<transId, List<ServId, Map<thingId, <ThingServiceId, f_ij, u_ij, p[]>>>>");
+		
 		for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThings.entrySet()){
 			
 			String transId = entry.getKey();
@@ -685,6 +776,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				ServiceAssignments servAssBck = new ServiceAssignments();
 				
 				servAssBck.setServId(serviceAssignment.getServId());
+				
 				servAssBck.setThingServiceExecFeatureMap(serviceAssignment.getThingServiceExecFeatureMap());
 				servAssigmentsList.add(servAssBck);
 			}
