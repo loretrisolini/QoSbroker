@@ -89,7 +89,7 @@
 
 	<dependencies>
 	
-		<dependency>
+ 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
 			<version>4.3.3</version>
