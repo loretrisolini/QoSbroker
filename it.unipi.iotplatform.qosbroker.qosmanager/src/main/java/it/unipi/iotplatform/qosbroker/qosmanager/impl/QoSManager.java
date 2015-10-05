@@ -2,13 +2,13 @@ package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.RequestResult;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAssignments;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceExecutionFeature;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingIdThingServiceIdPair;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingService;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;

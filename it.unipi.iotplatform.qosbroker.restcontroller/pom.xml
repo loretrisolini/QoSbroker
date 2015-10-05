@@ -36,7 +36,7 @@
 				<instructions>
 					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
 					<Import-Package>it.unipi.iotplatform.qosbroker.qosmanager.api;version="${pom.version}",
-							it.unipi.iotplatform.qosbroker.qosmanager.datamodel;version="${pom.version}",
+							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
@@ -117,7 +117,11 @@
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qosmanager</artifactId>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.api</artifactId>
+		</dependency>
 	</dependencies>
 
 

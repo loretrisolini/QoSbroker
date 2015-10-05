@@ -1,21 +1,20 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThingsInfoContainer;
+import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThingsList;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSreq;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.api.datamodel.RequestResult;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingIdThingServiceIdPair;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingService;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingServiceFeatures;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Constants;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsList;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.EquivalentThingsInfoContainer;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSreq;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.QoSscopeValue;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementRequest;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAgreementResponse;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceDefinition;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingServiceFeatures;
 import it.unipi.iotplatform.qosbroker.qosmanager.utils.ThingInfoContainer;
 
 import java.util.ArrayList;
