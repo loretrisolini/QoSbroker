@@ -1,16 +1,13 @@
 package it.unipi.iotplatform.qosbroker.qoscalculator.impl;
 
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
-import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ThingAssignmentParams;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingIdThingServiceIdPair;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
-import it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSBrokerCore;
 
 import java.net.URI;
 import java.util.ArrayList;

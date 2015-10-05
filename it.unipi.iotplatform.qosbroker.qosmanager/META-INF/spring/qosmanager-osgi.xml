@@ -28,8 +28,8 @@
 	<osgi:reference id="BigDataRepositoryInterface"
 		interface="eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository" cardinality="0..1"></osgi:reference>
 		
-	<osgi:reference id="QosCalculatorService"
-		interface="it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF"></osgi:reference>
+	<!-- <osgi:reference id="QosCalculatorService"
+		interface="it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF" bean-name="QosCalculator"></osgi:reference> -->
 		
 <!-- 	<osgi:reference id="negotiationServiceOSGI"
 		interface="eu.betaas.taas.qosmanager.negotiation.NegotiationInterface"

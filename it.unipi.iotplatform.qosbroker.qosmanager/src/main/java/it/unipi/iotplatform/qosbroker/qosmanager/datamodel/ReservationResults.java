@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.qosbroker.qoscalculator.datamodel;
+package it.unipi.iotplatform.qosbroker.qosmanager.datamodel;
 
 import java.util.List;
 

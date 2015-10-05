@@ -1,8 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qoscalculator.api;
 
-import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ReservationResults;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
+import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
 

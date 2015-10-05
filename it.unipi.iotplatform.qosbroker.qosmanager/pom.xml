@@ -100,10 +100,9 @@
 		  <version>0.0.1-SNAPSHOT</version>
 	  	</dependency>  -->
 
-		<dependency>
+   		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qoscalculator</artifactId>
-			<version>4.3.3</version>
-		</dependency>
+		</dependency>  
 	</dependencies>
 </project>

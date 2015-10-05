@@ -1,11 +1,9 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 
-import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
-import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ReservationResults;
+
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.RequestResult;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Service;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceAssignments;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Thing;
@@ -15,7 +13,6 @@ import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.ThingService;
 import java.io.FileInputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,14 +29,13 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 
 import eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 
 public class QoSManager implements QoSManagerIF {
 
 //	/**  Reference to the Negotiator engine */
 //	private NegotiationInterface negotiator; 
 	
-	private QoSCalculatorIF qosCalculator;
+//	private QoSCalculatorIF qosCalculator;
 	
 	private BigDataRepository bigDataRepository;
 	
@@ -224,11 +220,11 @@ public class QoSManager implements QoSManagerIF {
 		//compute reservation results, given the total number of service requests k, 
 		//the Map<transId, Map<servId, serviceName>>, the Map<thingId, Thing>,
 		//Map<transId, List<ServiceAssignments>>, Map<transId, h/p_j>, epsilon
-		ReservationResults allocationResult = 
-				qosCalculator.computeAllocation(k, totalRequestedServicesMap, totalThingsMap, mappingServEqThings, 
-												coefficientMap, 0.001);
+//		ReservationResults allocationResult = 
+//				qosCalculator.computeAllocation(k, totalRequestedServicesMap, totalThingsMap, mappingServEqThings, 
+//												coefficientMap, Double.valueOf(0.001));
 		
-		List<ContextRegistration> ngsiAllocationSchema = allocationResult.getAllocationSchema();
+//		List<ContextRegistration> ngsiAllocationSchema = allocationResult.getAllocationSchema();
 		
 		//TODO heuristic algorithm
 //		HashMap<Integer, List<ServiceExecutionFeature>> mappingServiceThing =
@@ -286,11 +282,11 @@ public class QoSManager implements QoSManagerIF {
 		this.bigDataRepository = bigDataRepository;
 	}
 
-	public QoSCalculatorIF getQosCalculator() {
-		return qosCalculator;
-	}
-
-	public void setQosCalculator(QoSCalculatorIF qosCalculator) {
-		this.qosCalculator = qosCalculator;
-	}
+//	public QoSCalculatorIF getQosCalculator() {
+//		return qosCalculator;
+//	}
+//
+//	public void setQosCalculator(QoSCalculatorIF qosCalculator) {
+//		this.qosCalculator = qosCalculator;
+//	}
 }
