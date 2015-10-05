@@ -21,8 +21,8 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 public class Request extends DataStructure{
 
 
-	@XmlElement(name = "requestId")
-	@JsonProperty("requestId")
+	@XmlElement(name = "transactionId")
+	@JsonProperty("transactionId")
 	private String transactionId;
 	
 	@XmlElement(name = "operationType")
@@ -43,10 +43,10 @@ public class Request extends DataStructure{
 	//entityId List in the serviceRequest
 	private List<EntityId> entityIdList;
 	
-	@XmlElementWrapper(name = "requestedServiceMap")
+	@XmlElementWrapper(name = "requestedServicesMap")
 	@XmlElement(name = "service")
 	@JsonProperty("requestedServices")
-	private HashMap<Integer, Service> requestedServiceMap;
+	private HashMap<Integer, String> requestedServicesMap;
 
 	public String getOpType() {
 		return opType;
@@ -79,11 +79,11 @@ public class Request extends DataStructure{
 	public void setTransactionId(String transactionId) {
 		this.transactionId = transactionId;
 	}
-	public HashMap<Integer, Service> getRequestedServiceMap() {
-		return requestedServiceMap;
+	public HashMap<Integer, String> getRequestedServicesMap() {
+		return requestedServicesMap;
 	}
-	public void setRequestedServiceMap(HashMap<Integer, Service> requestedServiceMap) {
-		this.requestedServiceMap = requestedServiceMap;
+	public void setRequestedServiceMap(HashMap<Integer, String> requestedServicesMap) {
+		this.requestedServicesMap = requestedServicesMap;
 	}
 	
 }

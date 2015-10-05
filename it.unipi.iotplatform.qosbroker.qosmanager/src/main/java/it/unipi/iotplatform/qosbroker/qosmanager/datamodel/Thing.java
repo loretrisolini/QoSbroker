@@ -26,7 +26,7 @@ public class Thing extends DataStructure{
 	@XmlElement(name = "batteryLevel")
 	@JsonProperty("batteryLevel")
 	private Double batteryLevel;
-
+	
 	@XmlElementWrapper(name = "thingServiceList")
 	@XmlElement(name = "thingService")
 	@JsonProperty("thingServices")

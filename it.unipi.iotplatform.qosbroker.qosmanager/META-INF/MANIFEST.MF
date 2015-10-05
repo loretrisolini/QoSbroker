@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1443366310613
+Bnd-LastModified: 1444035535927
 Build-Jdk: 1.8.0_60
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
@@ -9,29 +9,21 @@ Bundle-Version: 4.3.3
 Created-By: Apache Maven Bundle Plugin
 Export-Package: it.unipi.iotplatform.qosbroker.qosmanager.api;version="4
  .3.3";uses:="it.unipi.iotplatform.qosbroker.qosmanager.datamodel",it.un
- ipi.iotplatform.qosbroker.qosmanager.datamodel;version="4.3.3";uses:="e
- u.neclab.iotplatform.ngsi.api.datamodel,javax.xml.bind.annotation"
-Import-Package: com.google.common.base;version="17.0.0",
- com.google.common.collect;version="18.0.0",
- com.google.gson;version="2.2.2",
- eu.neclab.iotplatform.couchdb;version="4.3.3",
- eu.neclab.iotplatform.couchdb.http;version="4.3.3",
- eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
- eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3",
- eu.neclab.iotplatform.ngsi.api.ngsi10;version="4.3.3",
- eu.neclab.iotplatform.ngsi.api.ngsi9;version="4.3.3",
- eu.neclab.iotplatform.ngsi.association.datamodel;version="4.3.3",
- javax.xml.bind,
- javax.xml.bind.annotation,
- javax.xml.datatype,
- javax.xml.namespace,
- javax.xml.parsers,
- javax.xml.xpath,
- org.apache.log4j;version="1.2",
- org.json;version="1.0.0",
- org.osgi.framework;version="1.5",
- org.w3c.dom,
- org.xml.sax
+ ipi.iotplatform.qosbroker.qosmanager.utils;version="4.3.3";uses:="eu.ne
+ clab.iotplatform.ngsi.api.datamodel",it.unipi.iotplatform.qosbroker.qos
+ manager.datamodel;version="4.3.3";uses:="eu.neclab.iotplatform.ngsi.api
+ .datamodel,javax.xml.bind.annotation,org.apache.log4j"
+Import-Package: eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
+ eu.neclab.iotplatform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotp
+ latform.ngsi.api.ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.
+ ngsi9;version="4.3.3",com.google.common.collect;version="18.0.0",com.go
+ ogle.common.base;version="17.0.0",javax.xml.bind,javax.xml.bind.annotat
+ ion,javax.xml.parsers,org.apache.log4j;version="1.2",org.w3c.dom,it.uni
+ pi.iotplatform.qosbroker.qoscalculator.api;version="4.3.3",it.unipi.iot
+ platform.qosbroker.qosmonitor.api;version="4.3.3",eu.neclab.iotplatform
+ .ngsi.association.datamodel;version="4.3.3",com.google.gson;version="2.
+ 2.2",org.json;version="1.0.0",javax.xml.datatype,javax.xml.namespace,ja
+ vax.xml.xpath,org.osgi.framework;version="1.5",org.xml.sax
 Originally-Created-By: Apache Maven Bundle Plugin
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
 Tool: Bnd-2.4.1.201501161923

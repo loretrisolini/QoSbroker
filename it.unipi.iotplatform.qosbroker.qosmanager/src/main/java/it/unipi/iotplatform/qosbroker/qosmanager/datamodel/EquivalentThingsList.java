@@ -22,18 +22,18 @@ public class EquivalentThingsList extends DataStructure{
 	@XmlElementWrapper(name = "equivalentThingsIdList")
 	@XmlElement(name = "equivalentThingsId")
 	@JsonProperty("equivalentThingsId")
-	private List<ThingIdThingServiceIdPair> equivalentThingsId;
+	private List<ThingIdThingServiceIdPair> equivalentThingIdThingServiceIdList;
 
 	public EquivalentThingsList(){
-		equivalentThingsId = new ArrayList<>();
-	}
-	
-	public List<ThingIdThingServiceIdPair> getEquivalentThingsId() {
-		return equivalentThingsId;
+		equivalentThingIdThingServiceIdList = new ArrayList<>();
 	}
 
-	public void setEquivalentThingsId(
-			List<ThingIdThingServiceIdPair> equivalentThingsId) {
-		this.equivalentThingsId = equivalentThingsId;
+	public List<ThingIdThingServiceIdPair> getEquivalentThingIdThingServiceIdList() {
+		return equivalentThingIdThingServiceIdList;
+	}
+
+	public void setEquivalentThingIdThingServiceIdList(
+			List<ThingIdThingServiceIdPair> equivalentThingIdThingServiceIdList) {
+		this.equivalentThingIdThingServiceIdList = equivalentThingIdThingServiceIdList;
 	}
 }

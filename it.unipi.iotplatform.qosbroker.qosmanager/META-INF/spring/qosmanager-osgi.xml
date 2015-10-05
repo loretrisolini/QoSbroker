@@ -27,6 +27,10 @@
 <!-- cardinality="0..1" it is used for specify that the reference is optional  -->
 	<osgi:reference id="BigDataRepositoryInterface"
 		interface="eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository" cardinality="0..1"></osgi:reference>
+		
+	<osgi:reference id="QosCalculatorService"
+		interface="it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF"></osgi:reference>
+		
 <!-- 	<osgi:reference id="negotiationServiceOSGI"
 		interface="eu.betaas.taas.qosmanager.negotiation.NegotiationInterface"
 		bean-name="negotiationService"></osgi:reference>  -->   

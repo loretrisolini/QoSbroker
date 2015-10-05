@@ -772,8 +772,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 //		CREATE THE REQUEST FROM THE INFO TAKEN FROM SERVICE_AGREEMENT_REQUEST
 		
-		//create Map<ServId, Service> of services
-		HashMap<Integer, Service> serviceMap = createServiceList(serviceRequest.getAttributeList());
+		//create Map<ServId, ServiceName> of services
+		HashMap<Integer, String> servicesMap = createServiceList(serviceRequest.getAttributeList());
 		
 		//object to store the details of the service Request
 		Request request = new Request();
@@ -782,7 +782,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		request.setQosRequirements(qosRequirements);
 		request.setRestriction(restriction);
 		request.setEntityIdList(serviceRequest.getEntityIdList());
-		request.setRequestedServiceMap(serviceMap);
+		request.setRequestedServiceMap(servicesMap);
 		
 		StatusCode statusCode = new StatusCode();
 		
@@ -834,12 +834,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		List<String> requestedServicesNameList = new ArrayList<>();
 		
 		//list of objects that represents the requested Services <servId, requestedServiceName>
-		Collection<Service> servicesRequestsList = request.getRequestedServiceMap().values();
+		Collection<String> servicesRequestsList = request.getRequestedServicesMap().values();
 
 		//get the list of services names (attributes names) for the request to IoTDiscovery
-		for(Service serv: servicesRequestsList){
+		for(String servName: servicesRequestsList){
 			
-			requestedServicesNameList.add(serv.getRequestedServiceName());
+			requestedServicesNameList.add(servName);
 		}
 		
 		//create a discovery request object to get ContextRegResp List (list of things)
@@ -886,7 +886,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
 			
 			EquivalentThingsInfoContainer equivalentThingsMappings = 
-					createThingsMap(servicesRequestsList, ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
+					createThingsMap(request.getRequestedServicesMap(), ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
 			
 			if(equivalentThingsMappings == null){
 				
@@ -924,7 +924,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	/* function to create a map of things that can satisfy the requested services */
-	private EquivalentThingsInfoContainer createThingsMap(Collection<Service> servicesRequestsList,
+	private EquivalentThingsInfoContainer createThingsMap(HashMap<Integer, String> servicesRequestsMap,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
 			List<ContextElementResponse> qosMonitorResponse, double maxResponseTime) {
 		
@@ -994,13 +994,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//given by the key
 		HashMap<String, Boolean> serviceAvailableAtLeastOnOneThing = new HashMap<>();
 		
-		for (Service service : servicesRequestsList) {
+		for(Map.Entry<Integer, String> serviceEntry : servicesRequestsMap.entrySet()){
 		    
-			serviceAvailableAtLeastOnOneThing.put(service.getRequestedServiceName(), false);
+			serviceAvailableAtLeastOnOneThing.put(serviceEntry.getValue(), false);
 			
 			//for each service there is a list of equivalent things with a a thing service
 			//that satisfy that service requested
-			eqThingsListPerService.put(service.getServId(), new EquivalentThingsList());
+			eqThingsListPerService.put(serviceEntry.getKey(), new EquivalentThingsList());
 		}
 		
 		//iterate on the List<ThingInfoContainer> to create the 
@@ -1026,13 +1026,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			Integer thingId = thingIdCounter.getAndIncrement();
 			
 			//look for what services are exposed by the ContextRegistration(Thing)
-			for(Service service : servicesRequestsList){
+			for(Map.Entry<Integer, String> serviceEntry : servicesRequestsMap.entrySet()){
 				
 				//the Thing exposes the service requested serviceRequest
-				if(contRegAttrsMap.get(service.getRequestedServiceName()) != null){
+				if(contRegAttrsMap.get(serviceEntry.getValue()) != null){
 
-					Integer serviceId = service.getServId();
-					String requestedServiceName = service.getRequestedServiceName();
+					Integer serviceId = serviceEntry.getKey();
+					String requestedServiceName = serviceEntry.getValue();
 					
 					ContextRegistrationAttribute contRegAttr  = contRegAttrsMap.get(requestedServiceName);
 					
@@ -1097,7 +1097,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					tId_tsId.setThingServiceId(thingServiceId);
 					
 					//add the pair tId_tsId associated to the service with id serviceId
-					eqThingsListPerService.get(serviceId).getEquivalentThingsId().add(tId_tsId);
+					eqThingsListPerService.get(serviceId).getEquivalentThingIdThingServiceIdList().add(tId_tsId);
 				}
 			}
 			
@@ -1107,9 +1107,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 		
 		//check if every requestedService has an associated Thing
-		for(Service serviceRequest: servicesRequestsList){
+		for(Map.Entry<Integer, String> serviceEntry : servicesRequestsMap.entrySet()){
 			
-			if(!serviceAvailableAtLeastOnOneThing.get(serviceRequest.getRequestedServiceName())){
+			if(!serviceAvailableAtLeastOnOneThing.get(serviceEntry.getValue())){
 				
 				return null;
 			}
@@ -1127,24 +1127,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	/* function to create a list of requested services from the
 	   attribute list taken from serviceRequestAgreement */
-	private HashMap<Integer, Service> createServiceList(List<String> attributeList) {
+	private HashMap<Integer, String> createServiceList(List<String> attributeList) {
 
 		//get a list of unique service names
 		List<String> requestedServiceNames = new ArrayList<String>(new LinkedHashSet<String>(attributeList));
 		
-		HashMap<Integer, Service> serviceMap = new HashMap<>();
+		HashMap<Integer, String> serviceMap = new HashMap<>();
 		
 		for(String serviceName: requestedServiceNames){
 			
-			Service service = new Service();
-			
-			service.setRequestedServiceName(serviceName);
-			
 			int servId = serviceIdCounter.getAndIncrement();
 			
-			service.setServId(servId);
-			
-			serviceMap.put(servId, service);
+			serviceMap.put(servId, serviceName);
 		}
 		
 		return serviceMap;

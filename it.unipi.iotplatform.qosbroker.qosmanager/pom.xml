@@ -34,6 +34,7 @@
 					<instructions>
 						<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
 						<Import-Package>
+							it.unipi.iotplatform.qosbroker.qoscalculator.api;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.qosmonitor.api;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
@@ -78,6 +79,7 @@
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qosmonitor</artifactId>
 		</dependency> 
+
 		
 		<!-- GUAVA -->
 		<dependency>
@@ -98,5 +100,10 @@
 		  <version>0.0.1-SNAPSHOT</version>
 	  	</dependency>  -->
 
+		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.qoscalculator</artifactId>
+			<version>4.3.3</version>
+		</dependency>
 	</dependencies>
 </project>
