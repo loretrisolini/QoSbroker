@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1444062057456
+Bnd-LastModified: 1444221002572
 Build-Jdk: 1.8.0_60
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
@@ -13,13 +13,13 @@ Export-Package: it.unipi.iotplatform.qosbroker.qosmanager.api;version="4
  tplatform.ngsi.api.datamodel",it.unipi.iotplatform.qosbroker.qosmanager
  .datamodel;version="4.3.3"
 Import-Package: it.unipi.iotplatform.qosbroker.api.datamodel;version="4.
- 3.3",eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",eu.neclab.
- iotplatform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotplatform.ng
- si.api.ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.ngsi9;vers
- ion="4.3.3",com.google.common.collect;version="18.0.0",com.google.commo
- n.base;version="17.0.0",javax.xml.parsers,org.apache.log4j;version="1.2
- ",org.w3c.dom,it.unipi.iotplatform.qosbroker.qoscalculator.api;version=
- "4.3.3",it.unipi.iotplatform.qosbroker.qosmonitor.api;version="4.3.3",e
+ 3.3",it.unipi.iotplatform.qosbroker.qoscalculator.api;version="4.3.3",e
+ u.neclab.iotplatform.iotbroker.commons;version="4.3.3",eu.neclab.iotpla
+ tform.ngsi.api.datamodel;version="4.3.3",eu.neclab.iotplatform.ngsi.api
+ .ngsi10;version="4.3.3",eu.neclab.iotplatform.ngsi.api.ngsi9;version="4
+ .3.3",com.google.common.collect;version="18.0.0",com.google.common.base
+ ;version="17.0.0",javax.xml.parsers,org.apache.log4j;version="1.2",org.
+ w3c.dom,it.unipi.iotplatform.qosbroker.qosmonitor.api;version="4.3.3",e
  u.neclab.iotplatform.ngsi.association.datamodel;version="4.3.3",com.goo
  gle.gson;version="2.2.2",org.json;version="1.0.0",javax.xml.bind,javax.
  xml.bind.annotation,javax.xml.datatype,javax.xml.namespace,javax.xml.xp

@@ -53,6 +53,7 @@
 
 	<modules>
 		<module>../it.unipi.iotplatform.qosbroker.api</module>
+		<module>../it.unipi.iotplatform.qosbroker.couchdb</module>
 		<module>../it.unipi.iotplatform.qosbroker.qoscalculator</module>
 		<module>../it.unipi.iotplatform.qosbroker.qosmonitor</module>
 		<module>../it.unipi.iotplatform.qosbroker.qosmanager</module>

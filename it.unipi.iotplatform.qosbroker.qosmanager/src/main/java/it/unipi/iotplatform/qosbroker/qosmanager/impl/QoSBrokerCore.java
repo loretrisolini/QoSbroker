@@ -1085,6 +1085,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					
 					thingService.setThingServFeatures(thingServFeat);
 					
+					
 					Integer thingServiceId = thingServiceIdCounter.getAndIncrement();
 					thingServicesMap.put(thingServiceId, thingService);
 					

@@ -19,7 +19,7 @@
 	</bean>
 	
 	<bean id="QoSManager" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSManager">
- 		<property name="bigDataRepository" ref="BigDataRepositoryInterface"></property>
-<!--  		<property name="qosCalculator" ref="QosCalculatorService"></property> -->
+ 		<property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property>
+<!--   		<property name="qosCalculator" ref="QosCalculatorService"></property>  -->
 	</bean>
 </beans>

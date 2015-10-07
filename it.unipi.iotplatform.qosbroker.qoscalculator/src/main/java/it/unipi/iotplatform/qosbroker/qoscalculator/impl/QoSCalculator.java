@@ -478,6 +478,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 											.remove(allocation.thingIdThingServiceIdAssignments.get(s));
 								
 								//update the allocation in reservation object
+								//TODO List<AllocationObj> -> List<tId_tsId>
 								res.allocationSchema.get(transId).put(servId, allocation);
 								
 								//update the value of the thing substituted
