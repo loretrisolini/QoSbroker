@@ -4,6 +4,7 @@
     <groupId>it.unipi.iotplatform</groupId>
     <artifactId>QoSbrokerParent</artifactId>
     <version>4.3.3</version>
+ 	<relativePath>../QoSbrokerParent</relativePath>
   </parent>
 
   <artifactId>qosbroker.qosmonitor</artifactId>
@@ -32,12 +33,12 @@
 				<instructions>
 					<Private-Package>it.unipi.iotplatform.qosbroker.qosmonitor.*</Private-Package>
 					<Import-Package>
+							it.unipi.iotplatform.qosbroker.couchdb.api;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi9;version="${pom.version}",
-							eu.neclab.iotplatform.iotbroker.commons.interfaces;version="${pom.version}",
 							javax.servlet;version="2.5.0",
 							javax.servlet.http;version="2.5.0",
 							javax.xml.bind,
@@ -87,6 +88,11 @@
 </build>
 
 	<dependencies>
+	
+ 		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.couchdb</artifactId>
+		</dependency> 
 	
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>

@@ -4,6 +4,7 @@
     <groupId>it.unipi.iotplatform</groupId>
     <artifactId>QoSbrokerParent</artifactId>
     <version>4.3.3</version>
+	<relativePath>../QoSbrokerParent</relativePath>
   </parent>
 
   <artifactId>qosbroker.couchdb</artifactId>

@@ -10,6 +10,6 @@
 		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/config.xml" />
 
 	<bean id="QoSMonitor" class="it.unipi.iotplatform.qosbroker.qosmonitor.impl.QoSMonitor">
- 		<property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property>
+  		<property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property> 
 	</bean>
 </beans>

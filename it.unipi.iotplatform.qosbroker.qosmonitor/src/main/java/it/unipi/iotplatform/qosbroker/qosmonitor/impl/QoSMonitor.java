@@ -1,10 +1,10 @@
 package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
+
+import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import java.util.ArrayList;
 import java.util.List;
-
-import eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
@@ -30,7 +30,7 @@ public class QoSMonitor implements Ngsi10Interface{
 	 * A pointer to a Big Data repository. (This functionality is currently
 	 * disabled.)
 	 */
-	private BigDataRepository bigDataRepository;
+	private QoSBigDataRepository bigDataRepository;
 	
 	@Override
 	public NotifyContextResponse notifyContext(NotifyContextRequest arg0) {
@@ -135,11 +135,11 @@ public class QoSMonitor implements Ngsi10Interface{
 		return null;
 	}
 
-	public BigDataRepository getBigDataRepository() {
+	public QoSBigDataRepository getBigDataRepository() {
 		return bigDataRepository;
 	}
 
-	public void setBigDataRepository(BigDataRepository bigDataRepository) {
+	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
 		this.bigDataRepository = bigDataRepository;
 	}
 

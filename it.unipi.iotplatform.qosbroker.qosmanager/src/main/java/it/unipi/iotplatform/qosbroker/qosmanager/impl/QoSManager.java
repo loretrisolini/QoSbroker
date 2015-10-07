@@ -9,6 +9,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingIdThingServiceIdPair;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingService;
+import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 
@@ -30,7 +31,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 
-import eu.neclab.iotplatform.iotbroker.commons.interfaces.BigDataRepository;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 
 public class QoSManager implements QoSManagerIF {
@@ -40,7 +40,7 @@ public class QoSManager implements QoSManagerIF {
 	
 	private QoSCalculatorIF qosCalculator;
 	
-	private BigDataRepository bigDataRepository;
+	private QoSBigDataRepository bigDataRepository;
 	
 	
 	@Override
@@ -277,14 +277,6 @@ public class QoSManager implements QoSManagerIF {
 	    return a * (b / gcd(a, b));
 	}
 
-	public BigDataRepository getBigDataRepository() {
-		return bigDataRepository;
-	}
-
-	public void setBigDataRepository(BigDataRepository bigDataRepository) {
-		this.bigDataRepository = bigDataRepository;
-	}
-
 	public QoSCalculatorIF getQosCalculator() {
 		return qosCalculator;
 	}
@@ -293,11 +285,12 @@ public class QoSManager implements QoSManagerIF {
 		this.qosCalculator = qosCalculator;
 	}
 
-//	public QoSCalculatorIF getQosCalculator() {
-//		return qosCalculator;
-//	}
-//
-//	public void setQosCalculator(QoSCalculatorIF qosCalculator) {
-//		this.qosCalculator = qosCalculator;
-//	}
+	public QoSBigDataRepository getBigDataRepository() {
+		return bigDataRepository;
+	}
+
+	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
+		this.bigDataRepository = bigDataRepository;
+	}
+
 }
