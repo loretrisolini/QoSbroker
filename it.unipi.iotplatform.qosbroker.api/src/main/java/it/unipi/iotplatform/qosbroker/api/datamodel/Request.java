@@ -19,11 +19,6 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Request extends DataStructure{
-
-
-	@XmlElement(name = "transactionId")
-	@JsonProperty("transactionId")
-	private String transactionId;
 	
 	@XmlElement(name = "operationType")
 	@JsonProperty("operationType")
@@ -33,20 +28,10 @@ public class Request extends DataStructure{
 	@JsonProperty("qosRequirements")
 	private QoSreq qosRequirements;
 	
-	@XmlElement(name = "restriction")
-	@JsonProperty("restriction")
-	private Restriction restriction;
-	
-	@XmlElementWrapper(name = "entityIdList")
-	@XmlElement(name = "entityId")
-	@JsonProperty("entities")
-	//entityId List in the serviceRequest
-	private List<EntityId> entityIdList;
-	
-	@XmlElementWrapper(name = "requestedServicesMap")
-	@XmlElement(name = "service")
-	@JsonProperty("requestedServices")
-	private HashMap<Integer, String> requestedServicesMap;
+	@XmlElementWrapper(name = "requiredServicesNameList")
+	@XmlElement(name = "serviceName")
+	@JsonProperty("requiredServicesName")
+	private List<String> requiredServicesNameList;
 
 	public String getOpType() {
 		return opType;
@@ -60,30 +45,11 @@ public class Request extends DataStructure{
 	public void setQosRequirements(QoSreq qosRequirements) {
 		this.qosRequirements = qosRequirements;
 	}
-	public Restriction getRestriction() {
-		return restriction;
+	public List<String> getRequiredServicesNameList() {
+		return requiredServicesNameList;
 	}
-	public void setRestriction(Restriction restriction) {
-		this.restriction = restriction;
-	}
-	public List<EntityId> getEntityIdList() {
-		return entityIdList;
-	}
-	public void setEntityIdList(List<EntityId> entityIdList) {
-		this.entityIdList = entityIdList;
-	}
-
-	public String getTransactionId() {
-		return transactionId;
-	}
-	public void setTransactionId(String transactionId) {
-		this.transactionId = transactionId;
-	}
-	public HashMap<Integer, String> getRequestedServicesMap() {
-		return requestedServicesMap;
-	}
-	public void setRequestedServiceMap(HashMap<Integer, String> requestedServicesMap) {
-		this.requestedServicesMap = requestedServicesMap;
+	public void setRequiredServicesNameList(List<String> requiredServicesNameList) {
+		this.requiredServicesNameList = requiredServicesNameList;
 	}
 	
 }

@@ -178,7 +178,7 @@ public class RestController {
 	 *            The request body.
 	 * @return The response body.
 	 */
-	@RequestMapping(value = "/updateContext", method = RequestMethod.POST, consumes = {
+	@RequestMapping(value = "IoTAgent/updateContext", method = RequestMethod.POST, consumes = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON }, produces = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
 	public ResponseEntity<UpdateContextResponse> updateContextResponse(

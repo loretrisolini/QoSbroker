@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
  * on a thing */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ThingServiceFeatures extends DataStructure{
+public class ServiceFeatures extends DataStructure{
 
 	@XmlElement(name = "latency")
 	@JsonProperty("latency")
@@ -23,6 +23,9 @@ public class ThingServiceFeatures extends DataStructure{
 	//c_ij
 	private double energyCost;
 
+	public final static String LATENCY = "latency";
+	public final static String ENERGY_COST = "energyCost";
+	
 	public double getLatency() {
 		return latency;
 	}

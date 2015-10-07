@@ -18,6 +18,8 @@ public class ThingInfoContainer {
 
 	//id of the entityId structure on which it is matched the 
 	//ContextRegistration with the ContextElement
+	//or the id of the first entityId structure
+	//in the entityIdList in the ContextRegistration
 	private String contextEntityId;
 	
 	//Mapping List<ContextRegistrationAttribute> in a ContextRegistration
@@ -74,17 +76,19 @@ public class ThingInfoContainer {
 		    mappedContRegAttrsMetadata.put(contRegAttr.getName(), mappedContMetadata);
 		}
 	    
-		//create a map from List<ContextAttribute>
-	    Map<String,ContextAttribute> mappedContAttrs = 
-	    		Maps.uniqueIndex(contAttrsList, new Function <ContextAttribute,String> () {
-		          public String apply(ContextAttribute from) {
-		            return from.getName(); 
-	    }});
+		Map<String,ContextAttribute> mappedContAttrs;
+		if(contAttrsList != null){
+			//create a map from List<ContextAttribute>
+		    mappedContAttrs = 
+		    		Maps.uniqueIndex(contAttrsList, new Function <ContextAttribute,String> () {
+			          public String apply(ContextAttribute from) {
+			            return from.getName(); 
+		    }});
+		}
+		else{
+			mappedContAttrs = null;
+		}
 		
-	    if(mappedContAttrs.isEmpty()){
-	    	return null;
-	    }
-	    
 	    ThingInfoContainer thingInfoContainer = new ThingInfoContainer();
 		
 	    thingInfoContainer.setContextEntityId(id);

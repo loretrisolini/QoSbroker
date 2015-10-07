@@ -12,7 +12,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingIdThingServiceIdPair;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingService;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Constants;
 import it.unipi.iotplatform.qosbroker.qosmanager.utils.ThingInfoContainer;
@@ -771,24 +771,21 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 //		CREATE THE REQUEST FROM THE INFO TAKEN FROM SERVICE_AGREEMENT_REQUEST
 		
-		//create Map<ServId, ServiceName> of services
-		HashMap<Integer, String> servicesMap = createServiceList(serviceRequest.getAttributeList());
+		//create List<requiredServicesName> of services required in service Agreement request
+		//LinkedHashSer is used to avoid the equal string in requiredServicesName
+		//so thre are no equal serviceName Temp, Temp is equal to Temp
+		List<String> requiredServicesName = new ArrayList<>(new LinkedHashSet<String>(serviceRequest.getAttributeList()));
+		
 		
 		//object to store the details of the service Request
 		Request request = new Request();
-		request.setTransactionId(transactionID);
 		request.setOpType(opType);
 		request.setQosRequirements(qosRequirements);
-		request.setRestriction(restriction);
-		request.setEntityIdList(serviceRequest.getEntityIdList());
-		request.setRequestedServiceMap(servicesMap);
 		
-		StatusCode statusCode = new StatusCode();
-		
-//		discovery phase
+//		DISCOVERY PHASE
 		
 		//get list of equivalentThings
-		RequestResult reqResult = discoverThings(request, statusCode);
+		 StatusCode statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction);
 		
 		if(reqResult == null){
 			
@@ -825,25 +822,16 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return response;
 	}
 
-	/* discover a list of equivalent things given the request object.
-	 * the flag value indicates if the requestResult structures must be updated by the monitoring task */
-	private RequestResult discoverThings(Request request, StatusCode statusCode){
+	/* discover a list of equivalent things given the list of entityId objects
+	 * the list of required services and the restrictions */
+	private StatusCode discoverThings(List<EntityId> entityIdList,
+			Request request, Restriction restriction) {
 		
-		//list of requested services names
-		List<String> requestedServicesNameList = new ArrayList<>();
-		
-		//list of objects that represents the requested Services <servId, requestedServiceName>
-		Collection<String> servicesRequestsList = request.getRequestedServicesMap().values();
-
-		//get the list of services names (attributes names) for the request to IoTDiscovery
-		for(String servName: servicesRequestsList){
-			
-			requestedServicesNameList.add(servName);
-		}
+		StatusCode statusCode;
 		
 		//create a discovery request object to get ContextRegResp List (list of things)
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
-				request.getEntityIdList(), requestedServicesNameList, request.getRestriction());
+				entityIdList, request.getRequiredServicesNameList(), restriction);
 		
 		logger.debug("DiscoverContextAvailabilityRequest:"
 				+ discoveryRequest.toString());
@@ -873,19 +861,21 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						Code.BADREQUEST_400.getCode(),
 						ReasonPhrase.BADREQUEST_400.toString(), "No response from QoSMonitor");
 				
-				return null;
+				return statusCode;
 			}
 			
-			//create, from the List<ContextRegistrationResponse>, List<ContextElement>, 
-			//a map of things objects (with a map of thing services inside) 
-			//and check if there is at least one ContextRegistrationResponse for
-			//each service (checking if the ContextRegistrationResponse has an ContextAttribute = requested service)
-			//and if each ContextRegistrationResponse element has an associated ContextElement object
-			
-			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-			
-			EquivalentThingsInfoContainer equivalentThingsMappings = 
-					createThingsMap(request.getRequestedServicesMap(), ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
+			//from the pairs List<ContexReg> and List<ContElem> (stored in ThingInfoContainer as <ContReg,ContElem>)
+			//create Map<DevId, Thing> and Map<reqServName, List<DevId>> and update ThingsInfoDB and ServiceThingsDB
+			//using QoSMonitor
+			//and check if for every reqService there is at least a Thing available.
+			//if for a contReg there isn't an associated contElem create an entry <DevId, Thing> 
+			//but the Thing has batt=0.
+			//if for a required serviceName there is only one thing but that thing has battery
+			//equal to zero the service cannot be considered satisfied.
+			//filter thing based on MaxRespTime in request object
+			statusCode = 
+					createThingsMap(request.getRequiredServicesNameList(), ContextRegistrationResponseList, 
+									qosMonitorResponse.getListContextElementResponse(), request);
 			
 			if(equivalentThingsMappings == null){
 				
@@ -893,7 +883,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						Code.BADREQUEST_400.getCode(),
 						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
 				
-				return null;
+				return statusCode;
 			}
 			
 			if(discoveryResponse.getErrorCode() != null){
@@ -922,22 +912,111 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 	}
 
-	/* function to create a map of things that can satisfy the requested services */
-	private EquivalentThingsInfoContainer createThingsMap(HashMap<Integer, String> servicesRequestsMap,
+//	/* discover a list of equivalent things given the request object.
+//	 * the flag value indicates if the requestResult structures must be updated by the monitoring task */
+//	private RequestResult discoverThings(Request request, StatusCode statusCode){
+//		
+//		//list of requested services names
+//		List<String> requestedServicesNameList = request.getRequiredServicesNameList();
+//		
+//		//create a discovery request object to get ContextRegResp List (list of things)
+//		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
+//				request.getEntityIdList(), requestedServicesNameList, request.getRestriction());
+//		
+//		logger.debug("DiscoverContextAvailabilityRequest:"
+//				+ discoveryRequest.toString());
+//		
+//		//Get the NGSI 9 DiscoverContextAvailabilityResponse 
+//		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
+//				.discoverContextAvailability(discoveryRequest);
+//		
+//		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
+//				.getErrorCode().getCode() == 200)
+//				&& discoveryResponse.getContextRegistrationResponse() != null) {
+//			
+//			List<ContextRegistrationResponse> ContextRegistrationResponseList = 
+//					discoveryResponse.getContextRegistrationResponse();
+//			
+//			//build request to QoSmonitor from List<ContextRegistrationResponse>
+//			//look for the battery level in the ContextElements
+//			//associated to the list of ContextRegistrationResponse elements
+//			QueryContextRequest queryRequest = setRequestToQoSMonitor(ContextRegistrationResponseList);
+//			
+//			//request to the QoSmonitor
+//			QueryContextResponse qosMonitorResponse = qosMonitor.queryContext(queryRequest);
+//			
+//			if(qosMonitorResponse == null){
+//				
+//				statusCode =  new StatusCode(
+//						Code.BADREQUEST_400.getCode(),
+//						ReasonPhrase.BADREQUEST_400.toString(), "No response from QoSMonitor");
+//				
+//				return null;
+//			}
+//			
+//			//create, from the List<ContextRegistrationResponse>, List<ContextElement>, 
+//			//a map of things objects (with a map of thing services inside) 
+//			//and check if there is at least one ContextRegistrationResponse for
+//			//each service (checking if the ContextRegistrationResponse has an ContextAttribute = requested service)
+//			//and if each ContextRegistrationResponse element has an associated ContextElement object
+//			
+//			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+//			
+//			EquivalentThingsInfoContainer equivalentThingsMappings = 
+//					createThingsMap(request.getRequestedServicesMap(), ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
+//			
+//			if(equivalentThingsMappings == null){
+//				
+//				statusCode =  new StatusCode(
+//						Code.BADREQUEST_400.getCode(),
+//						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
+//				
+//				return null;
+//			}
+//			
+//			if(discoveryResponse.getErrorCode() != null){
+//				statusCode = discoveryResponse.getErrorCode();
+//			}
+//			else{
+//				statusCode =  new StatusCode(
+//						Code.OK_200.getCode(),
+//						ReasonPhrase.OK_200.toString(), "Result");
+//			}
+//
+//			//object RequestResult that contains the Request object and
+//			//the map of equivalent things
+//			RequestResult reqResult = new RequestResult();
+//			
+//			reqResult.setRequest(request);
+//			reqResult.setEquivalentThingsMappings(equivalentThingsMappings);
+//			
+//			return reqResult;
+//		}
+//		else{
+//			
+//			//no elements found in the iotDiscovery
+//			statusCode = discoveryResponse.getErrorCode();
+//			return null;
+//		}
+//	}
+
+	/* function that taken the pairs List<ContexReg> and List<ContElem> (stored in ThingInfoContainer as <ContReg,ContElem>)
+	create Map<DevId, Thing> and Map<reqServName, List<DevId>> and update ThingsInfoDB and ServiceThingsDB
+	using QoSManager and check if for every reqService there is at least a Thing available.
+	if for a contReg there isn't an associated contElem create an entry <DevId, Thing> 
+	but the Thing has batt=0.
+	if for a required serviceName there is only one thing but that thing has battery
+	equal to zero the service cannot be considered satisfied.
+	filter thing based on MaxRespTime in request object */
+	private StatusCode createThingsMap(HashMap<Integer, String> servicesRequestsMap,
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
-			List<ContextElementResponse> qosMonitorResponse, double maxResponseTime) {
+			List<ContextElementResponse> qosMonitorResponse, Request request) {
 		
-		//no ContextElement so no batteryLevel
-		if(qosMonitorResponse.isEmpty()) return null;
+		//Map<DevID, Thing>
+		HashMap<String, Thing> thingsInfo = new HashMap<>();
 		
-		HashMap<Integer, Thing> thingsMap = new HashMap<>();
-		
-		//Map<ServId, List<ThingId, ThingServiceId>>
-		HashMap<Integer, EquivalentThingsList> eqThingsListPerService = new HashMap<>();
-		
-		//first check if for each
-		//contextRegResp (Thing) object there is 
-		//an associated ContextElement (Thing battery level) object
+		//Map<reqServName, List<DevID>>
+		HashMap<String, Thing> serviceEquivalentThings = new HashMap<>();
 		
 		//creation of a new list that represents the pair ContextRegistration
 		//ContextElement (services on a thing and batteryLevel of a thing)
@@ -946,6 +1025,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		List<ThingInfoContainer> thingInfoContainersList = new ArrayList<>();
 		
 		for(ContextRegistrationResponse crr: contextRegistrationResponseList){
+
+			List<ContextRegistrationAttribute> contRegAttrsList = crr.getContextRegistration().getContextRegistrationAttribute();
+			
+			String devId;
+			List<ContextAttribute> contAttrsList;
+			
+			boolean matchFound = false;
 			
 			for(ContextElementResponse contElemResp: qosMonitorResponse){
 				
@@ -954,43 +1040,65 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				//the entityId of contElemResp
 				if(matchEntityId(contElemResp, crr)){
 					
-					//id of the entityId structure on which it is matched the 
-					//ContextRegistration with the ContextElement
-					String id = contElemResp.getContextElement().getEntityId().getId();
-					List<ContextRegistrationAttribute> contRegAttrsList = crr.getContextRegistration().getContextRegistrationAttribute();
-					List<ContextAttribute> contAttrsList = contElemResp.getContextElement().getContextAttributeList();
+					matchFound = true;
 					
-					//All the list passed in the getThingInfoContainer function
-					//are converted in maps
-					//The assumption is that all attributes names in the lists are unique
-					//that is every ContextRegistrationAttribute_Name is unique
-					//the same assumption is true for ContextAttribute_Name
-					ThingInfoContainer thingInfoContainer = 
-							ThingInfoContainer.getThingInfoContainer(id, contRegAttrsList, contAttrsList);
-					
-					if(thingInfoContainer == null){
-						
-						logger.error("thingInfoContainer object null");
-						return null;
-					}
-					
-					thingInfoContainersList.add(thingInfoContainer);
+					//id of the entityId structure of ContElem that match
+					//with the one of ConteReg
+					devId = contElemResp.getContextElement().getEntityId().getId();
+
+					contAttrsList = contElemResp.getContextElement().getContextAttributeList();
+					break;
 				}
+			}
+			
+			//check if no match has found, in that case give
+			//as devId the first id in the first entityIdList
+			//in the contextRegistration and null as contextAttrsList
+			if(!matchFound){
+				
+				//usually the case of multiple entityId for contextRegistration
+				//doesn't happen because there is one registrationContext
+				//for each sensor using only one entityId to identify
+				//a single sensor
+				devId = crr.getContextRegistration().getListEntityId().get(0).getId();
+				
+				//there is no value for the battery
+				contAttrsList = null;
+			}
+			
+			//All the list passed in the getThingInfoContainer function
+			//are converted in maps
+			//The assumption is that all attributes names in the lists are unique
+			//that is every ContextRegistrationAttribute_Name is unique
+			//the same assumption is true for ContextAttribute_Name
+			Thing t = 
+					Thing.getThingInfoContainer(devId, contRegAttrsList, contAttrsList);
+			
+			if(thingInfoContainer == null){
+				logger.debug("Error: ThingInfo <ContReg, ContElem> Container is null");
+			}
+			else{
+				thingInfoContainersList.add(thingInfoContainer);
 			}
 		}
 
-		//none contRegAttrListContElemPair is possible
-		if(thingInfoContainersList.isEmpty()) return null;
 		
-		//check if for each requested service name there is at least one
-		//contRegAttrListContElemPair and create for each contRegAttrListContElemPair
-		//that satisfies the request service an object thing (with a list of services
-		//that satisfies, that is a list of ThingServices)
+		//create Map<DevId,Thing>, Map<reqServName, List<DevId>>
+		//from thingInfoContainersList
+		for(ThingInfoContainer thingInfoContainer 
+				:thingInfoContainersList){
+			
+			Map<String, ContextRegistrationAttribute> contRegAttrsMap = thingInfoContainer.getContRegAttrsMap();
+			Map<String, Map<String, ContextMetadata>> contRegAttrsMetadataMap = thingInfoContainer.getContRegAttrsMetadataMapForEachContRegAttr();
+			Map<String, ContextAttribute> contAttrsMap = thingInfoContainer.getContAttrsMap();
+			
+			Thing t = new Thing();
+			
+			if(){
+				
+			}
+		}
 		
-		//map to check if it is available a service at least on one thing.
-		//the key is the service name taken from the attributeList.
-		//the value is set to true when it is found the thing that has that service
-		//given by the key
 		HashMap<String, Boolean> serviceAvailableAtLeastOnOneThing = new HashMap<>();
 		
 		for(Map.Entry<Integer, String> serviceEntry : servicesRequestsMap.entrySet()){
@@ -1049,7 +1157,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						return null;
 					}
 					
-					ThingServiceFeatures thingServFeat = new ThingServiceFeatures();
+					ServiceFeatures thingServFeat = new ServiceFeatures();
 					
 					Double latency = Double.valueOf(String.valueOf(contMetadata.get("latency").getValue()));
 					
@@ -1125,24 +1233,24 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	
-	/* function to create a list of requested services from the
-	   attribute list taken from serviceRequestAgreement */
-	private HashMap<Integer, String> createServiceList(List<String> attributeList) {
-
-		//get a list of unique service names
-		List<String> requestedServiceNames = new ArrayList<String>(new LinkedHashSet<String>(attributeList));
-		
-		HashMap<Integer, String> serviceMap = new HashMap<>();
-		
-		for(String serviceName: requestedServiceNames){
-			
-			int servId = serviceIdCounter.getAndIncrement();
-			
-			serviceMap.put(servId, serviceName);
-		}
-		
-		return serviceMap;
-	}
+//	/* function to create a list of requested services from the
+//	   attribute list taken from serviceRequestAgreement */
+//	private HashMap<Integer, String> createRequiredServicesList(List<String> attributeList) {
+//
+//		//get a list of unique service names
+//		List<String> requestedServiceNames = new ArrayList<String>(new LinkedHashSet<String>(attributeList));
+//		
+//		HashMap<Integer, String> serviceMap = new HashMap<>();
+//		
+//		for(String serviceName: requestedServiceNames){
+//			
+//			int servId = serviceIdCounter.getAndIncrement();
+//			
+//			serviceMap.put(servId, serviceName);
+//		}
+//		
+//		return serviceMap;
+//	}
 
 	/* get Restriction from serviceRequest */
 	private Restriction getRestriction(

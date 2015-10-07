@@ -1,6 +1,10 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
+import it.unipi.iotplatform.qosbroker.qosmanager.utils.ThingInfoContainer;
+
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -10,28 +14,28 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
+
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+
 /* class that represents a Thing (associated 
  * to a ContextRegistrationResponse element) */
 @XmlRootElement(name = "thing")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Thing extends DataStructure{
 	
-	//id (in the entityId Stricture) of the contRegResp
-	//associated to the thing and used to create
-	//the allocation schema
-	@XmlElement(name = "contexRegRespId")
-	@JsonProperty("contexRegRespId")
-	private String contextEntityId;
-	
 	@XmlElement(name = "batteryLevel")
 	@JsonProperty("batteryLevel")
 	private Double batteryLevel;
 	
-	@XmlElementWrapper(name = "thingServiceList")
-	@XmlElement(name = "thingService")
-	@JsonProperty("thingServices")
-	//Map<ThingServiceId, ThingServiceFeatures>
-	private HashMap<Integer, ThingService> thingServices;
+	@XmlElementWrapper(name = "servicesList")
+	@XmlElement(name = "service")
+	@JsonProperty("services")
+	//Map<ServiceName, ServiceFeatures>
+	private HashMap<String, ServiceFeatures> servicesList;
 
 	public Double getBatteryLevel() {
 		return batteryLevel;
@@ -41,20 +45,81 @@ public class Thing extends DataStructure{
 		this.batteryLevel = batteryLevel;
 	}
 
-	public HashMap<Integer, ThingService> getThingServices() {
-		return thingServices;
+	public HashMap<String, ServiceFeatures> getServicesList() {
+		return servicesList;
 	}
 
-	public void setThingServices(HashMap<Integer, ThingService> thingServices) {
-		this.thingServices = thingServices;
-	}
-
-	public String getContextEntityId() {
-		return contextEntityId;
-	}
-
-	public void setContextEntityId(String contextEntityId) {
-		this.contextEntityId = contextEntityId;
+	public void setServicesList(HashMap<String, ServiceFeatures> servicesList) {
+		this.servicesList = servicesList;
 	}
 	
+	//given a Pair of List<ContextRegistrationAttribute>, List<ContextAttribute> contAttrsList
+	//return a ThingInfoContainer object
+	public static Thing getThingInfoContainer(String id,
+			List<ContextRegistrationAttribute> contRegAttrsList, List<ContextAttribute> contAttrsList){
+		
+		Thing t = new Thing();
+		HashMap<String, ServiceFeatures> services = new HashMap<>();
+		
+		//iterate over List<ContextRegistrationAttribute>
+		//to get the list of services on a Thing
+		//and for each service the value of c_ij and t_ij
+		for(ContextRegistrationAttribute crAttr: contRegAttrsList){
+			
+			ServiceFeatures servFeat = new ServiceFeatures();
+			
+			List<ContextMetadata> contMetadata = contRegAttr.getMetaData();
+			
+		    if(contMetadata.isEmpty()){
+		    	continue;
+		    }
+			
+		    Map<String,ContextMetadata> mappedContMetadata = 
+		    		Maps.uniqueIndex(contMetadata, new Function <ContextMetadata,String> () {
+			          public String apply(ContextMetadata from) {
+			            return from.getName(); 
+		    }});
+			
+		}
+	    
+		//create a map for each List<ContextMetadata> in a ContextRegistrationAttribute element
+		//inside a List<ContextRegistrationAttribute>
+		HashMap<String, Map<String, ContextMetadata>> mappedContRegAttrsMetadata =
+				new HashMap<>();
+
+		for(ContextRegistrationAttribute contRegAttr: contRegAttrsList){
+			
+			List<ContextMetadata> contMetadata = contRegAttr.getMetaData();
+			
+		    if(contMetadata.isEmpty()){
+		    	continue;
+		    }
+			
+		    Map<String,ContextMetadata> mappedContMetadata = 
+		    		Maps.uniqueIndex(contMetadata, new Function <ContextMetadata,String> () {
+			          public String apply(ContextMetadata from) {
+			            return from.getName(); 
+		    }});
+		    
+		    if(mappedContMetadata.isEmpty()){
+		    	return null;
+		    }
+		    
+		    mappedContRegAttrsMetadata.put(contRegAttr.getName(), mappedContMetadata);
+		}
+	    
+		Map<String,ContextAttribute> mappedContAttrs;
+		if(contAttrsList != null){
+			//create a map from List<ContextAttribute>
+		    mappedContAttrs = 
+		    		Maps.uniqueIndex(contAttrsList, new Function <ContextAttribute,String> () {
+			          public String apply(ContextAttribute from) {
+			            return from.getName(); 
+		    }});
+		}
+		else{
+			mappedContAttrs = null;
+		}
+		
+	}
 }

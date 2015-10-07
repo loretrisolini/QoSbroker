@@ -20,7 +20,7 @@ public class ThingService extends DataStructure{
 	
 	@XmlElement(name = "thingServiceFeatures")
 	@JsonProperty("thingServiceFeatures")
-	private ThingServiceFeatures thingServFeatures;
+	private ServiceFeatures thingServFeatures;
 	
 	public String getServiceName() {
 		return serviceName;
@@ -28,10 +28,10 @@ public class ThingService extends DataStructure{
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
 	}
-	public ThingServiceFeatures getThingServFeatures() {
+	public ServiceFeatures getThingServFeatures() {
 		return thingServFeatures;
 	}
-	public void setThingServFeatures(ThingServiceFeatures thingServFeatures) {
+	public void setThingServFeatures(ServiceFeatures thingServFeatures) {
 		this.thingServFeatures = thingServFeatures;
 	}
 }
