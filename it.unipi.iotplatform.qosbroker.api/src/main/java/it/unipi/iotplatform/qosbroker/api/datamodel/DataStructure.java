@@ -19,7 +19,8 @@ public abstract class DataStructure {
 
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(DataStructure.class);
-
+	public final static String SCOPE_VALUE = "scopeValue";
+	
 	@Override
 	public String toString() {
 
@@ -63,19 +64,19 @@ public abstract class DataStructure {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T convertObjectToJaxbObject(Object object, T JaxbObject) {
+	public static <T> T convertObjectToJaxbObject(Node object, T JaxbObject, Class<?> type) {
 
-		if(JaxbObject.getClass() != object.getClass()){
-			throw new RuntimeException("Object must have the same type of JasxObject");
+		if (JaxbObject.getClass() != type) {
+			throw new RuntimeException("JaxbObject type must be equal to type "+ type.getCanonicalName());
 		}
-
+		
 		logger.debug(JaxbObject.getClass().getCanonicalName());
 		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(JaxbObject.getClass());
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 
-			JaxbObject = (T)unmarshaller.unmarshal((Node)object);
+			JaxbObject = (T)unmarshaller.unmarshal(object);
 
 		} catch (JAXBException e) {
 			logger.info("JAXBException", e);

@@ -11,6 +11,6 @@
 	<bean id="QoScouchdb" class="it.unipi.iotplatform.qosbroker.couchdb.impl.QoSCouchDB" />
 
 	<context:property-placeholder
-		location="file:///${dir.config}/iotbrokerconfig/iotBroker/config/couchdb.xml"/>
+		location="file:///${QoSdir.config}/config/QoScouchDB.xml"/>
 
 </beans>

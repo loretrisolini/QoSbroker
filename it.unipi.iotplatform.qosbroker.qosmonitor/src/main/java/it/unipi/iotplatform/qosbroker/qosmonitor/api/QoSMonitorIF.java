@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface QoSMonitorIF {
 
-	public void updateThingsServicesInfo(HashMap<String, Thing> thingsInfo, HashMap<String, List<String>> serviceEquivalentThings);
+	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo, HashMap<String, List<String>> serviceEquivalentThings);
 }

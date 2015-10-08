@@ -86,6 +86,7 @@ public class Thing extends DataStructure{
 		    	//have no features latency or energy cost
 		    	servFeat.setLatency(null);
 		    	servFeat.setEnergyCost(null);
+		    	services.put(contRegAttr.getName(), servFeat);
 		    	
 		    	continue;
 		    }
@@ -96,11 +97,31 @@ public class Thing extends DataStructure{
 			            return from.getName(); 
 		    }});
 		    
-		    Double latency = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.LATENCY).getValue()));
-		    servFeat.setLatency(latency);
+		    if(mappedContMetadata.get(ServiceFeatures.LATENCY) != null){
+		    	Double latency = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.LATENCY).getValue()));
+		    	servFeat.setLatency(latency);
+		    }
+		    else{
+		    	logger.debug("Latency value is null");
+		    	servFeat.setLatency(null);
+		    }
 			
-		    Double enCost = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.ENERGY_COST).getValue()));
-		    servFeat.setEnergyCost(enCost);
+		    if(mappedContMetadata.get(ServiceFeatures.ENERGY_COST) != null){
+		    	Double enCost = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.ENERGY_COST).getValue()));
+		    	servFeat.setEnergyCost(enCost);
+		    }
+		    else{
+		    	logger.debug("EnergyCost value is null");
+		    	servFeat.setEnergyCost(null);
+		    }
+		    
+		    if(mappedContMetadata.get(ServiceFeatures.ACCURACY) != null){
+		    	Double accuracy = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.ACCURACY).getValue()));
+			    servFeat.setAccuracy(accuracy);
+		    }
+		    else{
+			    servFeat.setAccuracy(null);
+		    }
 		    
 		    services.put(contRegAttr.getName(), servFeat);
 		}

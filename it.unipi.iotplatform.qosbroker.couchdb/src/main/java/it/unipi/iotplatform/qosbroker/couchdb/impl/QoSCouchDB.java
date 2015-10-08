@@ -40,8 +40,8 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	private String couchDB_PROTOCOL;
 	@Value("${couchdb_port:5984}")
 	private String couchDB_PORT;
-//	@Value("${couchdb_name:iotbrokerdb}")
-	private String couchDB_NAME = "QoSbrokerdb";
+	@Value("${couchdb_name:iotbrokerdb}")
+	private String couchDB_NAME;
 	@Value("${couchdb_username:null}")
 	private String couchDB_USERNAME;
 	@Value("${couchdb_password:null}")

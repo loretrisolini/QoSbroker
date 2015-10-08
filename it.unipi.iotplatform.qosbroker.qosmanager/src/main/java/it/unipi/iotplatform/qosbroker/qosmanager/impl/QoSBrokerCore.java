@@ -8,7 +8,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
-import it.unipi.iotplatform.qosbroker.qosmanager.datamodel.Constants;
+import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.w3c.dom.Node;
 
 import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
@@ -80,7 +81,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	private final QoSManager qosManager = new QoSManager();
 	
-	private Ngsi10Interface qosMonitor;
+	private QoSMonitorIF qosMonitor;
+	private Ngsi10Interface qosMonitorNgsi;
 	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
@@ -823,22 +825,20 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		for(OperationScope opScope : operationScope){
 			
 			if(opScope.getScopeType().contentEquals(ServiceDefinition.QOS)){
-				
-				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject(opScope.getScopeValue(), qosScopeValue);
-				
-				request.setQosRequirements(qosScopeValue);
-				
+
+				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), qosScopeValue, QoSscopeValue.class);
+
 				qosReqFound = true;
 				
 			}
 			if(opScope.getScopeType().contentEquals(ServiceDefinition.LOCATION)){
-
-				locationScopeValue = LocationScopeValue.convertObjectToJaxbObject(opScope.getScopeValue(), locationScopeValue);
+				
+				locationScopeValue = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValue, LocationScopeValue.class);
 				
 			}
 		}
 
-		if(!qosReqFound){
+		if(!qosReqFound || qosScopeValue == null){
 			return null;
 		}
 		
@@ -881,7 +881,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			QueryContextRequest queryRequest = setRequestToQoSMonitor(ContextRegistrationResponseList);
 			
 			//request to the QoSmonitor
-			QueryContextResponse qosMonitorResponse = qosMonitor.queryContext(queryRequest);
+			QueryContextResponse qosMonitorResponse = qosMonitorNgsi.queryContext(queryRequest);
 			
 			if(qosMonitorResponse == null){
 				
@@ -934,94 +934,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return null;
 		}
 	}
-
-//	/* discover a list of equivalent things given the request object.
-//	 * the flag value indicates if the requestResult structures must be updated by the monitoring task */
-//	private RequestResult discoverThings(Request request, StatusCode statusCode){
-//		
-//		//list of requested services names
-//		List<String> requestedServicesNameList = request.getRequiredServicesNameList();
-//		
-//		//create a discovery request object to get ContextRegResp List (list of things)
-//		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
-//				request.getEntityIdList(), requestedServicesNameList, request.getRestriction());
-//		
-//		logger.debug("DiscoverContextAvailabilityRequest:"
-//				+ discoveryRequest.toString());
-//		
-//		//Get the NGSI 9 DiscoverContextAvailabilityResponse 
-//		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
-//				.discoverContextAvailability(discoveryRequest);
-//		
-//		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
-//				.getErrorCode().getCode() == 200)
-//				&& discoveryResponse.getContextRegistrationResponse() != null) {
-//			
-//			List<ContextRegistrationResponse> ContextRegistrationResponseList = 
-//					discoveryResponse.getContextRegistrationResponse();
-//			
-//			//build request to QoSmonitor from List<ContextRegistrationResponse>
-//			//look for the battery level in the ContextElements
-//			//associated to the list of ContextRegistrationResponse elements
-//			QueryContextRequest queryRequest = setRequestToQoSMonitor(ContextRegistrationResponseList);
-//			
-//			//request to the QoSmonitor
-//			QueryContextResponse qosMonitorResponse = qosMonitor.queryContext(queryRequest);
-//			
-//			if(qosMonitorResponse == null){
-//				
-//				statusCode =  new StatusCode(
-//						Code.BADREQUEST_400.getCode(),
-//						ReasonPhrase.BADREQUEST_400.toString(), "No response from QoSMonitor");
-//				
-//				return null;
-//			}
-//			
-//			//create, from the List<ContextRegistrationResponse>, List<ContextElement>, 
-//			//a map of things objects (with a map of thing services inside) 
-//			//and check if there is at least one ContextRegistrationResponse for
-//			//each service (checking if the ContextRegistrationResponse has an ContextAttribute = requested service)
-//			//and if each ContextRegistrationResponse element has an associated ContextElement object
-//			
-//			double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-//			
-//			EquivalentThingsInfoContainer equivalentThingsMappings = 
-//					createThingsMap(request.getRequestedServicesMap(), ContextRegistrationResponseList, qosMonitorResponse.getListContextElementResponse(),maxRespTime);
-//			
-//			if(equivalentThingsMappings == null){
-//				
-//				statusCode =  new StatusCode(
-//						Code.BADREQUEST_400.getCode(),
-//						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
-//				
-//				return null;
-//			}
-//			
-//			if(discoveryResponse.getErrorCode() != null){
-//				statusCode = discoveryResponse.getErrorCode();
-//			}
-//			else{
-//				statusCode =  new StatusCode(
-//						Code.OK_200.getCode(),
-//						ReasonPhrase.OK_200.toString(), "Result");
-//			}
-//
-//			//object RequestResult that contains the Request object and
-//			//the map of equivalent things
-//			RequestResult reqResult = new RequestResult();
-//			
-//			reqResult.setRequest(request);
-//			reqResult.setEquivalentThingsMappings(equivalentThingsMappings);
-//			
-//			return reqResult;
-//		}
-//		else{
-//			
-//			//no elements found in the iotDiscovery
-//			statusCode = discoveryResponse.getErrorCode();
-//			return null;
-//		}
-//	}
 
 	/* function that taken the pairs List<ContexReg> and List<ContElem> (stored in ThingInfoContainer as <ContReg,ContElem>)
 	create Map<DevId, Thing> and Map<reqServName, List<DevId>> and update ThingsInfoDB and ServiceThingsDB
@@ -1126,9 +1038,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 		}
 		
+		//TODO use threads for writing in DBs
 		//update ThingsInfoDB and ServiceEquivalentThingsDB
 		//with the new Map<DevId, Thing> and Map<reqServName, List<DevId>>
-		//TODO qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings);
+		qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings);
 		
 		Boolean checkServiceAgreementRequestConditions =
 					checkServiceAllocationConditions(serviceEquivalentThings, thingsInfo, request);
@@ -1165,19 +1078,23 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			}
 			
 			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+			Double accuracy = request.getQosRequirements().getAccuracy();
 			String reqServName = entry.getKey();
 			
 			//var to check if filtering the eqThings
-			//based on latency there is at least one
+			//based on latency and accuracy there is at least one
 			//thing for that requiredService
-			Boolean maxRespTimeConstraint = false;
+			Boolean constraints = false;
 			
 			for(String eqThingDevId: eqThings){
 				
 				Double latency = thingsInfo.get(eqThingDevId).getServicesList().get(reqServName).getLatency();
+				Double servAccuracy = thingsInfo.get(eqThingDevId).getServicesList().get(reqServName).getAccuracy();
 				
-				if(latency != null && latency < maxRespTime){
-					maxRespTimeConstraint = true;
+				//if latency or servAccuracy are not null
+				//they must respect the constraints
+				if((latency == null || latency < maxRespTime) && (servAccuracy == null || servAccuracy >= accuracy)){
+					constraints = true;
 					break;
 				}
 			}
@@ -1186,7 +1103,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//this service has no things
 			//so it is useless continue in the allocation
 			//process
-			if(!maxRespTimeConstraint){
+			if(!constraints){
 				return false;
 			}
 
@@ -1275,12 +1192,22 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		this.ngsi10Requester = ngsi10Requester;
 	}
 
-	public Ngsi10Interface getQosMonitor() {
+	public QoSMonitorIF getQosMonitor() {
 		return qosMonitor;
 	}
 
-	public void setQosMonitor(Ngsi10Interface qosMonitor) {
+	public void setQosMonitor(QoSMonitorIF qosMonitor) {
 		this.qosMonitor = qosMonitor;
 	}
+
+	public Ngsi10Interface getQosMonitorNgsi() {
+		return qosMonitorNgsi;
+	}
+
+	public void setQosMonitorNgsi(Ngsi10Interface qosMonitorNgsi) {
+		this.qosMonitorNgsi = qosMonitorNgsi;
+	}
+
+
 
 }

@@ -3,20 +3,24 @@ package it.unipi.iotplatform.qosbroker.api.datamodel;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.Logger;
 
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Segment;
 
-@XmlRootElement(name = "LocationScopeValue")
+@XmlRootElement(name = "scopeValue")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class LocationScopeValue<T> extends DataStructure {
 	
-	@XmlElement(name = "locationRequirement", required = true)
-	//can be Point, Circle or Polygon
+    @XmlElements({
+        @XmlElement(name="circle", type=Circle.class),
+        @XmlElement(name="segment", type=Segment.class),
+        @XmlElement(name="point", type=Point.class)
+    })
+    //can be Point, Segment, Circle
 	private T locationRequirement;
 
 	public T getLocationRequirement() {

@@ -20,12 +20,12 @@ import org.w3c.dom.Node;
 </scopeValue>
 */
 
-@XmlRootElement(name = "QoSscopeValue")
+@XmlRootElement(name = "scopeValue")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class QoSscopeValue extends DataStructure {
 	
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(DataStructure.class);
+	private static Logger logger = Logger.getLogger(QoSscopeValue.class);
 	
 	@XmlElement(name = "maxResponseTime", required = true)
 	private Double maxResponseTime;
@@ -58,5 +58,13 @@ public class QoSscopeValue extends DataStructure {
 
 	public void setMaxRateRequest(Double maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
+	}
+
+	public Double getAccuracy() {
+		return accuracy;
+	}
+
+	public void setAccuracy(Double accuracy) {
+		this.accuracy = accuracy;
 	}
 }

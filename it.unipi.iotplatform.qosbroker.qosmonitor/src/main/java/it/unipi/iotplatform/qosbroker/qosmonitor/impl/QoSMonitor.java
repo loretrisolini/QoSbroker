@@ -149,9 +149,10 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 	}
 
 	@Override
-	public void updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
+	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, List<String>> serviceEquivalentThings) {
 		// TODO Auto-generated method stub
+		return true;
 		
 	}
 
