@@ -2,7 +2,9 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.couchdb.api.CouchDbConsts;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -10,7 +12,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.JSONObject;
+
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
@@ -48,29 +54,52 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		
 		List<EntityId> entityIdList = query.getEntityIdList();
 		
-		List<ContextElementResponse> DBresponse = new ArrayList<>();
-		
 		//this list is updated every i read a contextElementResponse 
 		//from the database
 		List<ContextElementResponse> contextElemRespList = new ArrayList<>();
 		
+		List<String> idList = new ArrayList<>();
+		
 		for(EntityId Id: entityIdList){
 			
-			//the couchDB stores a list of ContextElems for every
-			//context attribute in the ContextElement
-			DBresponse = bigDataRepository.getEntityLatestValues(Id);
-			
-			//TODO da testare
-			
-			if(!DBresponse.isEmpty()){
-				
-				contextElemRespList.addAll(DBresponse);
-				
-			}
-
+			idList.add(Id.getId());
 		}
 		
+		List<Pair<String, JSONObject>> dataList = bigDataRepository.readData(idList, CouchDbConsts.SENS_ACT_ATTR_DB);
+		
 		QueryContextResponse queryResponse = new QueryContextResponse();
+		
+		if(dataList == null){
+
+			queryResponse.setErrorCode(new StatusCode(
+					Code.INTERNALERROR_500.getCode(),
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Internal QoSMonitor Error"));
+			
+			return queryResponse;
+		}
+		
+		for(Pair<String, JSONObject> data: dataList){
+			
+			if(!data.getRight().isNull("error")){
+				continue;
+			}
+			
+			//problem with ContextElem in json format
+			//that is different from the jaxb format
+			ContextElementResponse contElemResp = 
+					DataStructure.fromJsonToContextElementResponse(data.getRight());
+			
+			contextElemRespList.add(contElemResp);
+		}
+		
+		if(dataList.isEmpty()){
+
+			queryResponse.setErrorCode(new StatusCode(
+					Code.CONTEXTELEMENTNOTFOUND_404.getCode(),
+					ReasonPhrase.CONTEXTELEMENTNOTFOUND_404.toString(), "Context Element not found"));
+			
+			return queryResponse;
+		}
 		
 		queryResponse.setContextResponseList(contextElemRespList);
 		queryResponse.setErrorCode(new StatusCode(

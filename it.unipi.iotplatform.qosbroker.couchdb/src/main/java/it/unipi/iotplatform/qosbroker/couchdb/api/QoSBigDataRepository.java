@@ -2,13 +2,14 @@ package it.unipi.iotplatform.qosbroker.couchdb.api;
 
 import java.util.List;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
+import org.json.JSONObject;
+
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 
 public interface QoSBigDataRepository {
 	
-	void storeData(List<ContextElement> contextElementList);
+	Boolean storeData(List<Pair<String, JSONObject>> dataList, String DBName);
 	
-	List<ContextElementResponse> getEntityLatestValues(EntityId entityId);
+	List<Pair<String, JSONObject>> readData(List<String> keyList, String DBName);
 }

@@ -1,5 +1,7 @@
 package it.unipi.iotplatform.qosbroker.couchdb.impl;
 
+import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -7,8 +9,10 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.auth.BasicScheme;
@@ -17,22 +21,21 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 
-import eu.neclab.iotplatform.couchdb.CouchDB;
 import eu.neclab.iotplatform.couchdb.CreateDB;
 import eu.neclab.iotplatform.couchdb.http.Client;
 import eu.neclab.iotplatform.couchdb.http.HttpRequester;
 import eu.neclab.iotplatform.iotbroker.commons.FullHttpResponse;
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
-import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 
 public class QoSCouchDB implements QoSBigDataRepository{
 
 	/** The logger. */
-	private static Logger logger = Logger.getLogger(CouchDB.class);
+	private static Logger logger = Logger.getLogger(QoSCouchDB.class);
 
 	@Value("${couchdb_host:localhost}")
 	private String couchDB_HOST;
@@ -40,13 +43,15 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	private String couchDB_PROTOCOL;
 	@Value("${couchdb_port:5984}")
 	private String couchDB_PORT;
-	@Value("${couchdb_name:iotbrokerdb}")
-	private String couchDB_NAME;
+	
+	@Value("${couchdb_names}")
+	private String[] couchDB_NAME;
+	
 	@Value("${couchdb_username:null}")
 	private String couchDB_USERNAME;
 	@Value("${couchdb_password:null}")
 	private String couchDB_PASSWORD;
-
+	
 	public String getCouchDB_HOST() {
 		return couchDB_HOST;
 	}
@@ -71,14 +76,6 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		this.couchDB_PORT = couchDB_PORT;
 	}
 
-	public String getCouchDB_NAME() {
-		return couchDB_NAME;
-	}
-
-	public void setCouchDB_NAME(String couchDB_NAME) {
-		this.couchDB_NAME = couchDB_NAME;
-	}
-
 	public String getUSERNAME() {
 		return couchDB_USERNAME;
 	}
@@ -99,12 +96,20 @@ public class QoSCouchDB implements QoSBigDataRepository{
 
 	private String authentication = null;
 
-	boolean databaseExist = false;
+	HashMap<String, Boolean> databaseExist;
 
 	private String couchDB_ip = null;
 
 	public QoSCouchDB() {
-
+		
+		databaseExist = new HashMap<>();
+		
+		int i = 0;
+		for(Map.Entry<String, Boolean> entry : databaseExist.entrySet()){
+			databaseExist.put(couchDB_NAME[i], false);
+			
+			i++;
+		}
 	}
 
 	public String getCouchDB_ip() {
@@ -118,9 +123,8 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	}
 
 	@SuppressWarnings("deprecation")
-	@Override
-	public void storeData(List<ContextElement> contextElementList) {
-
+	private Boolean checkDB(String DBName){
+		
 		if (couchDB_ip == null) {
 			setCouchDB_ip();
 		}
@@ -136,206 +140,75 @@ public class QoSCouchDB implements QoSBigDataRepository{
 					.toString();
 		}
 
-		if (!databaseExist) {
+		if (!databaseExist.get(DBName)) {
 			try {
-				if (couchDBtool.checkDB(getCouchDB_ip(), couchDB_NAME,
+				if (couchDBtool.checkDB(getCouchDB_ip(), DBName,
 						authentication)) {
 
-					databaseExist = true;
+					databaseExist.put(DBName, true);
 
 				} else {
 
-					couchDBtool.createDb(getCouchDB_ip(), couchDB_NAME,
+					couchDBtool.createDb(getCouchDB_ip(), DBName,
 							authentication);
-					databaseExist = true;
+					databaseExist.put(DBName, true);
 				}
 			} catch (MalformedURLException e) {
 				logger.info("Impossible to store information into CouchDB", e);
-				return;
+				return false;
 			}
 		}
+		return true;
+	}
+	
 
-		Iterator<ContextElement> iter = contextElementList.iterator();
+	@Override
+	public Boolean storeData(List<Pair<String, JSONObject>> dataList, String DBName){
+
+		if(!checkDB(DBName)){
+			return false;
+		}
+
+		Iterator<Pair<String, JSONObject>> iter = dataList.iterator();
 		while (iter.hasNext()) {
 
-			ContextElement contextElement = iter.next();
+			Pair<String, JSONObject> data = iter.next();
 
-			// Create a list of ContextElement where each ContextElement has
-			// only one ContextAttribute
-			List<ContextElement> isolatedContextElementList = this
-					.isolateAttributes(contextElement);
-
-			// Iterate over the list
-			for (ContextElement isolatedContextElement : isolatedContextElementList) {
-
-				// Extract the timestamp from the ContextAttribute
-				Date timestamp = extractTimestamp(isolatedContextElement
-						.getContextAttributeList().iterator().next());
-
-				// If no timestamp is found, take the actual one.
-				if (timestamp == null) {
-					timestamp = new Date();
-				}
-
-				// Generate the documentKey for historical data
-//				String documentKey = this.generateKeyForHistoricalData(
-//						contextElement.getEntityId(), contextElement
-//								.getContextAttributeList().iterator().next()
-//								.getName(), timestamp);
-
-//				JSONObject xmlJSONObj = XML.toJSONObject(contextElement
-//						.toString());
+			String key = data.getLeft();
+			JSONObject jsonObj = data.getRight();
 				
-				JSONObject xmlJSONObj = fromContextElementToJson(contextElement);
+			// Store the historical data
+			logger.debug("JSON Object to store:" + jsonObj.toString(2));
+			try {
+				FullHttpResponse dbResponse = queryDB(key);
 				
-				// Store the historical data
-				logger.debug("JSON Object to store:" + xmlJSONObj.toString(2));
-				try {
-					FullHttpResponse dbResponse = queryDB(contextElement.getEntityId());
+				//check if the response from the DB is empty
+				if(dbResponse.getBody() != null){
+					JSONObject resp = new JSONObject(dbResponse.getBody());
 					
-					//check if the response from the DB is empty
-					if(dbResponse.getBody() != null){
-						JSONObject resp = new JSONObject(dbResponse.getBody());
+					if(!resp.isNull("_rev")){
 						
-						if(!resp.isNull("_rev")){
-							
-							xmlJSONObj.put("_rev", resp.getString("_rev"));
-						}
+						jsonObj.put("_rev", resp.getString("_rev"));
 					}
-						
-					Client.sendRequest(new URL(getCouchDB_ip() + couchDB_NAME
-							+ "/" + contextElement.getEntityId().getId()), "PUT", xmlJSONObj.toString(),
-							"application/json", authentication);
-					
-
-					
-				} catch (MalformedURLException e) {
-					logger.info("Impossible to store information into CouchDB",
-							e);
 				}
+					
+				Client.sendRequest(new URL(getCouchDB_ip() + DBName
+						+ "/" + key), "PUT", jsonObj.toString(),
+						"application/json", authentication);
+				
 
-				// TODO update latest
-				// update latest
-
+				
+			} catch (MalformedURLException e) {
+				logger.info("Impossible to store information into CouchDB",
+						e);
+				return false;
 			}
 
 		}
-
+		return true;
 	}
 
-	private JSONObject fromContextElementToJson(ContextElement contextElement) {
-
-		JSONObject contexElemJSONObj = new JSONObject();
-		
-		JSONObject entityId = new JSONObject();
-		
-		entityId.put("id", contextElement.getEntityId().getId());
-		entityId.put("type", contextElement.getEntityId().getType());
-		entityId.put("isPattern", contextElement.getEntityId().getIsPattern());
-		
-		contexElemJSONObj.put("entityId", entityId);
-		
-		JSONArray attributes = new JSONArray();
-		
-		List<ContextAttribute> contAttrList = contextElement.getContextAttributeList();
-		
-		for(ContextAttribute contAttr: contAttrList){
-			
-			JSONObject contAttrJSONObj = new JSONObject();
-			
-			contAttrJSONObj.put("name", contAttr.getName());
-			contAttrJSONObj.put("type", contAttr.getType());
-			contAttrJSONObj.put("contextValue", contAttr.getcontextValue());
-			
-			attributes.put(contAttrJSONObj);
-		}
-		
-		contexElemJSONObj.put("attributes", attributes);
-		
-		//return the ContElem enclosed in a contextElement Json object
-		//because when it is read is more easy to identify the
-		//elements of a complex structure ContextElement
-		return (new JSONObject()).put("contextElement", contexElemJSONObj);
-	}
-
-	private String generateKeyForHistoricalData(EntityId entityId,
-			String attributeName, Date timestamp) {
-
-		// example: obs_urn:x-iot:smartsantander:1:3301|2015-05-08 16:36:22
-
-		SimpleDateFormat dateFormat = new SimpleDateFormat(
-				"yyyy-MM-dd%20HH:mm:ss");
-
-		String key = new String(String.format("obs_%s:%s|%s", entityId.getId(),
-				attributeName, dateFormat.format(timestamp)));
-
-		return key;
-
-	}
-
-	/**
-	 * This method create a list of ContextElement, one for each
-	 * ContextAttribute in the original ContextElement. The new
-	 * ContextAttributes will have duplicated DomainMetadata and EntityID. This
-	 * is necessary in order to store historical data and make historical query
-	 * of a specified attribute.
-	 * 
-	 * @param contextElement
-	 * @return
-	 */
-	private List<ContextElement> isolateAttributes(ContextElement contextElement) {
-
-		List<ContextElement> contextElementList = new ArrayList<ContextElement>();
-
-		if (contextElement.getContextAttributeList().size() > 1) {
-			contextElementList.add(contextElement);
-		} else {
-
-			for (ContextAttribute contextAttribute : contextElement
-					.getContextAttributeList()) {
-				List<ContextAttribute> contextAttributeList = new ArrayList<ContextAttribute>();
-				contextAttributeList.add(contextAttribute);
-				contextElementList.add(new ContextElement(contextElement
-						.getEntityId(),
-						contextElement.getAttributeDomainName(),
-						contextAttributeList, contextElement
-								.getDomainMetadata()));
-			}
-		}
-
-		return contextElementList;
-
-	}
-
-	private Date extractTimestamp(ContextAttribute contextAttribute) {
-
-		Date timestamp = null;
-
-		if(contextAttribute.getMetadata() != null){
-			for (ContextMetadata contextMetadata : contextAttribute.getMetadata()) {
 	
-				if (contextMetadata.getName().equalsIgnoreCase("creation_time")) {
-	
-					/*
-					 * This contextMetadata is set by the leafengine connector
-					 */
-	
-					// example timestamp "2015.05.29 19:24:28:769 +0000"
-					// "yyyy.MM.dd HH:mm:ss:SSS Z"
-	
-					SimpleDateFormat parserSDF = new SimpleDateFormat(
-							"yyyy.MM.dd HH:mm:ss:SSS Z");
-					timestamp = parserSDF.parse(
-							(String) contextMetadata.getValue(), new ParsePosition(
-									0));
-					break;
-				}
-	
-			}
-		}
-
-		return timestamp;
-	}
 
 	public static void main(String[] args) {
 		String date = "2015.05.29 19:24:28:769 +0000";
@@ -346,77 +219,31 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	}
 
 	@Override
-	public List<ContextElementResponse> getEntityLatestValues(EntityId entityId) {
+	public List<Pair<String, JSONObject>> readData(List<String> keyList, String DBName){
 
-		// TODO Auto-generated method stub
-
-		FullHttpResponse dbResponse = queryDB(entityId);
-
-		JSONObject resp = new JSONObject(dbResponse.getBody());
-		
-		if(!resp.isNull("contextElement")){
-			
-			ContextElementResponse contextResponse = fromJsonToContextElementResponse(resp.getJSONObject("contextElement"));
-			
-			List<ContextElementResponse> contextElementList = new ArrayList<>();
-			
-			contextElementList.add(contextResponse);
-			
-			return contextElementList;
-		}
-		else{
+		if(!checkDB(DBName)){
 			return null;
 		}
 		
-	}
-
-	private ContextElementResponse fromJsonToContextElementResponse(
-			JSONObject contElemJson) {
-		
-		ContextElementResponse contextElemResp = new ContextElementResponse();
-		
-		ContextElement contextElem = new ContextElement();
-		
-		//read values for EntityId structure
-		EntityId entId = new EntityId();
-		
-		entId.setId(contElemJson.getJSONObject("entityId").getString("id"));
-		
-		entId.setType(URI.create(contElemJson.getJSONObject("entityId").getString("type")));
-		
-		entId.setIsPattern(contElemJson.getJSONObject("entityId").getBoolean("isPattern"));
-		
-		contextElem.setEntityId(entId);
-		
-		//read values for ContextAttributeList
-		List<ContextAttribute> contAttrList = new ArrayList<>();
-		
-		JSONArray attributes = contElemJson.getJSONArray("attributes");
-		
-		for(int i=0; i < attributes.length(); i++){
+		List<Pair<String, JSONObject>> readDataList = new ArrayList<Pair<String, JSONObject>>();
+		for(String key: keyList){
+			FullHttpResponse dbResponse = queryDB(key);
+	
+			if(dbResponse == null){
+				return null;
+			}
 			
-			JSONObject attr = attributes.getJSONObject(i);
+			JSONObject jsonResp = new JSONObject(dbResponse.getBody());
 			
-			ContextAttribute contAttr = new ContextAttribute();
+			Pair<String, JSONObject> dataPair = new Pair<String, JSONObject>(key, jsonResp);
 			
-			contAttr.setName(attr.getString("name"));
-			
-			contAttr.setType(URI.create(attr.getString("type")));
-			
-			contAttr.setcontextValue(String.valueOf(attr.get("contextValue")));
-			
-			contAttrList.add(contAttr);
+			readDataList.add(dataPair);
 		}
 		
-		contextElem.setEntityId(entId);
-		contextElem.setContextAttributeList(contAttrList);
-		
-		//set ContextElement Response
-		contextElemResp.setContextElement(contextElem);
-		
-		return contextElemResp;
+		return readDataList;
 	}
 
+	
 	/**
 	 * It returns result of a view in couchDB
 	 * 
@@ -424,55 +251,30 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	 * @param documentType
 	 * @return
 	 */
-	private FullHttpResponse queryDB(EntityId entityId) {
-		
-		if (couchDB_ip == null) {
-			setCouchDB_ip();
-		}
-
-		logger.info("Send update to the CouchDB storage...");
-
-		if (couchDB_USERNAME != null && !couchDB_USERNAME.trim().isEmpty()
-				&& couchDB_PASSWORD != null
-				&& !couchDB_PASSWORD.trim().isEmpty()) {
-			UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
-					couchDB_USERNAME, couchDB_PASSWORD);
-			authentication = BasicScheme.authenticate(creds, "US-ASCII", false)
-					.toString();
-		}
-
-		if (!databaseExist) {
-			try {
-				if (couchDBtool.checkDB(getCouchDB_ip(), couchDB_NAME,
-						authentication)) {
-
-					databaseExist = true;
-
-				} else {
-
-					couchDBtool.createDb(getCouchDB_ip(), couchDB_NAME,
-							authentication);
-					databaseExist = true;
-				}
-			} catch (MalformedURLException e) {
-				logger.info("Impossible to store information into CouchDB", e);
-				return null;
-			}
-		}
+	private FullHttpResponse queryDB(String key) {
 		
 		FullHttpResponse response = null;
 		try {
 
 			response = HttpRequester.sendGet(new URL(couchDB_ip + "/"
-					+ couchDB_NAME + "/" + entityId.getId()));
+					+ couchDB_NAME + "/" + key));
 		} catch (MalformedURLException e) {
 			logger.error("Error: ", e);
+			return null;
 		} catch (Exception e) {
 			logger.error("Error: ", e);
+			return null;
 		}
 
 		return response;
+	}
 
+	public String[] getCouchDB_NAME() {
+		return couchDB_NAME;
+	}
+
+	public void setCouchDB_NAME(String[] couchDB_NAME) {
+		this.couchDB_NAME = couchDB_NAME;
 	}
 
 

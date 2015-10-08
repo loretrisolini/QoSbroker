@@ -1,6 +1,6 @@
 package it.unipi.iotplatform.qosbroker.couchdb.api;
 
-public class CouchDbConstants {
+public class CouchDbConsts {
 
 	public static final String THINGS_INFO_DB = "ThingsInfoDB";
 	public static final String SERV_EQ_THINGS_DB = "ServiceEquivalentThingsDB";
