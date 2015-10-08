@@ -1,6 +1,5 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
-import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -11,8 +10,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 
 /* class to represent the request
    that is sent through the ServiceAgreementRequest */
@@ -26,30 +26,41 @@ public class Request extends DataStructure{
 	
 	@XmlElement(name = "qosRequirements")
 	@JsonProperty("qosRequirements")
-	private QoSreq qosRequirements;
+	private QoSscopeValue qosRequirements;
 	
 	@XmlElementWrapper(name = "requiredServicesNameList")
 	@XmlElement(name = "serviceName")
 	@JsonProperty("requiredServicesName")
 	private List<String> requiredServicesNameList;
 
+	@XmlElement(name = "locationRequirement")
+	@JsonProperty("locationRequirement")
+	protected LocationScopeValue locationRequirement;
+	
 	public String getOpType() {
 		return opType;
 	}
 	public void setOpType(String opType) {
 		this.opType = opType;
 	}
-	public QoSreq getQosRequirements() {
-		return qosRequirements;
-	}
-	public void setQosRequirements(QoSreq qosRequirements) {
-		this.qosRequirements = qosRequirements;
-	}
+
 	public List<String> getRequiredServicesNameList() {
 		return requiredServicesNameList;
 	}
 	public void setRequiredServicesNameList(List<String> requiredServicesNameList) {
 		this.requiredServicesNameList = requiredServicesNameList;
 	}
-	
+	public QoSscopeValue getQosRequirements() {
+		return qosRequirements;
+	}
+	public void setQosRequirements(QoSscopeValue qosRequirements) {
+		this.qosRequirements = qosRequirements;
+	}
+	public LocationScopeValue getLocationRequirement() {
+		return locationRequirement;
+	}
+	public void setLocationRequirement(LocationScopeValue locationRequirement) {
+		this.locationRequirement = locationRequirement;
+	}
+
 }

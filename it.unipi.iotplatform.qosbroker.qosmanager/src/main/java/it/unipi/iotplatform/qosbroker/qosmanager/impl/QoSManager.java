@@ -1,14 +1,8 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-
-
-import it.unipi.iotplatform.qosbroker.api.datamodel.RequestResult;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAssignments;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceExecutionFeature;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingIdThingServiceIdPair;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingService;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
@@ -77,157 +71,157 @@ public class QoSManager implements QoSManagerIF {
 	}
 	
 	@Override
-	public void createAgreement(String offer, RequestResult reqResult){
+	public void createAgreement(String offer, String transactionId, Request request){
 		
 		//TODO Parse Offer
 		
-		//Map<transId, RequestResults>
-		HashMap<String, RequestResult> requestResultsMap = new HashMap<>();
-		
-		//TODO Get old List of RequestResults
-		
-		requestResultsMap.put(reqResult.getRequest().getTransactionId(), reqResult);
-		
-		//Map<transId ,List<ServId, Map<tId ,<tsId,f_ij,u_ij>>>
-		HashMap<String, List<ServiceAssignments>> mappingServEqThings = new HashMap<>();
-		
-		//Map<transId, h/p_j> to compute number of things
-		//to which assign a service
-		HashMap<String,Integer> coefficientMap = new HashMap<>();
-		
-		//Map<transId, p_j>
-		HashMap<String, Double> periodsMap = new HashMap<>();
-		
-		//List<p_j>
-		ArrayList<Double> periods = new ArrayList<>();
-		
-		//iterate over the list of RequestResults objects
-		//to build the list of periods
-		for(RequestResult requestResult: requestResultsMap.values()){
-			
-			Double period = requestResult.getRequest().getQosRequirements().getMaxRateRequest();
-			
-			periodsMap.put(requestResult.getRequest().getTransactionId(), period);
-			periods.add(period);
-		}
-		
-		//h hyperperiod computed as least common multiple
-		//of the list of periods
-		double hyperPeriod = lcms(periods);
-		
-		//Map that contains all the thingsMaps for all
-		//service requests
-		HashMap<Integer, Thing> totalThingsMap = new HashMap<>();
-		
-		//Map that contains all the service requested
-		//in a Request identify by a transId
-		//Map<transId, Map<servId,servName>>
-		HashMap<String, HashMap<Integer, String>> totalRequestedServicesMap = new HashMap<>();
-		
-		//counter of services requests
-		int k=0;
-		
-		//iterate over the list of RequestResult to build the
-		//MappingServEqThings
-		for(RequestResult requestResult: requestResultsMap.values()){
-			
-			String transactionId = requestResult.getRequest().getTransactionId();
-			Double period = periodsMap.get(transactionId);
-			
-			//compute the coefficient h/p_j
-			Double coeff = hyperPeriod/period;
-			coefficientMap.put(transactionId, coeff.intValue());
-			
-			//get the map of service requested for that
-			//RequestResult object
-			HashMap<Integer, String> requestedServicesMap = requestResult.getRequest().getRequestedServicesMap();
-			
-			//container Map of all service request identified by a transId and a servId
-			totalRequestedServicesMap.put(transactionId, requestedServicesMap);
-			
-			//List that contains all the equivalent things for the 
-			//requested service with servId
-			List<ServiceAssignments> servAssignmentsList = new ArrayList<>();
-			
-			//iterate on the list of service identify by the services ids
-			//for that request identify by the transactionId
-			for(Map.Entry<Integer, String> serviceEntry : requestedServicesMap.entrySet()){
-				
-				//increment service request counter
-				k++;
-				
-				//Map<tId, ServiceExecFeat>
-				HashMap<Integer, ServiceExecutionFeature> servExecFeatMap = new HashMap<>();
-				
-				//Map<thingId, Thing> for that request
-				HashMap<Integer, Thing> thingsMap = 
-						requestResult.getEquivalentThingsMappings().getThingsMap();
-
-				//container Map of all equivalent things for all requests
-				totalThingsMap.putAll(thingsMap);
-				
-				//list of pairs ThingId_ThingServiceId for that serviceId
-				//in that list of services in that request with
-				//id transactionId
-				List<ThingIdThingServiceIdPair> equivalentThingsIdThingServicesId = 
-						requestResult.getEquivalentThingsMappings().getEqThingsListPerService()
-						.get(serviceEntry.getKey()).getEquivalentThingIdThingServiceIdList();
-				
-				//compute the serviceExecutionFeature for each service id for that transactionId
-				for(ThingIdThingServiceIdPair thingsIdThingServiceId: equivalentThingsIdThingServicesId){
-					
-					Integer thingId = thingsIdThingServiceId.getThingId();
-					Integer thingServiceId = thingsIdThingServiceId.getThingServiceId();
-					
-					Thing t = thingsMap.get(thingId);
-					ThingService ts = t.getThingServices().get(thingServiceId);
-					
-					Double batteryLev = t.getBatteryLevel();
-					Double energyCost = ts.getThingServFeatures().getEnergyCost();
-					Double latency = ts.getThingServFeatures().getLatency();
-					
-					Double normalizedEnergyCost = hyperPeriod/period * energyCost/batteryLev / 100;
-					Double utilization = latency/period;
-					
-					ServiceExecutionFeature servExecFeat = new ServiceExecutionFeature();
-					
-					servExecFeat.setThingServiceId(thingServiceId);
-					servExecFeat.setNormalizedEnergyCost(normalizedEnergyCost);
-					servExecFeat.setUtilization(utilization);
-					
-					ArrayList<Double> priority = new ArrayList<>();
-					priority.add(normalizedEnergyCost);
-					priority.add(utilization);
-					priority.add(new Random().nextDouble());
-					
-					//Map<thingId, <thingServiceId, f_ij, u_ij, priority[]>>
-					servExecFeatMap.put(thingId, servExecFeat);
-				}
-				
-				//Set the object that represents the list of things that
-				//can satisfy a requested service identified by servId
-				ServiceAssignments servAssigments = new ServiceAssignments();
-				servAssigments.setServId(serviceEntry.getKey());
-				servAssigments.setThingServiceExecFeatureMap(servExecFeatMap);
-				
-				//List<<servId, Map<thingId, ServiceExecutionFeature>>>
-				//ServiceExecutionFeature = <thingServiceId, f_ij, u_ij, priority[]>
-				servAssignmentsList.add(servAssigments);
-			}
-			
-			//Map<transId, List<ServiceAssignment>>
-			//ServiceAssignments = <servId, Map<thingId, <thingServiceId, f_ij, u_ij, priority[]>>
-			mappingServEqThings.put(transactionId, servAssignmentsList);
-		}
-		
-		//compute reservation results, given the total number of service requests k, 
-		//the Map<transId, Map<servId, serviceName>>, the Map<thingId, Thing>,
-		//Map<transId, List<ServiceAssignments>>, Map<transId, h/p_j>, epsilon
-		ReservationResults allocationResult = 
-				qosCalculator.computeAllocation(k, totalRequestedServicesMap, totalThingsMap, mappingServEqThings, 
-												coefficientMap, Double.valueOf(0.001));
-		
-		List<ContextRegistration> ngsiAllocationSchema = allocationResult.getAllocationSchema();
+//		//Map<transId, RequestResults>
+//		HashMap<String, RequestResult> requestResultsMap = new HashMap<>();
+//		
+//		//TODO Get old List of RequestResults
+//		
+//		requestResultsMap.put(reqResult.getRequest().getTransactionId(), reqResult);
+//		
+//		//Map<transId ,List<ServId, Map<tId ,<tsId,f_ij,u_ij>>>
+//		HashMap<String, List<ServiceAssignments>> mappingServEqThings = new HashMap<>();
+//		
+//		//Map<transId, h/p_j> to compute number of things
+//		//to which assign a service
+//		HashMap<String,Integer> coefficientMap = new HashMap<>();
+//		
+//		//Map<transId, p_j>
+//		HashMap<String, Double> periodsMap = new HashMap<>();
+//		
+//		//List<p_j>
+//		ArrayList<Double> periods = new ArrayList<>();
+//		
+//		//iterate over the list of RequestResults objects
+//		//to build the list of periods
+//		for(RequestResult requestResult: requestResultsMap.values()){
+//			
+//			Double period = requestResult.getRequest().getQosRequirements().getMaxRateRequest();
+//			
+//			periodsMap.put(requestResult.getRequest().getTransactionId(), period);
+//			periods.add(period);
+//		}
+//		
+//		//h hyperperiod computed as least common multiple
+//		//of the list of periods
+//		double hyperPeriod = lcms(periods);
+//		
+//		//Map that contains all the thingsMaps for all
+//		//service requests
+//		HashMap<Integer, Thing> totalThingsMap = new HashMap<>();
+//		
+//		//Map that contains all the service requested
+//		//in a Request identify by a transId
+//		//Map<transId, Map<servId,servName>>
+//		HashMap<String, HashMap<Integer, String>> totalRequestedServicesMap = new HashMap<>();
+//		
+//		//counter of services requests
+//		int k=0;
+//		
+//		//iterate over the list of RequestResult to build the
+//		//MappingServEqThings
+//		for(RequestResult requestResult: requestResultsMap.values()){
+//			
+//			String transactionId = requestResult.getRequest().getTransactionId();
+//			Double period = periodsMap.get(transactionId);
+//			
+//			//compute the coefficient h/p_j
+//			Double coeff = hyperPeriod/period;
+//			coefficientMap.put(transactionId, coeff.intValue());
+//			
+//			//get the map of service requested for that
+//			//RequestResult object
+//			HashMap<Integer, String> requestedServicesMap = requestResult.getRequest().getRequestedServicesMap();
+//			
+//			//container Map of all service request identified by a transId and a servId
+//			totalRequestedServicesMap.put(transactionId, requestedServicesMap);
+//			
+//			//List that contains all the equivalent things for the 
+//			//requested service with servId
+//			List<ServiceAssignments> servAssignmentsList = new ArrayList<>();
+//			
+//			//iterate on the list of service identify by the services ids
+//			//for that request identify by the transactionId
+//			for(Map.Entry<Integer, String> serviceEntry : requestedServicesMap.entrySet()){
+//				
+//				//increment service request counter
+//				k++;
+//				
+//				//Map<tId, ServiceExecFeat>
+//				HashMap<Integer, ServiceExecutionFeature> servExecFeatMap = new HashMap<>();
+//				
+//				//Map<thingId, Thing> for that request
+//				HashMap<Integer, Thing> thingsMap = 
+//						requestResult.getEquivalentThingsMappings().getThingsMap();
+//
+//				//container Map of all equivalent things for all requests
+//				totalThingsMap.putAll(thingsMap);
+//				
+//				//list of pairs ThingId_ThingServiceId for that serviceId
+//				//in that list of services in that request with
+//				//id transactionId
+//				List<ThingIdThingServiceIdPair> equivalentThingsIdThingServicesId = 
+//						requestResult.getEquivalentThingsMappings().getEqThingsListPerService()
+//						.get(serviceEntry.getKey()).getEquivalentThingIdThingServiceIdList();
+//				
+//				//compute the serviceExecutionFeature for each service id for that transactionId
+//				for(ThingIdThingServiceIdPair thingsIdThingServiceId: equivalentThingsIdThingServicesId){
+//					
+//					Integer thingId = thingsIdThingServiceId.getThingId();
+//					Integer thingServiceId = thingsIdThingServiceId.getThingServiceId();
+//					
+//					Thing t = thingsMap.get(thingId);
+//					ThingService ts = t.getThingServices().get(thingServiceId);
+//					
+//					Double batteryLev = t.getBatteryLevel();
+//					Double energyCost = ts.getThingServFeatures().getEnergyCost();
+//					Double latency = ts.getThingServFeatures().getLatency();
+//					
+//					Double normalizedEnergyCost = hyperPeriod/period * energyCost/batteryLev / 100;
+//					Double utilization = latency/period;
+//					
+//					ServiceExecutionFeature servExecFeat = new ServiceExecutionFeature();
+//					
+//					servExecFeat.setThingServiceId(thingServiceId);
+//					servExecFeat.setNormalizedEnergyCost(normalizedEnergyCost);
+//					servExecFeat.setUtilization(utilization);
+//					
+//					ArrayList<Double> priority = new ArrayList<>();
+//					priority.add(normalizedEnergyCost);
+//					priority.add(utilization);
+//					priority.add(new Random().nextDouble());
+//					
+//					//Map<thingId, <thingServiceId, f_ij, u_ij, priority[]>>
+//					servExecFeatMap.put(thingId, servExecFeat);
+//				}
+//				
+//				//Set the object that represents the list of things that
+//				//can satisfy a requested service identified by servId
+//				ServiceAssignments servAssigments = new ServiceAssignments();
+//				servAssigments.setServId(serviceEntry.getKey());
+//				servAssigments.setThingServiceExecFeatureMap(servExecFeatMap);
+//				
+//				//List<<servId, Map<thingId, ServiceExecutionFeature>>>
+//				//ServiceExecutionFeature = <thingServiceId, f_ij, u_ij, priority[]>
+//				servAssignmentsList.add(servAssigments);
+//			}
+//			
+//			//Map<transId, List<ServiceAssignment>>
+//			//ServiceAssignments = <servId, Map<thingId, <thingServiceId, f_ij, u_ij, priority[]>>
+//			mappingServEqThings.put(transactionId, servAssignmentsList);
+//		}
+//		
+//		//compute reservation results, given the total number of service requests k, 
+//		//the Map<transId, Map<servId, serviceName>>, the Map<thingId, Thing>,
+//		//Map<transId, List<ServiceAssignments>>, Map<transId, h/p_j>, epsilon
+//		ReservationResults allocationResult = 
+//				qosCalculator.computeAllocation(k, totalRequestedServicesMap, totalThingsMap, mappingServEqThings, 
+//												coefficientMap, Double.valueOf(0.001));
+//		
+//		List<ContextRegistration> ngsiAllocationSchema = allocationResult.getAllocationSchema();
 		
 		//TODO heuristic algorithm
 //		HashMap<Integer, List<ServiceExecutionFeature>> mappingServiceThing =

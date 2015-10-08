@@ -94,6 +94,11 @@
 			<artifactId>qosbroker.couchdb</artifactId>
 		</dependency> 
 	
+ 		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.api</artifactId>
+		</dependency> 
+	
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>

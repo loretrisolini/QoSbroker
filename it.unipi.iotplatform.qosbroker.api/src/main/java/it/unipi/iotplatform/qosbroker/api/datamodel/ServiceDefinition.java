@@ -45,21 +45,11 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Restriction;
 				 </scopeValue>
 				  </operationScope>
   <operationScope>
-				 <scopeType>ServiceFeatures</scopeType>
-				 <scopeValue>
-					<featureList>
-					   <feature>
-						 <featureName>accuracy</featureName>
-						 <featureValue>0.8</featureValue>
-					   </feature>
-					</featureList>
-				 </scopeValue>
-				  </operationScope> 
-  <operationScope>
 				 <scopeType>QoS</scopeType>
 				 <scopeValue>
 					 <maxResponseTime>15</maxResponseTime>
 					 <maxRateRequest>15</maxRateRequest>
+					 <accuracy>0.8<accuracy>
 				 </scopeValue>
 			 </operationScope>
 		</scope>
@@ -85,7 +75,14 @@ public class ServiceDefinition extends DataStructure{
 	
 	@XmlElement(required=true)
 	private Restriction restriction = null;
-
+	
+	public final static String LOCATION = "Location";
+	public final static String SIMPLE_GEO_LOCATION = "SimpleGeoLocation";
+	public static final String QOS = "QoS";
+	public static final String MAX_RESPONSE_TIME = "maxResponseTime";
+	public static final String MAX_RATE_REQUEST = "maxRateRequest";
+	public static final String ACCURACY = "accuracy";
+	
 	public String getOperationType() {
 		return operationType;
 	}

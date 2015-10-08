@@ -16,29 +16,29 @@ public class ServiceFeatures extends DataStructure{
 	@XmlElement(name = "latency")
 	@JsonProperty("latency")
 	//t_ij
-	private double latency;
+	private Double latency;
 	
 	@XmlElement(name = "energyCost")
 	@JsonProperty("energyCost")
 	//c_ij
-	private double energyCost;
+	private Double energyCost;
 
 	public final static String LATENCY = "latency";
 	public final static String ENERGY_COST = "energyCost";
 	
-	public double getLatency() {
+	public Double getLatency() {
 		return latency;
 	}
 
-	public void setLatency(double latency) {
+	public void setLatency(Double latency) {
 		this.latency = latency;
 	}
 
-	public double getEnergyCost() {
+	public Double getEnergyCost() {
 		return energyCost;
 	}
 
-	public void setEnergyCost(double energyCost) {
+	public void setEnergyCost(Double energyCost) {
 		this.energyCost = energyCost;
 	}
 }

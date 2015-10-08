@@ -16,10 +16,11 @@ import org.w3c.dom.Node;
 <scopeValue>
 	 <maxResponseTime>15</maxResponseTime>
 	 <maxRateRequest>15</maxRateRequest>
+	 <accuracy>0.8<accuracy>
 </scopeValue>
 */
 
-@XmlRootElement(name = "scopeValue")
+@XmlRootElement(name = "QoSscopeValue")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class QoSscopeValue extends DataStructure {
 	
@@ -31,6 +32,9 @@ public class QoSscopeValue extends DataStructure {
 	
 	@XmlElement(name = "maxRateRequest", required = true)
 	private Double maxRateRequest;
+	
+	@XmlElement(name = "accuracy", required = false)
+	private Double accuracy;
 
 	public static Logger getLogger() {
 		return logger;
@@ -55,24 +59,4 @@ public class QoSscopeValue extends DataStructure {
 	public void setMaxRateRequest(Double maxRateRequest) {
 		this.maxRateRequest = maxRateRequest;
 	}
-
-
-	
-//	public static QoSscopeValue convertObjectToQoSscopeValue(Object object) {
-//
-//		QoSscopeValue response = null;
-//
-//		try {
-//			JAXBContext jaxbContext = JAXBContext.newInstance(QoSscopeValue.class);
-//			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-//
-//			response = (QoSscopeValue)unmarshaller.unmarshal((Node)object);
-//
-//		} catch (JAXBException e) {
-//			logger.info("JAXBException", e);
-//		}
-//
-//		return response;
-//
-//	}
 }

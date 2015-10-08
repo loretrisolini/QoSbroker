@@ -2,9 +2,14 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
+import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
@@ -24,7 +29,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRequest
 import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionResponse;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 
-public class QoSMonitor implements Ngsi10Interface{
+public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
 	/**
 	 * A pointer to a Big Data repository. (This functionality is currently
@@ -141,6 +146,13 @@ public class QoSMonitor implements Ngsi10Interface{
 
 	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
 		this.bigDataRepository = bigDataRepository;
+	}
+
+	@Override
+	public void updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
+			HashMap<String, List<String>> serviceEquivalentThings) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

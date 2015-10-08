@@ -1,7 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.RequestResult;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 
 import javax.annotation.Resource;
 
@@ -23,6 +23,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public void createAgreement(String offer, RequestResult reqResult);
+	public void createAgreement(String offer, String transactionId, Request request);
 	
 }

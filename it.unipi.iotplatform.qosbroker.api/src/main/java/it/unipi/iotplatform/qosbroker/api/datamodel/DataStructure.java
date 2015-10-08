@@ -62,17 +62,17 @@ public abstract class DataStructure {
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static <T> T convertObjectToJaxbObject(Object object, T JaxbObject) {
 
-		if (JaxbObject.getClass().getSuperclass() != DataStructure.class) {
-			throw new RuntimeException("Cannot convert Object to "
-					+ JaxbObject.getClass().getName());
+		if(JaxbObject.getClass() != object.getClass()){
+			throw new RuntimeException("Object must have the same type of JasxObject");
 		}
+
+		logger.debug(JaxbObject.getClass().getCanonicalName());
 		
-
-
 		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(QoSscopeValue.class);
+			JAXBContext jaxbContext = JAXBContext.newInstance(JaxbObject.getClass());
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 
 			JaxbObject = (T)unmarshaller.unmarshal((Node)object);
