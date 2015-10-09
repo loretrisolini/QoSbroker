@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@XmlRootElement(name = "ThingsInfo")
+@XmlRootElement(name = "thingsInfo")
 @XmlAccessorType(XmlAccessType.FIELD)
 /* class that contain the Map<DevId, Thing> */
 public class ThingsInfo extends DataStructure{

@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-@XmlRootElement(name = "ServiceEquivalentThingsMapping")
+@XmlRootElement(name = "serviceEquivalentThingsMapping")
 @XmlAccessorType(XmlAccessType.FIELD)
 /* class that contain the Map<reqServName, List<DevId>> */
 public class ServiceEquivalentThingsMapping extends DataStructure{
@@ -20,14 +20,14 @@ public class ServiceEquivalentThingsMapping extends DataStructure{
 	@XmlElement(name = "serviceEquivalentThingsEntry")
 	@JsonProperty("serviceEquivalentThings")
 	//Map<reqServName, List<DevId>>
-	HashMap<String, List<String>> serviceEquivalentThings;
+	HashMap<String, EquivalentThings> serviceEquivalentThings;
 
-	public HashMap<String, List<String>> getServiceEquivalentThingsMap() {
+	public HashMap<String, EquivalentThings> getServiceEquivalentThings() {
 		return serviceEquivalentThings;
 	}
 
-	public void setServiceEquivalentThingsMap(
-			HashMap<String, List<String>> serviceEquivalentThingsMap) {
-		this.serviceEquivalentThings = serviceEquivalentThingsMap;
+	public void setServiceEquivalentThings(
+			HashMap<String, EquivalentThings> serviceEquivalentThings) {
+		this.serviceEquivalentThings = serviceEquivalentThings;
 	}
 }

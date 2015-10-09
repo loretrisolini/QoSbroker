@@ -16,6 +16,7 @@ import java.util.List;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -221,7 +222,52 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		
 		//iterate over the list of keys to read data from the DB with name DBName
 		List<Pair<String, JSONObject>> readDataList = new ArrayList<Pair<String, JSONObject>>();
-		for(String key: keyList){
+		List<String> keys = keyList;
+		
+		//read all content of the DB with name 
+		//DBName
+		if(keys == null){
+			keys = new ArrayList<>();
+			
+			//read all elements in DBName
+			FullHttpResponse dbResponse = queryDB(null, DBName);
+			
+			if(dbResponse == null){
+				//error
+				return null;
+			}
+			if(dbResponse.getBody() == null){
+				//element not found
+				return readDataList;
+			}
+			
+			JSONObject jsonResp = new JSONObject(dbResponse.getBody());
+			
+			if(jsonResp.isNull(QoSConsts.COUCHDB_TOTROWS)){
+				//error in reading DBName
+				return null;
+			}
+			else{
+				//read the total rows in the response
+				//if zero the db is empty
+				if(jsonResp.getInt(QoSConsts.COUCHDB_TOTROWS) == 0)
+					return readDataList;
+			}
+			
+			//read all keys of the elements in the db
+			//this is done to read all elements
+			//given the list of keys
+			JSONArray rows = jsonResp.getJSONArray(QoSConsts.COUCHDB_ROWS);
+			
+			for(int i = 0; i < rows.length(); i++){
+				
+				if(!rows.getJSONObject(i).isNull(QoSConsts.COUCHDB_KEY))
+					keys.add(rows.getJSONObject(i).getString(QoSConsts.COUCHDB_KEY));
+			}
+		}
+		
+
+		for(String key: keys){
 			FullHttpResponse dbResponse = queryDB(key, DBName);
 	
 			if(dbResponse == null){
@@ -245,7 +291,7 @@ public class QoSCouchDB implements QoSBigDataRepository{
 			}
 				
 			//key founded in the DB as _id,_rev
-			String foundedKey = new String(_id + "||" + _rev);
+			String foundedKey = new String(_id);// + "||" + _rev);
 			
 			Pair<String, JSONObject> dataPair = new Pair<String, JSONObject>(foundedKey, jsonResp);
 			
@@ -268,8 +314,18 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		FullHttpResponse response = null;
 		try {
 
-			response = HttpRequester.sendGet(new URL(couchDB_ip + "/"
-					+ DBName + "/" + key));
+			if(key == null){
+				
+				//read all the keys of the docs
+				//in the db
+				response = HttpRequester.sendGet(new URL(couchDB_ip + "/"
+						+ DBName + "/" + QoSConsts.COUCHDB_ALLDOCS));
+			}
+			else{
+				//read an element with a key
+				response = HttpRequester.sendGet(new URL(couchDB_ip + "/"
+						+ DBName + "/" + key));
+			}
 		} catch (MalformedURLException e) {
 			logger.error("Error: ", e);
 			return null;

@@ -24,4 +24,8 @@ public class QoSConsts {
 	
 	public static final String COUCHDB_ID = "_id";
 	public static final String COUCHDB_REV = "_rev";
+	public static final String COUCHDB_KEY = "key";
+	public static final String COUCHDB_ALLDOCS = "_all_docs";
+	public static final String COUCHDB_TOTROWS = "total_rows";
+	public static final String COUCHDB_ROWS = "rows";
 }

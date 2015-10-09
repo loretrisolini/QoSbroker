@@ -42,6 +42,8 @@
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi9;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons.interfaces;version="${pom.version}",
+							
+							org.eclipse.persistence,
 							javax.servlet;version="2.5.0",
 							javax.servlet.http;version="2.5.0",
 							javax.xml.bind,

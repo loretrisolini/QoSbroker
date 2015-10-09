@@ -126,7 +126,7 @@ public abstract class DataStructure {
 		//return the ContElem enclosed in a contextElement Json object
 		//because when it is read is more easy to identify the
 		//elements of a complex structure ContextElement
-		return (new JSONObject()).put("contextElement", contexElemJSONObj);
+		return (new JSONObject()).put("contextElements", contexElemJSONObj);
 	}
 	
 	public static ContextElementResponse fromJsonToContextElementResponse(
@@ -139,18 +139,18 @@ public abstract class DataStructure {
 		//read values for EntityId structure
 		EntityId entId = new EntityId();
 		
-		entId.setId(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getString("id"));
+		entId.setId(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("id"));
 		
-		entId.setType(URI.create(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getString("type")));
+		entId.setType(URI.create(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("type")));
 		
-		entId.setIsPattern(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getBoolean("isPattern"));
+		entId.setIsPattern(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getBoolean("isPattern"));
 		
 		contextElem.setEntityId(entId);
 		
 		//read values for ContextAttributeList
 		List<ContextAttribute> contAttrList = new ArrayList<>();
 		
-		JSONArray attributes = contElemJson.getJSONObject("contextElement").getJSONArray("attributes");
+		JSONArray attributes = contElemJson.getJSONObject("contextElements").getJSONArray("attributes");
 		
 		for(int i=0; i < attributes.length(); i++){
 			
@@ -175,4 +175,42 @@ public abstract class DataStructure {
 		
 		return contextElemResp;
 	}
+	
+//	public static <T> JSONObject fromJaxbToJson(T jaxbObject){
+//		
+//		try{
+//			JAXBContext jc = JAXBContext.newInstance(jaxbObject.getClass());
+//			Marshaller marshaller = jc.createMarshaller();
+//	        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+//	        marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+//	        marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+//			StringWriter sw = new StringWriter();
+//	        
+//	        marshaller.marshal(jaxbObject, sw);
+//	        
+//	        return new JSONObject(sw.toString());
+//		}
+//		catch(JAXBException je){
+//			je.printStackTrace();
+//			return null;
+//		}
+//	}
+//	
+//	public static <T> T fromJsonToJaxb(JSONObject jsonObj, T jaxbObject, Class<?> type){
+//		
+//		try{
+//		    JAXBContext jc = JAXBContext.newInstance(type);
+//
+//	        Unmarshaller unmarshaller = jc.createUnmarshaller();
+//	        
+//			StringReader sr = new StringReader(jsonObj.toString());
+//	        jaxbObject = (T) unmarshaller.unmarshal(sr);
+//	        
+//	        return jaxbObject;
+//		}
+//		catch(JAXBException je){
+//			je.printStackTrace();
+//			return null;
+//		}
+//	}
 }

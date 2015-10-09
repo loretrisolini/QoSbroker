@@ -1,13 +1,16 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
+import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceEquivalentThingsMapping;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsInfo;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -763,13 +766,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			List<ContextElementResponse> qosMonitorResponse, Request request) {
 		
 		//Map<reqServName, List<DevID>>
-		HashMap<String, List<String>> serviceEquivalentThings = new HashMap<>();
+		HashMap<String, EquivalentThings> serviceEquivalentThings = new HashMap<>();
 		
 		//set the key serviceEquivalentThings Map 
 		//taken from the requiredServicesNameList
 		//in Request object
 		for(String reqServName: request.getRequiredServicesNameList()){
-			serviceEquivalentThings.put(reqServName, new ArrayList<String>());
+			serviceEquivalentThings.put(reqServName, new EquivalentThings());
 		}
 		
 		//creation of the map<DevId, Thing> from the List<ContextRegistration>
@@ -843,7 +846,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				for(String reqServName: serviceEquivalentThings.keySet()){
 					
 					if(t.getServicesList().get(reqServName) != null){
-						serviceEquivalentThings.get(reqServName).add(devId);
+						serviceEquivalentThings.get(reqServName).addEqThing(devId);
 					}
 				}
 			}
@@ -856,6 +859,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//TODO use threads for writing in DBs
 		//update ThingsInfoDB and ServiceEquivalentThingsDB
 		//with the new Map<DevId, Thing> and Map<reqServName, List<DevId>>
+		ThingsInfo thInfo = new ThingsInfo();
+		thInfo.setThingInfoList(thingsInfo);
+		ServiceEquivalentThingsMapping servEqThings = new ServiceEquivalentThingsMapping();
+		servEqThings.setServiceEquivalentThings(serviceEquivalentThings);
+		
 		qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings);
 		
 		Boolean checkServiceAgreementRequestConditions =
@@ -873,12 +881,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	if only one thing for a service the Thing
 	battery must be != null */
 	private Boolean checkServiceAllocationConditions(
-			HashMap<String, List<String>> serviceEquivalentThings,
+			HashMap<String, EquivalentThings> serviceEquivalentThings,
 			HashMap<String, Thing> thingsInfo, Request request) {
 
-		for(Map.Entry<String, List<String>> entry: serviceEquivalentThings.entrySet()){
+		for(Map.Entry<String, EquivalentThings> entry: serviceEquivalentThings.entrySet()){
 			
-			List<String> eqThings = entry.getValue();
+			List<String> eqThings = entry.getValue().getEqThings();
 			if(eqThings.isEmpty()){
 				return false;
 			}

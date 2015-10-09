@@ -157,6 +157,8 @@ public class Thing extends DataStructure{
 			    	
 			    	p.setLatitude(Float.valueOf(coordsValues[0]));
 			    	p.setLongitude(Float.valueOf(coordsValues[1]));
+			    	
+			    	t.setCoords(p);
 		    	}
 		    	catch(PatternSyntaxException pe){
 		    		logger.debug("coords was not in format \"latitude,longitude\" ");
@@ -178,4 +180,6 @@ public class Thing extends DataStructure{
 	public void setCoords(Point coords) {
 		this.coords = coords;
 	}
+	
+//	"thing":{"servicesList":{"entry":[{"value":"","key":"battery"},{"value":{"latency":0.2000000000000000111,"energyCost":0.9000000000000000222},"key":"degrees"}]},"batteryLevel":77}}
 }
