@@ -28,7 +28,6 @@ public abstract class DataStructure {
 
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(DataStructure.class);
-	public final static String SCOPE_VALUE = "scopeValue";
 	
 	@Override
 	public String toString() {
@@ -140,18 +139,18 @@ public abstract class DataStructure {
 		//read values for EntityId structure
 		EntityId entId = new EntityId();
 		
-		entId.setId(contElemJson.getJSONObject("entityId").getString("id"));
+		entId.setId(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getString("id"));
 		
-		entId.setType(URI.create(contElemJson.getJSONObject("entityId").getString("type")));
+		entId.setType(URI.create(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getString("type")));
 		
-		entId.setIsPattern(contElemJson.getJSONObject("entityId").getBoolean("isPattern"));
+		entId.setIsPattern(contElemJson.getJSONObject("contextElement").getJSONObject("entityId").getBoolean("isPattern"));
 		
 		contextElem.setEntityId(entId);
 		
 		//read values for ContextAttributeList
 		List<ContextAttribute> contAttrList = new ArrayList<>();
 		
-		JSONArray attributes = contElemJson.getJSONArray("attributes");
+		JSONArray attributes = contElemJson.getJSONObject("contextElement").getJSONArray("attributes");
 		
 		for(int i=0; i < attributes.length(); i++){
 			

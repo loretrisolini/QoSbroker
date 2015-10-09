@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
@@ -446,193 +447,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	public UpdateContextResponse updateContext(
 			final UpdateContextRequest request) {
 
-		return null;
-		
-//		UpdateContextResponse response = null;
-//		List<AssociationDS> listAssociationDS = new LinkedList<AssociationDS>();
-//		final List<ContextElement> lContextElements = request
-//				.getContextElement();
-//		final List<ContextElement> listContextElement = new LinkedList<ContextElement>();
-//		UpdateContextRequest updateContextRequest = null;
-//		 Going through individual ContextElement
-//		Iterator<ContextElement> it = lContextElements.iterator();
-//		while (it.hasNext()) {
-//			ContextElement ce = it.next();
-//
-//			/*
-//			 * Retrieving EntityID and Entity Attributes for
-//			 * DiscoverContextAvailabilityRequest
-//			 */
-//			List<EntityId> eidList = new LinkedList<EntityId>();
-//			eidList.add(ce.getEntityId());
-//
-//			List<ContextAttribute> lContextAttributes = ce
-//					.getContextAttributeList();
-//			List<String> attributeList = new LinkedList<String>();
-//
-//			if (lContextAttributes != null && !lContextAttributes.isEmpty()) {
-//
-//				Iterator<ContextAttribute> itAttributeList = lContextAttributes
-//						.iterator();
-//				while (itAttributeList.hasNext()) {
-//					ContextAttribute ca = itAttributeList.next();
-//					attributeList.add(ca.getName());
-//				}
-//			}
-//			 Creating Restriction OperationScopes for
-//			 DiscoverContextAvailabilityRequest
-//			OperationScope os = new OperationScope("IncludeAssociations",
-//					"TARGETS");
-//			List<OperationScope> loperOperationScopes = new LinkedList<OperationScope>();
-//			loperOperationScopes.add(os);
-//			Restriction restriction = new Restriction("", loperOperationScopes);
-//
-//			 Create the NGSI 9 DiscoverContextAvailabilityRequest
-//			DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
-//					eidList, attributeList, restriction);
-//			 Get the NGSI 9 DiscoverContextAvailabilityResponse
-//			DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
-//					.discoverContextAvailability(discoveryRequest);
-//
-//			/*
-//			 * Getting Associations information from
-//			 * DiscoverContextAvailabilityResponse
-//			 */
-//
-//			List<ContextRegistrationResponse> lcrr = discoveryResponse
-//					.getContextRegistrationResponse();
-//			Iterator<ContextRegistrationResponse> itContextRegistrationResponse = lcrr
-//					.iterator();
-//			while (itContextRegistrationResponse.hasNext()) {
-//				ContextRegistrationResponse crr = itContextRegistrationResponse
-//						.next();
-//
-//				List<ContextMetadata> lcmd = crr.getContextRegistration()
-//						.getListContextMetadata();
-//
-//				Iterator<ContextMetadata> it1 = lcmd.iterator();
-//				while (it1.hasNext()) {
-//					ContextMetadata cmd = it1.next();
-//					if ("Association".equals(cmd.getType().toString())) {
-//
-//						logger.debug("++++++++++++++++++++++++++++++++++++++++++++++++++befor value");
-//						String s = "<value>" + cmd.getValue() + "</value>";
-//						logger.debug("++++++++++++++++++++++++++++++++++++++++++++++++++befor value");
-//						ContextMetadataAssociation cma = (ContextMetadataAssociation) xmlFactory
-//								.convertStringToXml(cmd.toString(),
-//										ContextMetadataAssociation.class);
-//						XmlFactory xmlFac = new XmlFactory();
-//						ValueAssociation va = (ValueAssociation) xmlFac
-//								.convertStringToXml(s, ValueAssociation.class);
-//						cma.setValue(va);
-//
-//						if (va.getAttributeAssociation().size() == 0) {
-//
-//							AssociationDS ads = new AssociationDS(
-//									new EntityAttribute(va.getSourceEntity(),
-//											""), new EntityAttribute(
-//													va.getSourceEntity(), ""));
-//							listAssociationDS.add(ads);
-//						} else {
-//							List<AttributeAssociation> lAttributeAsociations = va
-//									.getAttributeAssociation();
-//							for (AttributeAssociation aa : lAttributeAsociations) {
-//								AssociationDS ads = new AssociationDS(
-//										new EntityAttribute(
-//												va.getSourceEntity(),
-//												aa.getSourceAttribute()),
-//												new EntityAttribute(va
-//														.getTargetEntity(), aa
-//														.getTargetAttribute()));
-//								listAssociationDS.add(ads);
-//							}
-//						}
-//					}
-//
-//				}
-//			}
-//			logger.debug("List of Assocaions from ConfigManager:"
-//					+ listAssociationDS.toString());
-//			if (!listAssociationDS.isEmpty()) {
-//				for (ContextAttribute ca : ce.getContextAttributeList()) {
-//
-//					List<EntityAttribute> loutput = associationUtil
-//							.findA(listAssociationDS,
-//									new EntityAttribute(ce.getEntityId(), ca
-//											.getName()));
-//					logger.debug("List of effective Associations:"
-//							+ loutput.toString());
-//					EntityId currentEntityID = null;
-//
-//					for (EntityAttribute ea1 : loutput) {
-//						List<ContextAttribute> lcaRes = new LinkedList<ContextAttribute>();
-//						if (currentEntityID != null) {
-//							if (!currentEntityID.getId().equals(
-//									ea1.getEntity().getId())) {
-//								ContextElement ceRes = new ContextElement(
-//										ea1.getEntity(),
-//										ce.getAttributeDomainName(), lcaRes,
-//										ce.getDomainMetadata());
-//								listContextElement.add(ceRes);
-//								currentEntityID = ea1.getEntity();
-//							}
-//						} else {
-//							ContextElement ceRes = new ContextElement(
-//									ea1.getEntity(),
-//									ce.getAttributeDomainName(), lcaRes,
-//									ce.getDomainMetadata());
-//							listContextElement.add(ceRes);
-//							currentEntityID = ea1.getEntity();
-//						}
-//						ContextAttribute ca1 = new ContextAttribute(
-//								"".equals(ea1.getEntityAttribute()) ? ca.getName()
-//										: ea1.getEntityAttribute(),
-//										ca.getType(), ca.getcontextValue().toString(),
-//										ca.getMetadata());
-//						lcaRes.add(ca1);
-//
-//					}
-//				}
-//
-//			} else {
-//
-//				listContextElement.add(ce);
-//
-//			}
-//
-//		}
-//
-//		updateContextRequest = new UpdateContextRequest(listContextElement,
-//				request.getUpdateAction());
-//
-//		logger.info("Started Contact pub/sub broker..");
-//
-//		/**
-//		 * Dump data in Big Data Repository if present.
-//		 */
-//		 if (bigDataRepository != null) {
-//		
-//		 new Thread() {
-//		
-//		 @Override
-//		 public void run() {
-//		
-//		 bigDataRepository.storeData(lContextElements);
-//		
-//		 }
-//		 }.start();
-//		
-//		 }
-//		
-//		try {
-//
-//			response = ngsi10Requester.updateContext(updateContextRequest,
-//					new URI(pubSubUrl));
-//		} catch (URISyntaxException e) {
-//			logger.debug("URI Syntax Error", e);
-//		}
-//
-//		return response;
+		return qosMonitorNgsi.updateContext(request);
 
 	}
 	
@@ -824,14 +639,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		for(OperationScope opScope : operationScope){
 			
-			if(opScope.getScopeType().contentEquals(ServiceDefinition.QOS)){
+			if(opScope.getScopeType().contentEquals(QoSConsts.QOS)){
 
 				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), qosScopeValue, QoSscopeValue.class);
 
 				qosReqFound = true;
 				
 			}
-			if(opScope.getScopeType().contentEquals(ServiceDefinition.LOCATION)){
+			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION)){
 				
 				locationScopeValue = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValue, LocationScopeValue.class);
 				

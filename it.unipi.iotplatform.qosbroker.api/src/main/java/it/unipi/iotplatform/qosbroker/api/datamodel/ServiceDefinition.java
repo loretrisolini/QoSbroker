@@ -76,13 +76,6 @@ public class ServiceDefinition extends DataStructure{
 	@XmlElement(required=true)
 	private Restriction restriction = null;
 	
-	public final static String LOCATION = "Location";
-	public final static String SIMPLE_GEO_LOCATION = "SimpleGeoLocation";
-	public static final String QOS = "QoS";
-	public static final String MAX_RESPONSE_TIME = "maxResponseTime";
-	public static final String MAX_RATE_REQUEST = "maxRateRequest";
-	public static final String ACCURACY = "accuracy";
-	
 	public String getOperationType() {
 		return operationType;
 	}

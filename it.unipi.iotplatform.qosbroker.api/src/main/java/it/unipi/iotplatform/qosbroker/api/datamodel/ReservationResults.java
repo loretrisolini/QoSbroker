@@ -11,7 +11,7 @@ public class ReservationResults {
 	private boolean isFeas;
 	
 	private int which;
-
+	
 	public List<ContextRegistration> getAllocationSchema() {
 		return allocationSchema;
 	}

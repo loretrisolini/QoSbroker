@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosrestcontroller.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
@@ -178,7 +179,7 @@ public class RestController {
 	 *            The request body.
 	 * @return The response body.
 	 */
-	@RequestMapping(value = "IoTAgent/updateContext", method = RequestMethod.POST, consumes = {
+	@RequestMapping(value = "/updateContext", method = RequestMethod.POST, consumes = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON }, produces = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
 	public ResponseEntity<UpdateContextResponse> updateContextResponse(
@@ -187,61 +188,19 @@ public class RestController {
 
 		logger.info(" <--- NGSI-10 has received request for Update Context resource ---> \n");
 
+		
 		try{
-//
-//			validateMessageBody(requester, request, sNgsi10schema);
-//			
-//			for (int i = 0; i < request.getContextElement().size(); i++) {
-//
-//				/*
-//				 * Add metadata to each context element contained by the update.
-//				 */
-//				if (!requester.getContentType().contains("application/json")) {
-//					if (request.getContextElement().get(i).getDomainMetadata() != null) {
-//						request.getContextElement()
-//						.get(i)
-//						.setDomainMetadata(
-//								new ArrayList<ContextMetadata>());
-//					}
-//
-//					try {
-//
-//						request.getContextElement()
-//						.get(i)
-//						.getDomainMetadata()
-//						.add(GenerateMetadata
-//								.createSourceIPMetadata(new URI(
-//										requester.getRequestURL()
-//										.toString())));
-//
-//						request.getContextElement()
-//						.get(i)
-//						.getDomainMetadata()
-//						.add(GenerateMetadata
-//								.createDomainTimestampMetadata());
-//					} catch (URISyntaxException e) {
-//						logger.info(" URI Syntax Exception ", e);
-//					}
-//
-//				}
-//			}
-//			
-//			
-//
-//			UpdateContextResponse response = ngsiCore.updateContext(request);
-//
-//			System.out.println("########## Response to Converter ##########"
-//					+ response);
-//
-//			return new ResponseEntity<UpdateContextResponse>(response,
-//					HttpStatus.OK);
+
+			validateMessageBody(requester, request, sNgsi10schema);
+			
+			if(request.getUpdateAction().value() == QoSConsts.NEGOTIATION){
+				String requestHttp = request.toString();
+				throw new Exception("Negotiation"); 
+			}
 
 			logger.debug("UPDATE QOS BROKER");
 			
-			UpdateContextResponse response = new UpdateContextResponse(
-					new StatusCode(Code.OK_200.getCode(),
-							ReasonPhrase.OK_200.toString(),
-							"DA IMPLEMENTARE"), null);
+			UpdateContextResponse response = ngsiCore.updateContext(request);
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);
@@ -251,9 +210,9 @@ public class RestController {
 			logger.debug(e.getMessage());
 			
 			UpdateContextResponse response = new UpdateContextResponse(
-					new StatusCode(Code.OK_200.getCode(),
-							ReasonPhrase.OK_200.toString(),
-							"Da Implementare"), null);
+					new StatusCode(Code.INTERNALERROR_500.getCode(),
+							ReasonPhrase.RECEIVERINTERNALERROR_500.toString(),
+							e.getMessage()), null);
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);

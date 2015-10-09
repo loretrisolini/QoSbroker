@@ -3,13 +3,14 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.couchdb.api.CouchDbConsts;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
+import eu.neclab.iotplatform.ngsi.api.datamodel.NgsiStructure;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
@@ -65,7 +67,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			idList.add(Id.getId());
 		}
 		
-		List<Pair<String, JSONObject>> dataList = bigDataRepository.readData(idList, CouchDbConsts.SENS_ACT_ATTR_DB);
+		List<Pair<String, JSONObject>> dataList = bigDataRepository.readData(idList, QoSConsts.SENS_ACT_ATTR_DB);
 		
 		QueryContextResponse queryResponse = new QueryContextResponse();
 		
@@ -78,20 +80,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			return queryResponse;
 		}
 		
-		for(Pair<String, JSONObject> data: dataList){
-			
-			if(!data.getRight().isNull("error")){
-				continue;
-			}
-			
-			//problem with ContextElem in json format
-			//that is different from the jaxb format
-			ContextElementResponse contElemResp = 
-					DataStructure.fromJsonToContextElementResponse(data.getRight());
-			
-			contextElemRespList.add(contElemResp);
-		}
-		
+		//check if for all keys, the response
+		//was element not found
 		if(dataList.isEmpty()){
 
 			queryResponse.setErrorCode(new StatusCode(
@@ -100,6 +90,17 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			
 			return queryResponse;
 		}
+		
+		for(Pair<String, JSONObject> data: dataList){
+			
+			//problem with ContextElem in json format
+			//that is different from the jaxb format
+			ContextElementResponse contElemResp = 
+					DataStructure.fromJsonToContextElementResponse(data.getRight());
+			
+			contextElemRespList.add(contElemResp);
+		}
+
 		
 		queryResponse.setContextResponseList(contextElemRespList);
 		queryResponse.setErrorCode(new StatusCode(
@@ -123,43 +124,52 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		return null;
 	}
 
+	/* update battery and coords of a thing */
 	@Override
 	public UpdateContextResponse updateContext(UpdateContextRequest arg0) {
-		// TODO Auto-generated method stub
 		
-//		/**
-//		 * The code snippet below is for dumping the data in a Big Data
-//		 * repository in addition. This feature is currently disabled.
-//		 */
-//		if (bigDataRepository != null) {
-//
-//			new Thread() {
-//				@Override
-//				public void run() {
-//
-//					List<ContextElement> contextElementList = new ArrayList<ContextElement>();
-//
-//					Iterator<ContextElementResponse> iter = queryContextRespLIstAfterMerge
-//							.getListContextElementResponse().iterator();
-//
-//					while (iter.hasNext()) {
-//
-//						ContextElementResponse contextElementResp = iter
-//								.next();
-//
-//						contextElementList.add(contextElementResp
-//								.getContextElement());
-//
-//					}
-//
-//					bigDataRepository.storeData(contextElementList);
-//
-//				}
-//			}.start();
-//		}
+		final List<ContextElement> contextElementList = arg0.getContextElement();
+		
+		if (bigDataRepository != null) {
 
+			new Thread() {
+				@Override
+				public void run() {
+
+					Iterator<ContextElement> iter = contextElementList.iterator();
+					
+					List<Pair<String, JSONObject>> dataList = new ArrayList<Pair<String, JSONObject>>();
+					
+					while (iter.hasNext()) {
+
+						ContextElement contElem = iter.next();
+						
+						//get id of the entityId of the ContElem as DevId
+						String key = contElem.getEntityId().getId();
+						
+						//TODO READ Map<DevId, Thing> and update battery and coords
+						
+						//problem of conversion of ContElem from
+						//jaxb xml to json
+						JSONObject jsonContElem = DataStructure.fromContextElementToJson(contElem);
+						
+						Pair<String,JSONObject> dataEntry = new Pair<String, JSONObject>(key, jsonContElem);
+
+						dataList.add(dataEntry);
+
+					}
+
+					bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
+				}
+			}.start();
+		}
 		
-		return null;
+		UpdateContextResponse response = new UpdateContextResponse(
+				new StatusCode(Code.OK_200.getCode(),
+						ReasonPhrase.OK_200.toString(),
+						"store ContElements in QoSMonitor"), null);
+
+		return response;
 	}
 
 	@Override

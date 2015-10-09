@@ -1,9 +1,9 @@
 package it.unipi.iotplatform.qosbroker.couchdb.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -12,12 +12,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -26,11 +24,6 @@ import eu.neclab.iotplatform.couchdb.http.Client;
 import eu.neclab.iotplatform.couchdb.http.HttpRequester;
 import eu.neclab.iotplatform.iotbroker.commons.FullHttpResponse;
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
-import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 
 public class QoSCouchDB implements QoSBigDataRepository{
 
@@ -96,20 +89,11 @@ public class QoSCouchDB implements QoSBigDataRepository{
 
 	private String authentication = null;
 
-	HashMap<String, Boolean> databaseExist;
+	HashMap<String, Boolean> databaseExist = new HashMap<>();
 
 	private String couchDB_ip = null;
 
 	public QoSCouchDB() {
-		
-		databaseExist = new HashMap<>();
-		
-		int i = 0;
-		for(Map.Entry<String, Boolean> entry : databaseExist.entrySet()){
-			databaseExist.put(couchDB_NAME[i], false);
-			
-			i++;
-		}
 	}
 
 	public String getCouchDB_ip() {
@@ -122,6 +106,8 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		logger.info("CouchDB IP: " + couchDB_ip);
 	}
 
+	/* function to check if a DB with a name DBName exists.
+	 * If it doesn't exist, it is created */
 	@SuppressWarnings("deprecation")
 	private Boolean checkDB(String DBName){
 		
@@ -140,7 +126,7 @@ public class QoSCouchDB implements QoSBigDataRepository{
 					.toString();
 		}
 
-		if (!databaseExist.get(DBName)) {
+		if (databaseExist.get(DBName) == null) {
 			try {
 				if (couchDBtool.checkDB(getCouchDB_ip(), DBName,
 						authentication)) {
@@ -161,33 +147,40 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		return true;
 	}
 	
-
+	/* function to store data in the DB with DBName given
+	 * the list of pairs <Key,JSONObject> */
 	@Override
 	public Boolean storeData(List<Pair<String, JSONObject>> dataList, String DBName){
 
 		if(!checkDB(DBName)){
 			return false;
 		}
-
+		
+		//itearte over the list of data
 		Iterator<Pair<String, JSONObject>> iter = dataList.iterator();
 		while (iter.hasNext()) {
 
 			Pair<String, JSONObject> data = iter.next();
 
+			//take the key and the jsonObj
+			//to store
 			String key = data.getLeft();
 			JSONObject jsonObj = data.getRight();
 				
 			// Store the historical data
 			logger.debug("JSON Object to store:" + jsonObj.toString(2));
 			try {
-				FullHttpResponse dbResponse = queryDB(key);
+				//check if the data with the key if already
+				//stored, if it is stored, it is taken
+				//the _rev to update the data already stored
+				FullHttpResponse dbResponse = queryDB(key, DBName);
 				
 				//check if the response from the DB is empty
 				if(dbResponse.getBody() != null){
 					JSONObject resp = new JSONObject(dbResponse.getBody());
 					
 					if(!resp.isNull("_rev")){
-						
+						//take the _rev
 						jsonObj.put("_rev", resp.getString("_rev"));
 					}
 				}
@@ -218,6 +211,7 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		System.out.println(timestamp);
 	}
 
+	/* function to read data from the DB with DBName given the list of keys */
 	@Override
 	public List<Pair<String, JSONObject>> readData(List<String> keyList, String DBName){
 
@@ -225,17 +219,35 @@ public class QoSCouchDB implements QoSBigDataRepository{
 			return null;
 		}
 		
+		//iterate over the list of keys to read data from the DB with name DBName
 		List<Pair<String, JSONObject>> readDataList = new ArrayList<Pair<String, JSONObject>>();
 		for(String key: keyList){
-			FullHttpResponse dbResponse = queryDB(key);
+			FullHttpResponse dbResponse = queryDB(key, DBName);
 	
 			if(dbResponse == null){
+				//error
 				return null;
+			}
+			if(dbResponse.getBody() == null){
+				//element not found
+				continue;
 			}
 			
 			JSONObject jsonResp = new JSONObject(dbResponse.getBody());
 			
-			Pair<String, JSONObject> dataPair = new Pair<String, JSONObject>(key, jsonResp);
+			//remove _id and _rev from the jsonResponse
+			//and add _id and _rev to Key
+			String _id = new String();
+			String _rev = new String();
+			if(!jsonResp.isNull(QoSConsts.COUCHDB_ID) && !jsonResp.isNull(QoSConsts.COUCHDB_REV)){
+				_id = jsonResp.remove(QoSConsts.COUCHDB_ID).toString();
+				_rev = jsonResp.remove(QoSConsts.COUCHDB_REV).toString();
+			}
+				
+			//key founded in the DB as _id,_rev
+			String foundedKey = new String(_id + "||" + _rev);
+			
+			Pair<String, JSONObject> dataPair = new Pair<String, JSONObject>(foundedKey, jsonResp);
 			
 			readDataList.add(dataPair);
 		}
@@ -251,13 +263,13 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	 * @param documentType
 	 * @return
 	 */
-	private FullHttpResponse queryDB(String key) {
+	private FullHttpResponse queryDB(String key, String DBName) {
 		
 		FullHttpResponse response = null;
 		try {
 
 			response = HttpRequester.sendGet(new URL(couchDB_ip + "/"
-					+ couchDB_NAME + "/" + key));
+					+ DBName + "/" + key));
 		} catch (MalformedURLException e) {
 			logger.error("Error: ", e);
 			return null;

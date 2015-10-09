@@ -44,9 +44,6 @@ public class Thing extends DataStructure{
 	@JsonProperty("services")
 	//Map<ServiceName, ServiceFeatures>
 	private HashMap<String, ServiceFeatures> servicesList;
-
-	public final static String BATTERY = "battery";
-	public final static String COORDS = "coords";
 	
 	public Double getBatteryLevel() {
 		return batteryLevel;
@@ -144,14 +141,14 @@ public class Thing extends DataStructure{
 			            return from.getName(); 
 		    }});
 		    
-		    if(mappedContAttrs.get(BATTERY) != null){
-			    Double battery = Double.valueOf(String.valueOf(mappedContAttrs.get(BATTERY).getcontextValue()));
+		    if(mappedContAttrs.get(QoSConsts.BATTERY) != null){
+			    Double battery = Double.valueOf(String.valueOf(mappedContAttrs.get(QoSConsts.BATTERY).getcontextValue()));
 			    t.setBatteryLevel(battery);
 			}
 		
 		    String[] coordsValues;
-		    if(mappedContAttrs.get(COORDS) != null){
-		    	String coords = String.valueOf(mappedContAttrs.get(COORDS).getcontextValue());
+		    if(mappedContAttrs.get(QoSConsts.COORDS) != null){
+		    	String coords = String.valueOf(mappedContAttrs.get(QoSConsts.COORDS).getcontextValue());
 		    	
 		    	try{
 		    		coordsValues = coords.split(",");
