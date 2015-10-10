@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
@@ -15,6 +16,8 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Node;
+
+import com.google.gson.Gson;
 
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
@@ -213,4 +216,30 @@ public abstract class DataStructure {
 //			return null;
 //		}
 //	}
+	
+	public static <T> T fromJsonToJaxb(JSONObject jsonObj, T jaxbObj, Class<?> type){
+		
+		if(jaxbObj.getClass() != type){
+			throw new RuntimeException("ERROR jaxbObj type must be equal to type");
+		}
+
+		Gson gson = new Gson();
+		jaxbObj = (T)gson.fromJson(jsonObj.toString(), type);
+		return jaxbObj;
+	}
+	
+	public static <T> JSONObject fromJaxbToJson(T jaxbObj, Class<?> type){
+		
+		if(jaxbObj.getClass() != type){
+			throw new RuntimeException("ERROR jaxbObj type must be equal to type");
+		}
+
+		Gson gson = new Gson();
+
+		// convert java object to JSON format,
+		// and returned as JSON formatted string
+		JSONObject json = new JSONObject(gson.toJson(jaxbObj));
+		
+		return json;
+	}
 }

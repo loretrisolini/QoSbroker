@@ -856,16 +856,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 		}
 		
-		//TODO use threads for writing in DBs
 		//update ThingsInfoDB and ServiceEquivalentThingsDB
 		//with the new Map<DevId, Thing> and Map<reqServName, List<DevId>>
-		ThingsInfo thInfo = new ThingsInfo();
-		thInfo.setThingInfoList(thingsInfo);
-		ServiceEquivalentThingsMapping servEqThings = new ServiceEquivalentThingsMapping();
-		servEqThings.setServiceEquivalentThings(serviceEquivalentThings);
 		
-		qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings);
+		//if the update operation of ThingsInfoDB and ServEqThingsDB
+		//is not correct, it is useless continue with
+		//allocation procedure
+		if(!qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings)) return false;
 		
+		//check the condition for the serviceAgreementRequest
+		//at least one thing for required service
+		//if only one thing for a service the Thing
+		//battery must be != null
 		Boolean checkServiceAgreementRequestConditions =
 					checkServiceAllocationConditions(serviceEquivalentThings, thingsInfo, request);
 		

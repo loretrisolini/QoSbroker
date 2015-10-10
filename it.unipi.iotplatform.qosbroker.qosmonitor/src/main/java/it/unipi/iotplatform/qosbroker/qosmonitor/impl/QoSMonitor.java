@@ -5,9 +5,9 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceEquivalentThingsMapping;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsInfo;
+import it.unipi.iotplatform.qosbroker.api.serialization.json.ThingDeserializer;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.DeserializationContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.XML;
@@ -101,9 +103,13 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			
 			//problem with ContextElem in json format
 			//that is different from the jaxb format
-			ContextElementResponse contElemResp = 
-					DataStructure.fromJsonToContextElementResponse(data.getRight());
+//			ContextElementResponse contElemResp = 
+//					DataStructure.fromJsonToContextElementResponse(data.getRight());
+			ContextElement contElem =
+					DataStructure.fromJsonToJaxb(data.getRight(), new ContextElement(), ContextElement.class);
 			
+			ContextElementResponse contElemResp = new ContextElementResponse();
+			contElemResp.setContextElement(contElem);
 			contextElemRespList.add(contElemResp);
 		}
 
@@ -159,8 +165,14 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						
 						//problem of conversion of ContElem from
 						//jaxb xml to json
-						JSONObject jsonContElem = DataStructure.fromContextElementToJson(contElem);
+						//JSONObject jsonContElem = DataStructure.fromContextElementToJson(contElem);
+						JSONObject jsonContElem = DataStructure.fromJaxbToJson(contElem, ContextElement.class);
 						
+						if(!jsonContElem.isNull("contextAttributeList")){
+							jsonContElem.put("attributes", jsonContElem.getJSONArray("contextAttributeList"));
+							jsonContElem.remove("contextAttributeList");
+						}
+							
 						//create the pair <DevId, Thing> to put 
 						//in Map<DevId, Thing>
 						Thing t = new Thing();
@@ -174,13 +186,13 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 								
 								if(!attr.isNull("name")){
 									if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
-										t.setBatteryLevel(Double.valueOf(attr.getString("name")));
+										t.setBatteryLevel(Double.valueOf(attr.getString("contextValue")));
 									}
 													
 									if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
 										
 										Point p = new Point();
-										String[] coords = attr.getString("name").split(",");
+										String[] coords = attr.getString("contextValue").split(",");
 										
 										p.setLatitude(Float.valueOf(coords[0]));
 										p.setLongitude(Float.valueOf(coords[1]));
@@ -235,36 +247,62 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		this.bigDataRepository = bigDataRepository;
 	}
 
+	/* function to update ThingsInfoDB and ServNameEqThingsDB */
 	@Override
 	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, EquivalentThings> serviceEquivalentThings) {
 		
-		List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
-		
-		if(thingsData == null){
-			//error
-			return false;
-		}
+		//check the case in which update is called
+		//to update only battery and coords
+		//after the updateContext
+		//in this case must be avoided the deleting
+		//of old data things so we read the thingsInfoDB
+		if(serviceEquivalentThings == null){
+			List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
+			
+			if(thingsData == null){
+				//error
+				return false;
+			}
+	
+	
+			//conversion of data read from the DB 
+			if(!thingsData.isEmpty()){
+				
+				//conversion from json data to Map<DevId, Thing>
+				for(Pair<String, JSONObject> entryOldThing: thingsData){
+	
+					//convert json to Thing (Old)
+					Thing t = Thing.fromJsonToJaxb(entryOldThing.getRight(), new Thing(), Thing.class);
+						
+					//check if the key DevId taken from the data read from DB
+					//is equal to some key in new Map<DevId, Thing> thingsInfo
+					if(thingsInfo.get(entryOldThing.getLeft()) != null){
 
-		//conversion of data read from the DB 
-		if(!thingsData.isEmpty()){
-			//conversion from json data to Map<DevId, Thing>
-			for(Pair<String, JSONObject> entry: thingsData){
-				
-				Thing t = ;
-				
-				//store old data read from DB
-				//and put in Map thingsInfo
-				thingsInfo.put(entry.getLeft(), t);
+						//update the old thing with battery and coords
+						t.setBatteryLevel(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel());
+						t.setCoords(thingsInfo.get(entryOldThing.getLeft()).getCoords());
+						
+						//store the old thing with updated values of
+						//battery and coords in the Map<DevId, Thing>
+						//that will be stored in the DB
+						//it is done to avoid that in case of updating
+						//only batt and coords old thing data are deleted
+						thingsInfo.put(entryOldThing.getLeft(), t);
+
+					}
+
+				}
 			}
 		}
-		
+			
 		//store new Map<DevId, Thing> in ThingsInfoDB
 		List<Pair<String, JSONObject>> newThingsData = new ArrayList<>();
 		for(Map.Entry<String, Thing> entry : thingsInfo.entrySet()){
 			
-			//conversion of Thing in json format
-			JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
+//			//conversion of Thing in json format
+//			JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
+			JSONObject jsonThing = Thing.fromJaxbToJson(entry.getValue(), Thing.class);
 			
 			Pair<String, JSONObject> thingPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
 			
@@ -278,7 +316,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		
 		//check the case in which update is called
 		//to update only battery and coords
-		//after the updateContext
+		//after the updateContext otherwise
+		//update list of equivalent things for each reqServ
 		if(serviceEquivalentThings != null){
 			
 			List<Pair<String, JSONObject>> servEqThingsData = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
@@ -288,16 +327,44 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				return false;
 			}
 			
-			HashMap<String, Thing> servEqThingsMap = new HashMap<>();
 			//conversion of data read from the DB 
+			//if the result from db is not empty
+			//serviceEquivalentThings must be updated
 			if(!servEqThingsData.isEmpty()){
 				//conversion from json data to Map<reqServName, List<DevId>>
-				for(Pair<String, JSONObject> entry: servEqThingsData){
+				//and update the list of equivalent things for a reqServName
+				for(Pair<String, JSONObject> entryOldEqThings: servEqThingsData){
 					
-//					if(){
-//						
-//					}
+					//if match reqServName, add the new <DevId> list to stored reqServ
+					if(serviceEquivalentThings.get(entryOldEqThings.getLeft()) != null){
+						//conversion of old eq things data
+						EquivalentThings oldEqThings = 
+								EquivalentThings.fromJsonToJaxb(entryOldEqThings.getRight(), new EquivalentThings(), 
+																	EquivalentThings.class);
+					
+						//add to service equivalent things mapping to new list
+						//of equivalent things
+						serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThings.getEqThings());
+					}
 				}
+			}
+			
+			//store new Map<reServName, List<DevId>> in ServiceEquivalentThingsDB
+			List<Pair<String, JSONObject>> newServEqThingsData = new ArrayList<>();
+			for(Map.Entry<String, EquivalentThings> entry : serviceEquivalentThings.entrySet()){
+				
+//				//conversion of EquivalentThings in json format
+//				JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
+				JSONObject jsonThing = EquivalentThings.fromJaxbToJson(entry.getValue(), EquivalentThings.class);
+				
+				Pair<String, JSONObject> servEqThingsPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
+				
+				newServEqThingsData.add(servEqThingsPair);
+			}
+			
+			//store data
+			if(!bigDataRepository.storeData(newServEqThingsData, QoSConsts.SERV_EQ_THINGS_DB)){
+				return false;
 			}
 		}
 		
