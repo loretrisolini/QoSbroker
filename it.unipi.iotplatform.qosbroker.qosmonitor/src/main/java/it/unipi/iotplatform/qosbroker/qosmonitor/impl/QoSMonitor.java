@@ -7,7 +7,6 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsInfo;
-import it.unipi.iotplatform.qosbroker.api.serialization.json.ThingDeserializer;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -300,7 +299,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		List<Pair<String, JSONObject>> newThingsData = new ArrayList<>();
 		for(Map.Entry<String, Thing> entry : thingsInfo.entrySet()){
 			
-//			//conversion of Thing in json format
+			//conversion of Thing in json format
 //			JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
 			JSONObject jsonThing = Thing.fromJaxbToJson(entry.getValue(), Thing.class);
 			
@@ -341,10 +340,20 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						EquivalentThings oldEqThings = 
 								EquivalentThings.fromJsonToJaxb(entryOldEqThings.getRight(), new EquivalentThings(), 
 																	EquivalentThings.class);
-					
-						//add to service equivalent things mapping to new list
-						//of equivalent things
-						serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThings.getEqThings());
+						
+						List<String> oldEqThingsList = oldEqThings.getEqThings();
+						List<String> newEqThingsList = serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings();
+
+						//merge operation of the old eqThingsList and the new One
+						//avoiding duplicates
+						for(String oldDevId: oldEqThingsList){
+							for(String newDevId : newEqThingsList){
+								if(oldDevId.contentEquals(newDevId)){
+									oldEqThingsList.remove(oldDevId);
+								}
+							}
+						}
+						serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
 					}
 				}
 			}
@@ -353,7 +362,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			List<Pair<String, JSONObject>> newServEqThingsData = new ArrayList<>();
 			for(Map.Entry<String, EquivalentThings> entry : serviceEquivalentThings.entrySet()){
 				
-//				//conversion of EquivalentThings in json format
+				//conversion of EquivalentThings in json format
 //				JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
 				JSONObject jsonThing = EquivalentThings.fromJaxbToJson(entry.getValue(), EquivalentThings.class);
 				
