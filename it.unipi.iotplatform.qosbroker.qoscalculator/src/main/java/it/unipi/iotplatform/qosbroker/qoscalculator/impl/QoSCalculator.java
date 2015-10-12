@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
+import eu.neclab.iotplatform.ngsi.api.datamodel.NgsiStructure;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
@@ -38,10 +39,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 	//max split or min split
 	private enum Policy{
 		MAX_SPLIT, MIN_SPLIT
-	}
-	
-	private enum Location{
-		POINT, CIRCLE, POLYGON
 	}
 	
 	/**
@@ -181,6 +178,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
+		printInputGap(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
+		
 		res = GAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
 	
 		if(res.feasible == true)
@@ -217,156 +216,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 		return res;
 	}
 
-	/* function to create a table that say the list of DevId of the
-	 * things that respect the restriction of a request identified
-	 * by the transactionId (Map<transId, List<DevId>>) */
-	private HashMap<String, List<String>> createMatrixM(
-			List<Pair<String, Request>> requests,
-			HashMap<String, Thing> eqThingInfo,
-			HashMap<String, ThingsIdList> servNameThingsIdList) {
-		
-		HashMap<String, List<String>> matrixM = new HashMap<>();
-		
-		for(Pair<String, Request> reqPair: requests){
-			
-			String transId = reqPair.getLeft();
-			Request request = reqPair.getRight();
-			List<String> reqServNameList = request.getRequiredServicesNameList();
-			
-			//take the maxRespTime and accuracy from QoSrequirements of the request object
-			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-			
-			Double accuracy = request.getQosRequirements().getAccuracy();
-			
-			logger.debug("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
-			
-			Point point = null;
-			Circle circle = null;
-			Polygon polygon = null;
-			
-			if(request.getLocationRequirement() != null){
-				//take the location requirement from the LocationRequirement object in the request object
-				Class<?> locRequirementsType = request.getLocationRequirement().getLocationRequirement().getClass();
-				
-				logger.debug("locRequirementsType is "+locRequirementsType.getCanonicalName());
-				
-				if(locRequirementsType == Point.class){
-					point = (Point)request.getLocationRequirement().getLocationRequirement();
-				}
-				else{
-					if(locRequirementsType == Circle.class){
-						circle = (Circle)request.getLocationRequirement().getLocationRequirement();
-					}
-					else{
-						polygon = (Polygon)request.getLocationRequirement().getLocationRequirement();
-					}
-				}
-			}
-			
-			for(String reServName: reqServNameList){
-				
-				//clone the list of DevId of all equivalent things for that 
-				//required service name
-				List<String> eqThings = new ArrayList<>();
-				eqThings.addAll(servNameThingsIdList.get(reServName).getEqThings());
-				
-				//iterate over the list of equivalent things
-				//for that serviceName
-				for(String devId: eqThings){
-					
-					Thing t = eqThingInfo.get(devId);
-					
-					Point coords = t.getCoords();
-					
-					//check location requirement
-					if(coords != null){
-						if(point != null){
-							if(coords.getLatitude() != point.getLatitude() ||
-									coords.getLongitude() != point.getLongitude()){
-								eqThings.remove(devId);
-							}
-						}
-						else{
-							if(circle != null){
-								if(!in_circle(circle, coords)){
-									eqThings.remove(devId);
-								}
-							}
-							else{
-								if(!in_polygon(polygon, coords)){
-									eqThings.remove(devId);
-								}
-							}
-						}
-					}
-					
-					//check QoSrequirements on services on a thing
-					HashMap<String, ServiceFeatures> services = t.getServicesList();
-					
-					for(Map.Entry<String, ServiceFeatures> servEntry: services.entrySet()){
-						
-						Double latency = servEntry.getValue().getLatency();
-						
-						Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
-															: servEntry.getValue().getAccuracy();
-
-						if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
-							eqThings.remove(devId);
-						}
-					}
-					
-				}
-				
-				if(eqThings.isEmpty()) return null;
-				else
-					matrixM.put(transId, eqThings);
-				
-				eqThings.clear();
-			}
-			
-			
-		}
-		
-		return matrixM;
-	}
-
-
-
-	private boolean in_polygon(Polygon polygon, Point coords) {
-	
-		int i;
-		int j;
-		
-		List<Vertex> vertexList = polygon.getVertexList();
-		
-		boolean result = false;
-		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
-			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
-					(vertexList.get(j).getLatitude() > coords.getLatitude())
-					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
-							* (coords.getLongitude() - vertexList.get(i).getLongitude())
-							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
-							+ vertexList.get(i).getLatitude())) {
-				result = !result;
-			}
-		}
-		
-		return result;
-	}
-
-
-
-	private boolean in_circle(Circle circle, Point coords) {
-		
-		Double x2 = Math.pow((circle.getCenterLatitude() - coords.getLatitude()), 2);
-		Double y2 = Math.pow((circle.getCenterLongitude() - coords.getLongitude()), 2);
-		
-		Double dist = Math.sqrt(x2 + y2);
-	    return dist <= circle.getRadius();
-	}
-
-
-
 	/**
 	 * Real_battery_ gap.
 	 *
@@ -389,8 +238,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 			double teta,
 			Priority prio,
 			Policy policy) {
-	
-		printInputGap(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
 		
 //		Reserveobj res = new Reserveobj();
 //		
@@ -696,8 +543,162 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 
 
+	/* function to create a table that say the list of DevId of the
+	 * things that respect the restriction of a request identified
+	 * by the transactionId (Map<transId, List<DevId>>) */
+	private HashMap<String, List<String>> createMatrixM(
+			List<Pair<String, Request>> requests,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList) {
+		
+		HashMap<String, List<String>> matrixM = new HashMap<>();
+		
+		//iterate over the list of requests
+		for(Pair<String, Request> reqPair: requests){
+			
+			//get the transId, request object and list of reqServName
+			String transId = reqPair.getLeft();
+			Request request = reqPair.getRight();
+			List<String> reqServNameList = request.getRequiredServicesNameList();
+			
+			//take the maxRespTime and accuracy from QoSrequirements of the request object
+			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+			Double accuracy = request.getQosRequirements().getAccuracy();
+			
+			logger.debug("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
+			
+			Point point = null;
+			Circle circle = null;
+			Polygon polygon = null;
+			
+			if(request.getLocationRequirement() != null){
+				//take the location requirement from the LocationRequirement object in the request object
+				Class<?> locRequirementsType = request.getLocationRequirement().getLocationRequirement().getClass();
+				
+				logger.debug("locRequirementsType is "+locRequirementsType.getCanonicalName());
+				
+				if(locRequirementsType == Point.class){
+					point = (Point)request.getLocationRequirement().getLocationRequirement();
+
+				}
+				else{
+					if(locRequirementsType == Circle.class){
+						circle = (Circle)request.getLocationRequirement().getLocationRequirement();
+					}
+					else{
+						polygon = (Polygon)request.getLocationRequirement().getLocationRequirement();
+					}
+				}
+			}
+			
+			//iterate over the list of required servName
+			for(String reServName: reqServNameList){
+				
+				//clone the list of DevId of all equivalent things for that 
+				//required service name
+				List<String> eqThings = new ArrayList<>();
+				eqThings.addAll(servNameThingsIdList.get(reServName).getEqThings());
+				
+				//iterate over the list of equivalent things
+				//for that serviceName
+				for(String devId: eqThings){
+					
+					//get the thing
+					Thing t = eqThingInfo.get(devId);
+					
+					//get the coords of the thing
+					Point coords = t.getCoords();
+					
+					//check location requirement
+					if(coords != null){
+						if(point != null){
+							if(coords.getLatitude() != point.getLatitude() ||
+									coords.getLongitude() != point.getLongitude()){
+								eqThings.remove(devId);
+							}
+						}
+						else{
+							if(circle != null){
+								if(!in_circle(circle, coords)){
+									eqThings.remove(devId);
+								}
+							}
+							else{
+								if(!in_polygon(polygon, coords)){
+									eqThings.remove(devId);
+								}
+							}
+						}
+					}
+					
+					//check QoSrequirements on services on a thing
+					HashMap<String, ServiceFeatures> services = t.getServicesList();
+					
+					for(Map.Entry<String, ServiceFeatures> servEntry: services.entrySet()){
+						
+						Double latency = servEntry.getValue().getLatency();
+						
+						Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
+															: servEntry.getValue().getAccuracy();
+						
+						//check latency and accuracy constraints
+						if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
+							eqThings.remove(devId);
+						}
+					}
+					
+				}
+				
+				//if the list of devId of the equivalentThings for
+				//that is empty, the allocation can take place
+				if(eqThings.isEmpty()) return null;
+				else
+					matrixM.put(transId, eqThings);
+				
+				eqThings.clear();
+			}
+			
+			
+		}
+		
+		return matrixM;
+	}
 
 
+	/* function to check if a point is inside a polygon */
+	private boolean in_polygon(Polygon polygon, Point coords) {
+	
+		int i;
+		int j;
+		
+		List<Vertex> vertexList = polygon.getVertexList();
+		
+		boolean result = false;
+		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
+			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
+					(vertexList.get(j).getLatitude() > coords.getLatitude())
+					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
+							* (coords.getLongitude() - vertexList.get(i).getLongitude())
+							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
+							+ vertexList.get(i).getLatitude())) {
+				result = !result;
+			}
+		}
+		
+		return result;
+	}
+
+	/* function to check if a point is inside a circle */
+	private boolean in_circle(Circle circle, Point coords) {
+		
+		Double x2 = Math.pow((circle.getCenterLatitude() - coords.getLatitude()), 2);
+		Double y2 = Math.pow((circle.getCenterLongitude() - coords.getLongitude()), 2);
+		
+		Double dist = Math.sqrt(x2 + y2);
+	    return dist <= circle.getRadius();
+	}
+	
+	/* function to print the input values of the GAP algorithm */
 	private void printInputGap(int k, List<Pair<String, Request>> requests,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
