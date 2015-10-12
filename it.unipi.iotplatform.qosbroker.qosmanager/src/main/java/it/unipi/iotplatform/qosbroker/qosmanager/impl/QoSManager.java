@@ -6,6 +6,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
@@ -147,8 +148,10 @@ public class QoSManager implements QoSManagerIF {
 		//read from DBs the Map<DevId, Thing> and the Map<reqServName, List<DevId>>
 		List<Pair<String, JSONObject>> eqThingInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
+		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
 		if(eqThingInfoJson == null || eqThingInfoJson.isEmpty() || 
-				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){
+				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty() ||
+				thingTransactionsJson == null || thingTransactionsJson.isEmpty()){
 			return false;
 		}
 		
@@ -163,9 +166,15 @@ public class QoSManager implements QoSManagerIF {
 			return false;
 		}
 
+		HashMap<String, TransIdList> matrixM = 
+				TransIdList.fromDbFormatToJavaFormat(thingTransactionsJson, TransIdList.class);
+		if(matrixM == null){
+			return false;
+		}
+		
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-																		eqThingInfo, servNameThingsIdList, 0.001);
+																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
 		
 		
 		//TODO store new request Result if allocation feasible

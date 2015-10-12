@@ -20,6 +20,7 @@ public class QoSConsts {
 	public static final String SERV_EQ_THINGS_DB = "service_equivalent_things_db";
 	public static final String SENS_ACT_ATTR_DB = "sensor_active_attributes_db";
 	public static final String REQUESTS_DB = "requests_db";
+	public static final String REQUIREMENTS_DB = "requirements_db";
 	public static final String ALLOCATION_DB = "allocation_db";
 	
 	public static final String COUCHDB_ID = "_id";

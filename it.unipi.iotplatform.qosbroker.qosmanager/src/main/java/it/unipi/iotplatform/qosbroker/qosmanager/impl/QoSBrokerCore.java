@@ -1,6 +1,5 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
@@ -10,9 +9,11 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -586,7 +587,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 //		DISCOVERY PHASE
 		
 		//get list of equivalentThings
-		StatusCode statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction);
+		StatusCode statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction, transactionId);
 		
 		if(statusCode.getCode() == Code.CONTEXTELEMENTNOTFOUND_404.getCode() ||
 				statusCode.getCode() == Code.BADREQUEST_400.getCode()){
@@ -670,7 +671,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/* discover a list of equivalent things given the list of entityId objects
 	 * the list of required services and the restrictions */
 	private StatusCode discoverThings(List<EntityId> entityIdList,
-			Request request, Restriction restriction) {
+			Request request, Restriction restriction, String transId) {
 		
 		StatusCode statusCode;
 		
@@ -720,7 +721,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//filter thing based on MaxRespTime in request object
 			Boolean serviceOK = 
 					createThingsMap(ContextRegistrationResponseList, 
-									qosMonitorResponse.getListContextElementResponse(), request);
+									qosMonitorResponse.getListContextElementResponse(), request, transId);
 			
 			//the conditions for execution of the service
 			//allocation algorithm are not achieved
@@ -762,7 +763,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	filter thing based on MaxRespTime in request object */
 	private Boolean createThingsMap(
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
-			List<ContextElementResponse> qosMonitorResponse, Request request) {
+			List<ContextElementResponse> qosMonitorResponse, Request request, String transId) {
 		
 		//Map<reqServName, List<DevID>>
 		HashMap<String, ThingsIdList> serviceEquivalentThings = new HashMap<>();
@@ -870,10 +871,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//if only one thing for a service the Thing
 		//battery must be != null
 		Boolean checkServiceAgreementRequestConditions =
-					checkServiceAllocationConditions(serviceEquivalentThings, thingsInfo, request);
+					checkServiceAllocationConditions(serviceEquivalentThings, thingsInfo, request, transId);
 		
 		if(!checkServiceAgreementRequestConditions){
 			return false;
+		}
+		else{
+			//qosMonitor
 		}
 		
 		return true;
@@ -882,53 +886,61 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private void printThingsMappings(HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
-		logger.debug("####################################");
-		logger.debug("####################################");
-		logger.debug("ThingsInfo Map<DevId, Thing>");
-		
-		for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
-			logger.debug("DevId: "+entryThing.getKey());
+		try{
+			PrintWriter writer = new PrintWriter("ThingsMappings.txt", "UTF-8");
+
+			writer.println("####################################");
+			writer.println("####################################");
+			writer.println("ThingsInfo Map<DevId, Thing>");
 			
-			logger.debug("batteryLevel:");
-			logger.debug(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
-												: entryThing.getValue().getBatteryLevel().toString());
-			logger.debug("coords:");
-			logger.debug(entryThing.getValue().getCoords()==null ? "coords==null" 
-												: entryThing.getValue().getCoords().getLatitude()+","+
-												entryThing.getValue().getCoords().getLongitude());
-			
-			logger.debug("Services on Thing with devId "+entryThing.getKey()+": ");
-			HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
-			for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
+			for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
+				writer.println("DevId: "+entryThing.getKey());
 				
-				logger.debug("ServiceName: "+service.getKey());
+				writer.println("batteryLevel:");
+				writer.println(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
+													: entryThing.getValue().getBatteryLevel().toString());
+				writer.println("coords:");
+				writer.println(entryThing.getValue().getCoords()==null ? "coords==null" 
+													: entryThing.getValue().getCoords().getLatitude()+","+
+													entryThing.getValue().getCoords().getLongitude());
 				
-				logger.debug("ServiceFeatures:");
-				logger.debug("latency: "+service.getValue().getLatency());
-				logger.debug("energyCost: "+service.getValue().getEnergyCost());
-				logger.debug("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
-												: service.getValue().getAccuracy());
+				writer.println("Services on Thing with devId "+entryThing.getKey()+": ");
+				HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
+				for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
+					
+					writer.println("ServiceName: "+service.getKey());
+					
+					writer.println("ServiceFeatures:");
+					writer.println("latency: "+service.getValue().getLatency());
+					writer.println("energyCost: "+service.getValue().getEnergyCost());
+					writer.println("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
+													: service.getValue().getAccuracy());
+				}
+				writer.println("<<--------------------------------->>");
 			}
-			logger.debug("<<--------------------------------->>");
-		}
-		logger.debug("########################################");
-		
-		logger.debug("########################################");
-		logger.debug("########################################");
-		logger.debug("Service Equivalent ThingsId Pairs");
-		
-		for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
+			writer.println("########################################");
 			
-			logger.debug("Required Service Name: "+entryEqThings.getKey());
-			logger.debug("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
-			List<String> eqThings = entryEqThings.getValue().getEqThings();
-			for(String thingId: eqThings){
-				logger.debug(thingId);
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.println("Service Equivalent ThingsId Pairs");
+			
+			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
+				
+				writer.println("Required Service Name: "+entryEqThings.getKey());
+				writer.println("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
+				List<String> eqThings = entryEqThings.getValue().getEqThings();
+				for(String thingId: eqThings){
+					writer.println(thingId);
+				}
+				writer.println("<<--------------------------------->>");
 			}
-			logger.debug("<<--------------------------------->>");
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.close();
 		}
-		logger.debug("########################################");
-		logger.debug("########################################");
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/* check the condition for the serviceAgreementRequest
@@ -937,11 +949,16 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	battery must be != null */
 	private Boolean checkServiceAllocationConditions(
 			HashMap<String, ThingsIdList> serviceEquivalentThings,
-			HashMap<String, Thing> thingsInfo, Request request) {
+			HashMap<String, Thing> thingsInfo, Request request, String transId) {
 
+		//Map<devId, transId> represents the devId that respect
+		//the requirements of the transaction with transId
+		HashMap<String, String> thingTransactionsMap = new HashMap<>();
+		
 		for(Map.Entry<String, ThingsIdList> entry: serviceEquivalentThings.entrySet()){
 			
 			List<String> eqThings = entry.getValue().getEqThings();
+			
 			if(eqThings.isEmpty()){
 				return false;
 			}
@@ -973,8 +990,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				//they must respect the constraints
 				if((latency == null || latency < maxRespTime) && (servAccuracy == null || servAccuracy >= accuracy)){
 					constraints = true;
-					break;
+					
+					//put an entry <devId, transId> in the Map<devId,transId>
+					thingTransactionsMap.put(eqThingDevId, transId);
 				}
+
 			}
 			
 			//filtering a list of eqThing
@@ -985,6 +1005,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				return false;
 			}
 
+		}
+		
+		if(thingTransactionsMap.isEmpty() && !qosMonitor.updateThingTransactions(thingTransactionsMap)){
+			return false;
 		}
 		
 		return true;

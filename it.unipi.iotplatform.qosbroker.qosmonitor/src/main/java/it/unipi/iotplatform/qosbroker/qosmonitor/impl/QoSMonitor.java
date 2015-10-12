@@ -7,6 +7,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -431,6 +432,56 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		
 		return true;
 		
+	}
+
+	/* function to update requirements_db with Map<devId, List<transId>>
+	 * that represents the devId with an associated List of transId
+	 * for which the thing with devId respect the constraints of 
+	 * the request identified by the transId */
+	@Override
+	public boolean updateThingTransactions(
+			HashMap<String, String> thingTransactionMap) {
+		
+		List<Pair<String, JSONObject>> thingTransactionsData = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
+		
+		if(thingTransactionsData == null){
+			//error maybe there is no things stored
+			return false;
+		}
+		
+		//convert data from DB format to java format
+		HashMap<String, TransIdList> thingTransactionsStored = Thing.fromDbFormatToJavaFormat(thingTransactionsData, TransIdList.class);
+		if(thingTransactionsStored == null){
+			return false;
+		}
+		
+		//iterate over the new thingTransactionsMap, if devId match
+		//in the thingTransactionsStored, add the new transId
+		for(Map.Entry<String, String> entry: thingTransactionMap.entrySet()){
+			
+			String devId = entry.getKey();
+			if(thingTransactionsStored.get(devId) != null){
+				//only add transId
+				thingTransactionsStored.get(devId).getTransIdList().add(entry.getValue());
+			}
+			else{
+				//add the entry <DevId, List<transId>>
+				TransIdList transactions = new TransIdList();
+				List<String> transIdList = new ArrayList<String>();
+				transIdList.add(entry.getValue());
+				transactions.setTransIdList(transIdList);
+				thingTransactionsStored.put(devId, transactions);
+			}
+		}
+		
+		thingTransactionsData = TransIdList.fromJavaFormatToDbFormat(thingTransactionsStored, TransIdList.class);
+		
+		//store data
+		if(!bigDataRepository.storeData(thingTransactionsData, QoSConsts.REQUIREMENTS_DB)){
+			return false;
+		}
+		
+		return true;
 	}
 
 }
