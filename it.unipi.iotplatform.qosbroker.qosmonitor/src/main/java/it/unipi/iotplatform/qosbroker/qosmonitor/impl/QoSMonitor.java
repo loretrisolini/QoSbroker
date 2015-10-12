@@ -5,8 +5,8 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsInfo;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
@@ -16,11 +16,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.DeserializationContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.json.XML;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
@@ -99,6 +96,11 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		}
 		
 		for(Pair<String, JSONObject> data: dataList){
+			
+			if(!data.getRight().isNull("attributes")){
+				data.getRight().put("contextAttributeList", data.getRight().getJSONArray("attributes"));
+				data.getRight().remove("attributes");
+			}
 			
 			//problem with ContextElem in json format
 			//that is different from the jaxb format
@@ -202,7 +204,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 								}
 							}
 							
-							t.setServicesList(null);
+							t.setServicesList(new HashMap<String, ServiceFeatures>());
 							
 							thingsInfo.put(key, t);
 						}
@@ -215,8 +217,6 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					
 					bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
 					
-					ThingsInfo thInfo = new ThingsInfo();
-					thInfo.setThingInfoList(thingsInfo);
 					//update battery and coords in Map<DevId, Thing>
 					updateThingsServicesInfo(thingsInfo, null);
 				}
@@ -251,47 +251,71 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, EquivalentThings> serviceEquivalentThings) {
 		
-		//check the case in which update is called
-		//to update only battery and coords
-		//after the updateContext
-		//in this case must be avoided the deleting
-		//of old data things so we read the thingsInfoDB
-		if(serviceEquivalentThings == null){
-			List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
+		
+		List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
+		
+		if(thingsData == null){
+			//error
+			return false;
+		}
+
+
+		//conversion of data read from the DB 
+		if(!thingsData.isEmpty()){
 			
-			if(thingsData == null){
-				//error
-				return false;
-			}
-	
-	
-			//conversion of data read from the DB 
-			if(!thingsData.isEmpty()){
-				
-				//conversion from json data to Map<DevId, Thing>
-				for(Pair<String, JSONObject> entryOldThing: thingsData){
-	
+			//conversion from json data to Map<DevId, Thing>
+			for(Pair<String, JSONObject> entryOldThing: thingsData){
+					
+				//check if the key DevId taken from the data read from DB
+				//is equal to some key in new Map<DevId, Thing> thingsInfo
+				//two case: 
+				//FIRST case, create Map<DevId, Thing> after an updateContext so the 
+				//update operation is only for batt and coords
+				//SECOND case, create Map<DevId, Thing> after ServAgreement and
+				//if batt or coords are null try to read this from thingsInfoDB
+				if(thingsInfo.get(entryOldThing.getLeft()) != null){
+
 					//convert json to Thing (Old)
 					Thing t = Thing.fromJsonToJaxb(entryOldThing.getRight(), new Thing(), Thing.class);
-						
-					//check if the key DevId taken from the data read from DB
-					//is equal to some key in new Map<DevId, Thing> thingsInfo
-					if(thingsInfo.get(entryOldThing.getLeft()) != null){
-
+					
+					//check the case in which update is called
+					//to update only battery and coords
+					//after the updateContext
+					//in this case must be avoided the deleting
+					//of old data things so we read the thingsInfoDB
+					//and we update only battery and coords
+					if(serviceEquivalentThings == null){
 						//update the old thing with battery and coords
 						t.setBatteryLevel(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel());
 						t.setCoords(thingsInfo.get(entryOldThing.getLeft()).getCoords());
-						
+
 						//store the old thing with updated values of
 						//battery and coords in the Map<DevId, Thing>
 						//that will be stored in the DB
 						//it is done to avoid that in case of updating
 						//only batt and coords old thing data are deleted
 						thingsInfo.put(entryOldThing.getLeft(), t);
-
+					}
+					else{
+						//if a thing on new Map<DevId, Thing> (created in the ServAgreement operation) 
+						//has battery or coords null
+						//there is a trial to read this values from the things read in the DB
+						//(check if values are not null in the thing read from DB)
+						if(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel() == null ||
+								thingsInfo.get(entryOldThing.getLeft()).getCoords() == null){
+							if(t.getBatteryLevel() != null){
+								thingsInfo.get(entryOldThing.getLeft()).setBatteryLevel(t.getBatteryLevel());
+							}
+							
+							if(t.getCoords() != null){
+								thingsInfo.get(entryOldThing.getLeft()).setCoords(t.getCoords());
+							}
+						}
 					}
 
+
 				}
+
 			}
 		}
 			

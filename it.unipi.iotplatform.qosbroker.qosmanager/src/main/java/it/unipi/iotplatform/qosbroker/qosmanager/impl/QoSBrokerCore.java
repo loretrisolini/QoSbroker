@@ -8,9 +8,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceEquivalentThingsMapping;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsInfo;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
