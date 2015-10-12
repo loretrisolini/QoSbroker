@@ -1,11 +1,11 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -13,21 +13,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Node;
 
 import com.google.gson.Gson;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
-import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
 /**
  *  Common super-type for NGSI data structure implementations.
@@ -102,87 +93,87 @@ public abstract class DataStructure {
 
 	}
 
-	public static JSONObject fromContextElementToJson(ContextElement contextElement) {
-
-		JSONObject contexElemJSONObj = new JSONObject();
-		
-		JSONObject entityId = new JSONObject();
-		
-		entityId.put("id", contextElement.getEntityId().getId());
-		entityId.put("type", contextElement.getEntityId().getType());
-		entityId.put("isPattern", contextElement.getEntityId().getIsPattern());
-		
-		contexElemJSONObj.put("entityId", entityId);
-		
-		JSONArray attributes = new JSONArray();
-		
-		List<ContextAttribute> contAttrList = contextElement.getContextAttributeList();
-		
-		for(ContextAttribute contAttr: contAttrList){
-			
-			JSONObject contAttrJSONObj = new JSONObject();
-			
-			contAttrJSONObj.put("name", contAttr.getName());
-			contAttrJSONObj.put("type", contAttr.getType());
-			contAttrJSONObj.put("contextValue", contAttr.getcontextValue());
-			
-			attributes.put(contAttrJSONObj);
-		}
-		
-		contexElemJSONObj.put("attributes", attributes);
-		
-		//return the ContElem enclosed in a contextElement Json object
-		//because when it is read is more easy to identify the
-		//elements of a complex structure ContextElement
-		return (new JSONObject()).put("contextElements", contexElemJSONObj);
-	}
-	
-	public static ContextElementResponse fromJsonToContextElementResponse(
-			JSONObject contElemJson) {
-		
-		ContextElementResponse contextElemResp = new ContextElementResponse();
-		
-		ContextElement contextElem = new ContextElement();
-		
-		//read values for EntityId structure
-		EntityId entId = new EntityId();
-		
-		entId.setId(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("id"));
-		
-		entId.setType(URI.create(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("type")));
-		
-		entId.setIsPattern(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getBoolean("isPattern"));
-		
-		contextElem.setEntityId(entId);
-		
-		//read values for ContextAttributeList
-		List<ContextAttribute> contAttrList = new ArrayList<>();
-		
-		JSONArray attributes = contElemJson.getJSONObject("contextElements").getJSONArray("attributes");
-		
-		for(int i=0; i < attributes.length(); i++){
-			
-			JSONObject attr = attributes.getJSONObject(i);
-			
-			ContextAttribute contAttr = new ContextAttribute();
-			
-			contAttr.setName(attr.getString("name"));
-			
-			contAttr.setType(URI.create(attr.getString("type")));
-			
-			contAttr.setcontextValue(String.valueOf(attr.get("contextValue")));
-			
-			contAttrList.add(contAttr);
-		}
-		
-		contextElem.setEntityId(entId);
-		contextElem.setContextAttributeList(contAttrList);
-		
-		//set ContextElement Response
-		contextElemResp.setContextElement(contextElem);
-		
-		return contextElemResp;
-	}
+//	public static JSONObject fromContextElementToJson(ContextElement contextElement) {
+//
+//		JSONObject contexElemJSONObj = new JSONObject();
+//		
+//		JSONObject entityId = new JSONObject();
+//		
+//		entityId.put("id", contextElement.getEntityId().getId());
+//		entityId.put("type", contextElement.getEntityId().getType());
+//		entityId.put("isPattern", contextElement.getEntityId().getIsPattern());
+//		
+//		contexElemJSONObj.put("entityId", entityId);
+//		
+//		JSONArray attributes = new JSONArray();
+//		
+//		List<ContextAttribute> contAttrList = contextElement.getContextAttributeList();
+//		
+//		for(ContextAttribute contAttr: contAttrList){
+//			
+//			JSONObject contAttrJSONObj = new JSONObject();
+//			
+//			contAttrJSONObj.put("name", contAttr.getName());
+//			contAttrJSONObj.put("type", contAttr.getType());
+//			contAttrJSONObj.put("contextValue", contAttr.getcontextValue());
+//			
+//			attributes.put(contAttrJSONObj);
+//		}
+//		
+//		contexElemJSONObj.put("attributes", attributes);
+//		
+//		//return the ContElem enclosed in a contextElement Json object
+//		//because when it is read is more easy to identify the
+//		//elements of a complex structure ContextElement
+//		return (new JSONObject()).put("contextElements", contexElemJSONObj);
+//	}
+//	
+//	public static ContextElementResponse fromJsonToContextElementResponse(
+//			JSONObject contElemJson) {
+//		
+//		ContextElementResponse contextElemResp = new ContextElementResponse();
+//		
+//		ContextElement contextElem = new ContextElement();
+//		
+//		//read values for EntityId structure
+//		EntityId entId = new EntityId();
+//		
+//		entId.setId(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("id"));
+//		
+//		entId.setType(URI.create(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getString("type")));
+//		
+//		entId.setIsPattern(contElemJson.getJSONObject("contextElements").getJSONObject("entityId").getBoolean("isPattern"));
+//		
+//		contextElem.setEntityId(entId);
+//		
+//		//read values for ContextAttributeList
+//		List<ContextAttribute> contAttrList = new ArrayList<>();
+//		
+//		JSONArray attributes = contElemJson.getJSONObject("contextElements").getJSONArray("attributes");
+//		
+//		for(int i=0; i < attributes.length(); i++){
+//			
+//			JSONObject attr = attributes.getJSONObject(i);
+//			
+//			ContextAttribute contAttr = new ContextAttribute();
+//			
+//			contAttr.setName(attr.getString("name"));
+//			
+//			contAttr.setType(URI.create(attr.getString("type")));
+//			
+//			contAttr.setcontextValue(String.valueOf(attr.get("contextValue")));
+//			
+//			contAttrList.add(contAttr);
+//		}
+//		
+//		contextElem.setEntityId(entId);
+//		contextElem.setContextAttributeList(contAttrList);
+//		
+//		//set ContextElement Response
+//		contextElemResp.setContextElement(contextElem);
+//		
+//		return contextElemResp;
+//	}
 	
 //	public static <T> JSONObject fromJaxbToJson(T jaxbObject){
 //		
@@ -248,4 +239,45 @@ public abstract class DataStructure {
 		return json;
 	}
 	
+	public static <T> HashMap<String, T> fromDbFormatToJavaFormat(List<Pair<String, JSONObject>> dbDataList, Class<?> type){
+		
+		HashMap<String, T> dataMap = new HashMap<>();
+		
+		for(Pair<String, JSONObject> pair: dbDataList){
+			String key = pair.getLeft();
+			
+
+			try{
+				T value = DataStructure.fromJsonToJaxb(pair.getRight(), (T)type.newInstance(), type);
+				
+				dataMap.put(key, value);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return dataMap;
+	}
+	
+	public static <T> List<Pair<String, JSONObject>> fromJavaFormatToDbFormat(HashMap<String, T> dataMap, Class<?> type){
+		
+		List<Pair<String, JSONObject>> dbDataList = new ArrayList<Pair<String, JSONObject>>();
+		
+		for(Map.Entry<String, T> entry: dataMap.entrySet()){
+			String key = entry.getKey();
+			
+
+			try{
+				JSONObject jsonValue = DataStructure.fromJaxbToJson(entry.getValue(), type);
+				
+				dbDataList.add(new Pair<String, JSONObject>(key, jsonValue));
+			}
+			catch(Exception e){
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return dbDataList;
+	}
 }

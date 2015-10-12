@@ -3,7 +3,7 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
-import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
@@ -249,7 +249,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 	/* function to update ThingsInfoDB and ServNameEqThingsDB */
 	@Override
 	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
-			HashMap<String, EquivalentThings> serviceEquivalentThings) {
+			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
 		
 		List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
@@ -258,10 +258,15 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			//error
 			return false;
 		}
-
-
+		
+		
+		//list of devId to check if the list of devId in serviceEquivalentThings
+		//point to things that are still alive, otherwise you remove the devId
+		List<String> devIdCheckList = new ArrayList<>();
+		
 		//conversion of data read from the DB 
 		if(!thingsData.isEmpty()){
+
 			
 			//conversion from json data to Map<DevId, Thing>
 			for(Pair<String, JSONObject> entryOldThing: thingsData){
@@ -275,6 +280,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				//if batt or coords are null try to read this from thingsInfoDB
 				if(thingsInfo.get(entryOldThing.getLeft()) != null){
 
+					//add the devId of the thing stored in the DB
+					devIdCheckList.add(entryOldThing.getLeft());
+					
 					//convert json to Thing (Old)
 					Thing t = Thing.fromJsonToJaxb(entryOldThing.getRight(), new Thing(), Thing.class);
 					
@@ -286,6 +294,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					//and we update only battery and coords
 					if(serviceEquivalentThings == null){
 						//update the old thing with battery and coords
+						//MONITORING OPERATION
 						t.setBatteryLevel(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel());
 						t.setCoords(thingsInfo.get(entryOldThing.getLeft()).getCoords());
 
@@ -321,16 +330,21 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			
 		//store new Map<DevId, Thing> in ThingsInfoDB
 		List<Pair<String, JSONObject>> newThingsData = new ArrayList<>();
-		for(Map.Entry<String, Thing> entry : thingsInfo.entrySet()){
-			
-			//conversion of Thing in json format
-//			JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
-			JSONObject jsonThing = Thing.fromJaxbToJson(entry.getValue(), Thing.class);
-			
-			Pair<String, JSONObject> thingPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
-			
-			newThingsData.add(thingPair);
+		newThingsData = Thing.fromJavaFormatToDbFormat(thingsInfo, Thing.class);
+		
+		if(newThingsData == null){
+			return false;
 		}
+//		for(Map.Entry<String, Thing> entry : thingsInfo.entrySet()){
+//			
+//			//conversion of Thing in json format
+////			JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
+//			JSONObject jsonThing = Thing.fromJaxbToJson(entry.getValue(), Thing.class);
+//			
+//			Pair<String, JSONObject> thingPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
+//			
+//			newThingsData.add(thingPair);
+//		}
 		
 		//store data
 		if(!bigDataRepository.storeData(newThingsData, QoSConsts.THINGS_INFO_DB)){
@@ -361,39 +375,53 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					//if match reqServName, add the new <DevId> list to stored reqServ
 					if(serviceEquivalentThings.get(entryOldEqThings.getLeft()) != null){
 						//conversion of old eq things data
-						EquivalentThings oldEqThings = 
-								EquivalentThings.fromJsonToJaxb(entryOldEqThings.getRight(), new EquivalentThings(), 
-																	EquivalentThings.class);
+						ThingsIdList oldEqThings = 
+								ThingsIdList.fromJsonToJaxb(entryOldEqThings.getRight(), new ThingsIdList(), 
+																	ThingsIdList.class);
 						
 						List<String> oldEqThingsList = oldEqThings.getEqThings();
 						List<String> newEqThingsList = serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings();
 
 						//merge operation of the old eqThingsList and the new One
 						//avoiding duplicates
-						for(String oldDevId: oldEqThingsList){
+						for(int i=0; i<oldEqThingsList.size(); i++){
 							for(String newDevId : newEqThingsList){
-								if(oldDevId.contentEquals(newDevId)){
-									oldEqThingsList.remove(oldDevId);
+								if(oldEqThingsList.get(i).contentEquals(newDevId)){
+									oldEqThingsList.remove(i);
+								}
+								
+								//check if the devId point to a thing that is 
+								//no more alive
+								//MONITORING OPERATION
+								if(!devIdCheckList.contains(oldEqThingsList.get(i))){
+									oldEqThingsList.remove(i);
 								}
 							}
 						}
-						serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
+						
+						if(!oldEqThingsList.isEmpty())
+							serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
 					}
 				}
 			}
 			
 			//store new Map<reServName, List<DevId>> in ServiceEquivalentThingsDB
 			List<Pair<String, JSONObject>> newServEqThingsData = new ArrayList<>();
-			for(Map.Entry<String, EquivalentThings> entry : serviceEquivalentThings.entrySet()){
-				
-				//conversion of EquivalentThings in json format
-//				JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
-				JSONObject jsonThing = EquivalentThings.fromJaxbToJson(entry.getValue(), EquivalentThings.class);
-				
-				Pair<String, JSONObject> servEqThingsPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
-				
-				newServEqThingsData.add(servEqThingsPair);
+			newServEqThingsData = ThingsIdList.fromJavaFormatToDbFormat(serviceEquivalentThings, ThingsIdList.class);
+			
+			if(newServEqThingsData == null){
+				return false;
 			}
+//			for(Map.Entry<String, EquivalentThings> entry : serviceEquivalentThings.entrySet()){
+//				
+//				//conversion of EquivalentThings in json format
+////				JSONObject jsonThing = XML.toJSONObject(entry.getValue().toString());
+//				JSONObject jsonThing = EquivalentThings.fromJaxbToJson(entry.getValue(), EquivalentThings.class);
+//				
+//				Pair<String, JSONObject> servEqThingsPair = new Pair<String, JSONObject>(entry.getKey(), jsonThing);
+//				
+//				newServEqThingsData.add(servEqThingsPair);
+//			}
 			
 			//store data
 			if(!bigDataRepository.storeData(newServEqThingsData, QoSConsts.SERV_EQ_THINGS_DB)){

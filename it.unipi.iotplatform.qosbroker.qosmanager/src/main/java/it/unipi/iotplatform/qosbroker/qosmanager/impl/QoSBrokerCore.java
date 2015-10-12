@@ -1,6 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.EquivalentThings;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
@@ -8,6 +8,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
@@ -764,13 +765,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			List<ContextElementResponse> qosMonitorResponse, Request request) {
 		
 		//Map<reqServName, List<DevID>>
-		HashMap<String, EquivalentThings> serviceEquivalentThings = new HashMap<>();
+		HashMap<String, ThingsIdList> serviceEquivalentThings = new HashMap<>();
 		
 		//set the key serviceEquivalentThings Map 
 		//taken from the requiredServicesNameList
 		//in Request object
 		for(String reqServName: request.getRequiredServicesNameList()){
-			serviceEquivalentThings.put(reqServName, new EquivalentThings());
+			serviceEquivalentThings.put(reqServName, new ThingsIdList());
 		}
 		
 		//creation of the map<DevId, Thing> from the List<ContextRegistration>
@@ -862,6 +863,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//allocation procedure
 		if(!qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings)) return false;
 		
+		printThingsMappings(thingsInfo, serviceEquivalentThings);
+		
 		//check the condition for the serviceAgreementRequest
 		//at least one thing for required service
 		//if only one thing for a service the Thing
@@ -876,15 +879,67 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return true;
 	}
 
+	private void printThingsMappings(HashMap<String, Thing> thingsInfo,
+			HashMap<String, ThingsIdList> serviceEquivalentThings) {
+		
+		logger.debug("####################################");
+		logger.debug("####################################");
+		logger.debug("ThingsInfo Map<DevId, Thing>");
+		
+		for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
+			logger.debug("DevId: "+entryThing.getKey());
+			
+			logger.debug("batteryLevel:");
+			logger.debug(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
+												: entryThing.getValue().getBatteryLevel().toString());
+			logger.debug("coords:");
+			logger.debug(entryThing.getValue().getCoords()==null ? "coords==null" 
+												: entryThing.getValue().getCoords().getLatitude()+","+
+												entryThing.getValue().getCoords().getLongitude());
+			
+			logger.debug("Services on Thing with devId "+entryThing.getKey()+": ");
+			HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
+			for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
+				
+				logger.debug("ServiceName: "+service.getKey());
+				
+				logger.debug("ServiceFeatures:");
+				logger.debug("latency: "+service.getValue().getLatency());
+				logger.debug("energyCost: "+service.getValue().getEnergyCost());
+				logger.debug("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
+												: service.getValue().getAccuracy());
+			}
+			logger.debug("<<--------------------------------->>");
+		}
+		logger.debug("########################################");
+		
+		logger.debug("########################################");
+		logger.debug("########################################");
+		logger.debug("Service Equivalent ThingsId Pairs");
+		
+		for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
+			
+			logger.debug("Required Service Name: "+entryEqThings.getKey());
+			logger.debug("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
+			List<String> eqThings = entryEqThings.getValue().getEqThings();
+			for(String thingId: eqThings){
+				logger.debug(thingId);
+			}
+			logger.debug("<<--------------------------------->>");
+		}
+		logger.debug("########################################");
+		logger.debug("########################################");
+	}
+
 	/* check the condition for the serviceAgreementRequest
 	at least one thing for required service
 	if only one thing for a service the Thing
 	battery must be != null */
 	private Boolean checkServiceAllocationConditions(
-			HashMap<String, EquivalentThings> serviceEquivalentThings,
+			HashMap<String, ThingsIdList> serviceEquivalentThings,
 			HashMap<String, Thing> thingsInfo, Request request) {
 
-		for(Map.Entry<String, EquivalentThings> entry: serviceEquivalentThings.entrySet()){
+		for(Map.Entry<String, ThingsIdList> entry: serviceEquivalentThings.entrySet()){
 			
 			List<String> eqThings = entry.getValue().getEqThings();
 			if(eqThings.isEmpty()){

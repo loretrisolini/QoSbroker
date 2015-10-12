@@ -23,6 +23,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public void createAgreement(String offer, String transactionId, Request request);
+	public Boolean createAgreement(String offer, String transactionId, Request request);
 	
 }

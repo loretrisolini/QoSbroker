@@ -14,14 +14,14 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @XmlRootElement(name = "equivalentThings")
 @XmlAccessorType(XmlAccessType.FIELD)
 /* class that contain the List<DevId> */
-public class EquivalentThings extends DataStructure{
+public class ThingsIdList extends DataStructure{
 
 	@XmlElementWrapper(name = "equivalentThingsList")
 	@XmlElement(name = "equivalentThing")
 	@JsonProperty("equivalentThings")
 	private List<String> eqThings;
 
-	public EquivalentThings(){
+	public ThingsIdList(){
 		eqThings  = new ArrayList<>();
 	}
 	

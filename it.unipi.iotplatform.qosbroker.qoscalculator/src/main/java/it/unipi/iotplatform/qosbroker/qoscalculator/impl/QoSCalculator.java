@@ -1,11 +1,14 @@
 package it.unipi.iotplatform.qosbroker.qoscalculator.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ThingAssignmentParams;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,15 +16,33 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
-import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 
 public class QoSCalculator implements QoSCalculatorIF {
 
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSCalculator.class);
+	
+	//indicates the value of p_ij
+	//to use f_ij, u_ij or random value
+	private enum Priority{
+		BATTERY, UTILIZATION, RANDOM
+	};
+	
+	//indicates the policy to follow
+	//to split service to multiple things
+	//max split or min split
+	private enum Policy{
+		MAX_SPLIT, MIN_SPLIT
+	}
+	
+	private enum Location{
+		POINT, CIRCLE, POLYGON
+	}
 	
 	/**
 	 * The Class Reserveobj.
@@ -37,187 +58,347 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//Map<thingId, <c_i, z_i>>
 		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap;
 		
-//		//Map<transId, Map<ServId, List<tId_tsId>>>
-//		HashMap<String, HashMap<Integer, AllocationObj>> allocationSchema;
-//
-//		Reserveobj() {
-//			allocationSchema = new HashMap<>();
-//
-//		}
+		//Map<transId, Map<reqServName, List<devId>>>
+		HashMap<String, HashMap<Integer, ThingsIdList>> allocationSchema;
+
+		Reserveobj() {
+			allocationSchema = new HashMap<>();
+
+		}
 		
 	}
 	
 	/* allocation class to store a single service
 	 * allocation transId,ServId -> tId, tsId */
-//	private class AllocationObj{
-//		
-//		String transId;
-//		
-//		Integer servId;
-//		
-//		ArrayList<ThingIdThingServiceIdPair> thingIdThingServiceIdAssignments;
-//		
-//		int split;
-//		
-//		AllocationObj(){
-//			thingIdThingServiceIdAssignments = new ArrayList<>();
-//		}
-//	}
-//	
-//	/**
-//	 * @param k the number of requests
-//	 * @param totalRequestedServicesMap all the requestService Names for each servId given a transId
-//	 * @param totalThingsMap the total number of equivalentThings for each service
-//	 * @param mappingServEqThings Map<transId, List<servId, Map<thingId, <thingServiceId, f_ij, u_ij, prioriy[]>>>>
-//	 * @param coefficientMap Map<transId, h/p_j>
-//	 * @param epsilon the tolerance used to stop iterations
-//	 * @return the ReservationResults object
-//	 */
-//	@Override
-//	public ReservationResults computeAllocation(
-//			int k,
-//			HashMap<String, HashMap<Integer, String>> totalRequestedServicesMap,
-//			HashMap<Integer, Thing> totalThingsMap,
-//			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
-//			HashMap<String, Integer> coefficientMap,
-//			double epsilon) {
-//		
-//		Reserveobj[] res = new Reserveobj[3];
-//		
-//		//execution with p_ij=f_ij
-//		res[0] = ABGAP(k, mappingServEqThings, coefficientMap, totalThingsMap, epsilon, 0,true);
-//		
-//		//execution with p_ij=u_ij
-//		res[1]= ABGAP(k, mappingServEqThings, coefficientMap, totalThingsMap, epsilon, 1, false);
-//
-//		//execution with p_ij=random_double
-//		res[2] = ABGAP(k, mappingServEqThings, coefficientMap, totalThingsMap, epsilon, 2, false);
-//
-//		ReservationResults ret = new ReservationResults();
-//		int imax=0;
-//		// Gets the best heuristic
-//		for(int j=1;j<3;j++)
-//		{
-//			if(res[imax].z<res[j].z && res[j].feasible)
-//				imax = j;
-//		}
-//		if(res[imax].feasible){
-//			ret.setFeas(true);
-//
+	private class AllocationObj{
+		
+		String transId;
+		
+		String serviceName;
+		
+		//List<DevId> assigned to a service request
+		ArrayList<String> devIdList;
+		
+		Double u_ij;
+		Double f_ij;
+		int split;
+		
+		AllocationObj(){
+			devIdList = new ArrayList<>();
+		}
+	}
+	
+	/**
+	 * @param k the number of requests
+	 * @param requests all the requests as Pair <transId, Request>
+	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
+	 * @param eqThingInfo Map<devId, Thing>
+	 * @param servNameThingsIdList Map<reServName, List<DevId>>
+	 * @param epsilon the tolerance used to stop iterations
+	 * @return the ReservationResults object
+	 */
+	@Override
+	public ReservationResults computeAllocation(
+			int k, List<Pair<String, Request>> requests, 
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList,
+			double epsilon) {
+		
+		Reserveobj[] res = new Reserveobj[3];
+		
+		
+		HashMap<String, List<String>> matrixM = createMatrixM(requests, eqThingInfo, servNameThingsIdList);
+		if(matrixM == null){
+			
+			logger.debug("ERROR: problem with matrix M creation");
+			return null;
+		}
+		
+		Priority prio = Priority.BATTERY;
+		Policy policy = Policy.MAX_SPLIT;
+		//execution with p_ij=f_ij
+		res[0] = ABGAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, epsilon, prio, policy);
+		
+		prio = Priority.UTILIZATION;
+		//execution with p_ij=u_ij
+		res[1]= ABGAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, epsilon, prio, policy);
+
+		prio = Priority.RANDOM;
+		//execution with p_ij=random_double
+		res[2] = ABGAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, epsilon, prio, policy);
+
+		ReservationResults ret = new ReservationResults();
+		int imax=0;
+		// Gets the best heuristic
+		for(int j=1;j<3;j++)
+		{
+			if(res[imax].z<res[j].z && res[j].feasible)
+				imax = j;
+		}
+		if(res[imax].feasible){
+			ret.setFeas(true);
+
 ////			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax], totalThingsMap, totalRequestedServicesMap);
 //			
 ////			ret.setAllocationSchema(ngsiAllocationSchema);
 ////			
 ////			ret.setWhich(imax);
-//		}
-//		
-//		return ret;
-//	}
-//
-//	
-//
-//	/**
-//	 * Execute the heuristic specifically tailored for battery consumption.
-//	 *
-//	 * @param k the number of request
-//	 * @param mappingServEqThings contains the P, F, U matrix
-//	 * @param coefficientMap Map<transId, h/p_j>
-//	 * @param totalThingsMap the vector of starting battery
-//	 * @param epsilon the tolerance used to stop iterations
-//	 * @param priorityIndex say which value using as priority p_ij
-//	 * @param indicates if it has to be done the local optimization
-//	 * @return the Reserveobj object
-//	 */
-//	private Reserveobj ABGAP(
-//			int k,
-//			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
-//			HashMap<String, Integer> coefficientMap,
-//			HashMap<Integer, Thing> totalThingsMap,
-//			double epsilon, int priorityIndex, boolean battery){
-//
-//		Reserveobj res = null;
-//		double upper = 1.0;
-//		double lower = 0.0;
-//		double teta = 0;
-//		double z = 0;
-//		System.out.println("teta = "+teta);
-//		
-//		//indicates the policy to follow
-//		//the first element says that the allocation must start
-//		//with one service per thing
-//		//the second indicates if the policy is max split or min split
-//		boolean[] policy = {true, false};
-//		
-//		res = GAP(k, mappingServEqThings, coefficientMap, totalThingsMap, priorityIndex, teta, true, policy.clone());
-//	
-//		if(res.feasible == true)
-//		{
-//			teta = (upper - lower) / 2;
-//			while((upper - lower) > epsilon)
-//			{
-//				System.out.println("teta = "+teta);
-////				policy[0] = true;
-////				policy[1] = false;
-//				
-//				res = GAP(k, mappingServEqThings, coefficientMap, totalThingsMap, priorityIndex, teta, true, policy.clone());
-//	
-//				if(res.feasible)
-//				{
-//					z = teta;
-//					lower = teta;
-//					teta = teta + ((upper-lower) / 2 );
-//				}
-//				else
-//				{
-//					upper = teta;
-//					teta = teta - ((upper-lower) / 2 );
-//				}
-//	
-//			}
-//			if(!res.feasible){
-//				teta = z;
-//				System.out.println("teta = "+teta);
-//				
-////				policy[0] = true;
-////				policy[1] = false;
-//				
-//				res = GAP(k, mappingServEqThings, coefficientMap, totalThingsMap, priorityIndex, teta, true, policy.clone());
-//			}
-//		}
-//		
-//		res.z = z;
-//		return res;
-//	}
-//
-//	/**
-//	 * Real_battery_ gap.
-//	 *
-//	 * @param k the number of requests
-//	 * @param mappingServEqThings represents F,U,P matrix 
-//	 * @param coefficientMap Map<thingId, h/p_j>
-//	 * @param totalThingsMap Map<thingId, Thing>
-//	 * @param priorityIndex indicates wht priority to use
-//	 * @param teta the teta
-//	 * @param battery says if it must be done the local optimization
-//	 * @param policy says how to split
-//	 * @return the reserveobj
-//	 */
-//	private Reserveobj GAP(
-//			int k,
-//			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
-//			HashMap<String, Integer> coefficientMap,
-//			HashMap<Integer, Thing> totalThingsMap,
-//			int priorityIndex, double teta, boolean battery, boolean[] policy) {
-//	
-////		printInputGap(k, mappingServEqThings, coefficientMap, totalThingsMap, priorityIndex, teta, battery, policy);
-//		
+		}
+		
+		return ret;
+	}
+
+	
+
+	/**
+	 * Execute the heuristic specifically tailored for battery consumption.
+	 *
+	 * @param k the number of request
+	 * @param requests all the requests as Pair <transId, Request>
+	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
+	 * @param eqThingInfo Map<devId, Thing>
+	 * @param servNameThingsIdList Map<reServName, List<DevId>>
+	 * @param epsilon the tolerance used to stop iterations
+	 * @param prio say which value using as priority p_ij
+	 * @param policy say if must be used max or min split policy
+	 * @return the Reserveobj object
+	 */
+	private Reserveobj ABGAP(
+			int k, List<Pair<String, Request>> requests, 
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList,
+			HashMap<String, List<String>> matrixM,
+			double epsilon,
+			Priority prio,
+			Policy policy){
+
+		Reserveobj res = null;
+		double upper = 1.0;
+		double lower = 0.0;
+		double teta = 0;
+		double z = 0;
+		System.out.println("teta = "+teta);
+		
+		res = GAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
+	
+		if(res.feasible == true)
+		{
+			teta = (upper - lower) / 2;
+			while((upper - lower) > epsilon)
+			{
+				System.out.println("teta = "+teta);
+				
+				res = GAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
+	
+				if(res.feasible)
+				{
+					z = teta;
+					lower = teta;
+					teta = teta + ((upper-lower) / 2 );
+				}
+				else
+				{
+					upper = teta;
+					teta = teta - ((upper-lower) / 2 );
+				}
+	
+			}
+			if(!res.feasible){
+				teta = z;
+				System.out.println("teta = "+teta);
+				
+				res = GAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
+			}
+		}
+		
+		res.z = z;
+		return res;
+	}
+
+	/* function to create a table that say the list of DevId of the
+	 * things that respect the restriction of a request identified
+	 * by the transactionId (Map<transId, List<DevId>>) */
+	private HashMap<String, List<String>> createMatrixM(
+			List<Pair<String, Request>> requests,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList) {
+		
+		HashMap<String, List<String>> matrixM = new HashMap<>();
+		
+		for(Pair<String, Request> reqPair: requests){
+			
+			String transId = reqPair.getLeft();
+			Request request = reqPair.getRight();
+			List<String> reqServNameList = request.getRequiredServicesNameList();
+			
+			//take the maxRespTime and accuracy from QoSrequirements of the request object
+			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+			
+			Double accuracy = request.getQosRequirements().getAccuracy();
+			
+			logger.debug("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
+			
+			Point point = null;
+			Circle circle = null;
+			Polygon polygon = null;
+			
+			if(request.getLocationRequirement() != null){
+				//take the location requirement from the LocationRequirement object in the request object
+				Class<?> locRequirementsType = request.getLocationRequirement().getLocationRequirement().getClass();
+				
+				logger.debug("locRequirementsType is "+locRequirementsType.getCanonicalName());
+				
+				if(locRequirementsType == Point.class){
+					point = (Point)request.getLocationRequirement().getLocationRequirement();
+				}
+				else{
+					if(locRequirementsType == Circle.class){
+						circle = (Circle)request.getLocationRequirement().getLocationRequirement();
+					}
+					else{
+						polygon = (Polygon)request.getLocationRequirement().getLocationRequirement();
+					}
+				}
+			}
+			
+			for(String reServName: reqServNameList){
+				
+				//clone the list of DevId of all equivalent things for that 
+				//required service name
+				List<String> eqThings = new ArrayList<>();
+				eqThings.addAll(servNameThingsIdList.get(reServName).getEqThings());
+				
+				//iterate over the list of equivalent things
+				//for that serviceName
+				for(String devId: eqThings){
+					
+					Thing t = eqThingInfo.get(devId);
+					
+					Point coords = t.getCoords();
+					
+					//check location requirement
+					if(coords != null){
+						if(point != null){
+							if(coords.getLatitude() != point.getLatitude() ||
+									coords.getLongitude() != point.getLongitude()){
+								eqThings.remove(devId);
+							}
+						}
+						else{
+							if(circle != null){
+								if(!in_circle(circle, coords)){
+									eqThings.remove(devId);
+								}
+							}
+							else{
+								if(!in_polygon(polygon, coords)){
+									eqThings.remove(devId);
+								}
+							}
+						}
+					}
+					
+					//check QoSrequirements on services on a thing
+					HashMap<String, ServiceFeatures> services = t.getServicesList();
+					
+					for(Map.Entry<String, ServiceFeatures> servEntry: services.entrySet()){
+						
+						Double latency = servEntry.getValue().getLatency();
+						
+						Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
+															: servEntry.getValue().getAccuracy();
+
+						if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
+							eqThings.remove(devId);
+						}
+					}
+					
+				}
+				
+				if(eqThings.isEmpty()) return null;
+				else
+					matrixM.put(transId, eqThings);
+				
+				eqThings.clear();
+			}
+			
+			
+		}
+		
+		return matrixM;
+	}
+
+
+
+	private boolean in_polygon(Polygon polygon, Point coords) {
+	
+		int i;
+		int j;
+		
+		List<Vertex> vertexList = polygon.getVertexList();
+		
+		boolean result = false;
+		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
+			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
+					(vertexList.get(j).getLatitude() > coords.getLatitude())
+					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
+							* (coords.getLongitude() - vertexList.get(i).getLongitude())
+							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
+							+ vertexList.get(i).getLatitude())) {
+				result = !result;
+			}
+		}
+		
+		return result;
+	}
+
+
+
+	private boolean in_circle(Circle circle, Point coords) {
+		
+		Double x2 = Math.pow((circle.getCenterLatitude() - coords.getLatitude()), 2);
+		Double y2 = Math.pow((circle.getCenterLongitude() - coords.getLongitude()), 2);
+		
+		Double dist = Math.sqrt(x2 + y2);
+	    return dist <= circle.getRadius();
+	}
+
+
+
+	/**
+	 * Real_battery_ gap.
+	 *
+	 * @param k the number of request
+	 * @param requests all the requests as Pair <transId, Request>
+	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
+	 * @param eqThingInfo Map<devId, Thing>
+	 * @param servNameThingsIdList Map<reServName, List<DevId>>
+	 * @param teta the teta for the constraint on z_i - f_ij > teta
+	 * @param prio say which value using as priority p_ij
+	 * @param policy say if must be used max or min split policy
+	 * @return the reserveobj
+	 */
+	private Reserveobj GAP(
+			int k, List<Pair<String, Request>> requests, 
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList,
+			HashMap<String, List<String>> matrixM,
+			double teta,
+			Priority prio,
+			Policy policy) {
+	
+		printInputGap(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, teta, prio, policy);
+		
 //		Reserveobj res = new Reserveobj();
 //		
-//		//Backup of the mapping of services and equivalent things
-//		HashMap<String, List<ServiceAssignments>> mappingServEqThingsBck = cloneMappingServEqThings(mappingServEqThings);
+//		//Backup of the requests list List<transId, Request>
+//		 List<Pair<String, Request>> requestsBck = cloneRequests(requests);
 //		
-//		//create Map<thingId, <c_i, z_i>> from the Map<thingId, Thing>
-//		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap = createAssignmentsParamsMap(totalThingsMap);
+//		//create Map<thingId, <c_i, z_i>> from the eqThingInfo Map<DevId, Thing>
+//		HashMap<String, ThingAssignmentParams> assignmentParamsMap = createAssignmentParamsMap(eqThingInfo);
 //		
 //		//upper bound for utilization
 //		Double ni = k*(Math.pow(2, 1/k)-1);
@@ -232,12 +413,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		List<Integer> Fjr;
 //		
 //		//iterate over the service requests
-//		while(res.feasible && !mappingServEqThings.isEmpty()){
+//		while(res.feasible && !requests.isEmpty()){
 //			
 //			ds = -1 * INF;
 //			
 //			//temporary allocation object
-//			//<transId, servId, thingId, thingServiceId>
+//			//<transId, servName, List<DevId>>
 //			AllocationObj allocationTemp = new AllocationObj();
 //			
 //			//index to identify the position of the ServiceObject 
@@ -246,48 +427,56 @@ public class QoSCalculator implements QoSCalculatorIF {
 //			int j = 0;
 //			
 //			//iterate over the list of request identify by transId
-//			for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThings.entrySet()){
+//			for(Pair<String, Request> servRequest: requests){
 //				
 //				//get the transaId that identify a request with multiple
 //				//service requests
-//				String transId = entry.getKey();
+//				String transId = servRequest.getLeft();
+//				
+//				//Request object contains
+//				//operationType, QoSRequirements, LocationRequirements,
+//				//required service list
+//				Request requestObj = servRequest.getRight();
 //				
 //				logger.debug("request with TransId: "+transId);
 //				
-//				//Get the list of <servId, Map<thingId, <thingServiceId, f_ij, u_ij, p[]>>>
-//				List<ServiceAssignments> servAssignmentsList = entry.getValue();
+//				//Get the list of required services for this request
+//				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
 //				
-//				//iterate over the equivalent things-thingService params <f_ij, u_ij, p[]> 
-//				//for that service request
-//				for(ServiceAssignments servAssignment: servAssignmentsList){
+//				//iterate over the List of required services in the request
+//				//identified by transId
+//				for(String reqServiceName: reqServicesList){
 //					
-//					//map<thingId, ServiceExecutionFeature> of equivalent thing services associated to the thing
-//					//with the params <f_ij, u_ij, p_ij>
-//					HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = servAssignment.getThingServiceExecFeatureMap();
-//					
-//					//id that identify the single service request
-//					//inside a request composed by a list
-//					//of service requests
-//					Integer servId = servAssignment.getServId();
-//					
-//					logger.debug("ServiceRequest with servId: "+servId.toString()+
+//					logger.debug("ServiceRequest Name: "+reqServiceName+
 //									"inside request with TransId: "+transId);
 //					
 //					//coefficientMap ha as key the transId
 //					//so i get the first elem of array transId_servId
-//					List<Integer> Sj = factorization(coefficientMap.get(transId));
+//					List<Integer> Sj = factorization(servPeriodsMap.get(transId).getNj());
+//					
+//					//var that a trial to assign one service
+//					//to only one thing has been done
+//					Boolean oneServiceToOneThingTrial = true;
 //					
 //					//iterate over the list of split factors
 //					//of a service on multiple things
 //					while(!res.feasible || !Sj.isEmpty()){
 //						
-//						//s_p says to how many things assign the service
-//						int s_p = chooseFactor(Sj, policy);
-//						logger.debug("split= "+String.valueOf(s_p));
+//						int split;
+//						
+//						//split says to how many things assign the service
+//						if(oneServiceToOneThingTrial){ 
+//							split = 1;
+//							oneServiceToOneThingTrial = false;
+//						}
+//						else{
+//							split = chooseFactor(Sj, policy);
+//						}
+//						logger.debug("split factor= "+String.valueOf(split));
 //						
 //						//R is used iterate in case of 
 //						//assignment to multiple things
-//						int R = s_p;
+//						int R = split;
 //						
 //						//iterate over the R that indicates the number
 //						//of suballocation for the service servId
@@ -297,11 +486,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 //							
 //							for(int r = 0; r<R; r++){
 //	
-//								//List of thingId that satisfy
+//								//List of devId that satisfy
 //								//the constraints about
 //								//utilization and residual battery
-//								Fjr = checkConstraints(equivalentThingsParamsMap, assignmentsParamsMap, 
-//																		s_p, ni, teta, null);
+//								Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, matrixM, 
+//																		split, ni, teta, null);
 //								
 //								//there is no thing that satisfy the
 //								//requirements
@@ -502,87 +691,23 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		}
 //		
 //		res.assignmentsParamsMap = assignmentsParamsMap;
-//		
-//		return res;
-//	}
+		
+		return null;
+	}
 
-	/* function to print the parameters of the GAP function */
-//	private void printInputGap(int k,
-//			HashMap<String, List<ServiceAssignments>> mappingServEqThings,
-//			HashMap<String, Integer> coefficientMap,
-//			HashMap<Integer, Thing> totalThingsMap, int priorityIndex,
-//			double teta, boolean battery, boolean[] policy) {
-//		
-//		logger.debug("number of service requests="+String.valueOf(k));
-//		
-//		logger.debug("priorityIndex="+String.valueOf(priorityIndex));
-//		
-//		logger.debug("teta="+String.valueOf(teta));
-//		
-//		logger.debug("local optimization: "+String.valueOf(battery));
-//		
-//		logger.debug("policy");
-//		logger.debug("start with split factor 1: "+String.valueOf(policy[0]));
-//		logger.debug("start with min split factor: "+String.valueOf(policy[1]));
-//		
-//		logger.debug("<------------------------>");
-//		logger.debug("Coefficients Map");
-//		
-//		for(Map.Entry<String, Integer> entryCoeff: coefficientMap.entrySet()){
-//			
-//			logger.debug("transactionId="+entryCoeff.getKey());
-//			logger.debug("coefficient="+String.valueOf(entryCoeff.getValue()));
-//		}
-//		logger.debug("<------------------------>");
-//		
-//		logger.debug("<------------------------>");
-//		logger.debug("totalThingsMap");
-//		
-//		for(Map.Entry<Integer, Thing> entryThing: totalThingsMap.entrySet()){
-//			
-//			logger.debug("thingId="+ entryThing.getKey().toString());
-//			logger.debug("batteryLevel="+ String.valueOf(entryThing.getValue().getBatteryLevel()));
-//			
-//			HashMap<Integer, ThingService> thingServicesMap = entryThing.getValue().getThingServices();
-//			
-//			for(Map.Entry<Integer, ThingService> entryThingServ: thingServicesMap.entrySet()){
-//				logger.debug("thingServiceId="+entryThingServ.getKey().toString());
-//				logger.debug("ThingServiceName="+entryThingServ.getValue().getServiceName());
-//				
-//				logger.debug("latency="+String.valueOf(entryThingServ.getValue().getThingServFeatures().getLatency()));
-//				logger.debug("energy_cost="+String.valueOf(entryThingServ.getValue().getThingServFeatures().getEnergyCost()));
-//			}
-//		}
-//		logger.debug("<------------------------>");
-//		
-//		logger.debug("<------------------------>");
-//		logger.debug("mappingServEqThings");
-//		
-//		for(Map.Entry<String, List<ServiceAssignments>> entryMapping: mappingServEqThings.entrySet()){
-//			
-//			logger.debug("transId="+entryMapping.getKey());
-//			List<ServiceAssignments> servAssignmentsList = entryMapping.getValue();
-//			
-//			for(ServiceAssignments servAss: servAssignmentsList){
-//				
-//				logger.debug("serviceId="+String.valueOf(servAss.getServId()));
-//				
-//				HashMap<Integer, ServiceExecutionFeature> eqThings = servAss.getThingServiceExecFeatureMap();
-//				
-//				for(Map.Entry<Integer, ServiceExecutionFeature> entryServExceFeat: eqThings.entrySet()){
-//					
-//					logger.debug("thingId="+entryServExceFeat.getKey());
-//					logger.debug("thingServiceId="+entryServExceFeat.getValue().getThingServiceId().toString());
-//					
-//					logger.debug("f_ij="+entryServExceFeat.getValue().getNormalizedEnergyCost());
-//					logger.debug("u_ij="+entryServExceFeat.getValue().getUtilization());
-//					
-//					logger.debug("p_ij="+entryServExceFeat.getValue().getPriority().get(priorityIndex));
-//				}
-//			}
-//		}
-//		logger.debug("<------------------------>");
-//	}
+
+
+
+	private void printInputGap(int k, List<Pair<String, Request>> requests,
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList,
+			HashMap<String, List<String>> matrixM, double teta, Priority prio,
+			Policy policy) {
+		
+		
+		
+	}
 
 
 
@@ -655,27 +780,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		return contRegList;
 //	}
 
-	/* function to create the Map<thingId, <c_i, z_i>> given the Map<thingId, Thing> */
-//	private HashMap<Integer, ThingAssignmentParams> createAssignmentsParamsMap(
-//			HashMap<Integer, Thing> thingsMap) {
-//		
-//		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap = new HashMap<>();
-//		
-//		for(Map.Entry<Integer, Thing> entry : thingsMap.entrySet()){
-//			
-//			ThingAssignmentParams thingAssParams = new ThingAssignmentParams();
-//			
-//			//set z_i using the residual battery of the thing
-//			thingAssParams.setResidualBattery(entry.getValue().getBatteryLevel()/100);
-//			
-//			//set c_i
-//			thingAssParams.setTotalUtilization(0.0);
-//			
-//			assignmentsParamsMap.put(entry.getKey(), thingAssParams);
-//		}
-//		
-//		return assignmentsParamsMap;
-//	}
+
 //	
 //	/* function to get the thingId to which is associated the max residualBatteryLevel */
 //	private int getArgMaxResidualBattery(
@@ -862,27 +967,81 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		return Fjr;
 //	}
 
+
+
+
+
+	private List<Integer> checkConstraints(
+			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, List<String>> matrixM, int split, Double ni,
+			double teta, Object object) {
+		
+		
+		return null;
+	}
+
+
+
+	/* function to compute Map<DevId, <c_i, z_i>> */
+	private HashMap<String, ThingAssignmentParams> createAssignmentParamsMap(
+			HashMap<String, Thing> eqThingInfo) {
+		
+		HashMap<String, ThingAssignmentParams> assignmentParamsMap = new HashMap<>();
+		
+		for(String devId: eqThingInfo.keySet()){
+			
+			Double batt = eqThingInfo.get(devId).getBatteryLevel();
+			
+			if(batt == null){
+				batt = 0.0;
+			}
+			
+			ThingAssignmentParams assParams = new ThingAssignmentParams();
+			
+			//set the vaue of c_i
+			assParams.setTotalUtilization(0.0);
+			
+			//z_i set to one or to the value of the battery/100
+			assParams.setResidualBattery(batt/100);
+			
+			assignmentParamsMap.put(devId, assParams);
+		}
+		
+		return assignmentParamsMap;
+	}
+
+
+	/* function to create a copy od List<transId, Request> */
+	private List<Pair<String, Request>> cloneRequests(
+			List<Pair<String, Request>> requests) {
+		
+		List<Pair<String, Request>> reqListBck = new ArrayList<Pair<String, Request>>();
+		
+		for(Pair<String, Request> reqEntry: requests){
+			
+			String transId = reqEntry.getLeft();
+			Request req = reqEntry.getRight();
+			
+			reqListBck.add(new Pair<String, Request>(transId, req));
+		}
+		
+		return reqListBck;
+	}
+
+
+
 	/* function to choose a term from 
 	 * the list of factors given a policy */
-	private int chooseFactor(List<Integer> sj, boolean[] policy) {
-		
-		//first time try to assign a service
-		//to one sensor
-		if(policy[0]){
-			policy[0] = false;
+	private int chooseFactor(List<Integer> sj, Policy policy) {
+
+		if(policy == Policy.MIN_SPLIT){
 			
 			return sj.get(0);
 		}
 		else{
-			//if the second term of policy is false
-			//start from the max spit
-			//otherwise from the min split
-			if(policy[1]){
-				return sj.get(1);
-			}
-			else{
-				return sj.get((sj.size()-1));
-			}
+			
+			return sj.get((sj.size()-1));
 		}
 	}
 
@@ -891,7 +1050,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		int n = number;
 	    List<Integer> factors = new ArrayList<Integer>();
-	    factors.add(1);
+
 	    for (int i = 2; i <= n; i++) {
 	      while (n % i == 0) {
 	        factors.add(i);
@@ -899,12 +1058,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 	      }
 	    }
 	    return factors;
-	}
-
-	@Override
-	public ReservationResults computeAllocation() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	
