@@ -706,11 +706,68 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 
 		try{
-			PrintWriter writer = new PrintWriter("ThingsMappings.txt", "UTF-8");
+			PrintWriter writer = new PrintWriter("InputGap.txt", "UTF-8");
 
 			writer.println("####################################");
 			writer.println("####################################");
+			writer.println("number of Service Requests: "+k);
+			writer.println("<------------------------------>");
 			
+			writer.println("ServicePeriodParams <p_j, h/p_j>");
+			for(Map.Entry<String, ServicePeriodParams> entryPeriod: servPeriodsMap.entrySet()){
+				writer.println("transactionId: "+entryPeriod.getKey());
+				writer.println("p_j: "+entryPeriod.getValue().getPeriod());
+				writer.println("h/p_j: "+entryPeriod.getValue().getNj());
+				writer.println("<------------------------------>");
+			}
+			
+			writer.println("Things available <batt, coords, <servName, <t_ij, c_ij>>>");
+			for(Map.Entry<String, Thing> entryThing: eqThingInfo.entrySet()){
+				writer.println("devId: "+entryThing.getKey());
+				writer.println("batt: "+entryThing.getValue().getBatteryLevel());
+				if(entryThing.getValue().getCoords()!=null)
+					writer.println("coords: "+entryThing.getValue().getCoords().getLatitude()+","+entryThing.getValue().getCoords().getLongitude());
+				
+				HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
+				for(Map.Entry<String, ServiceFeatures> entryServ: services.entrySet()){
+					writer.println("Service Name: "+entryServ.getKey());
+					writer.println("latency: "+entryServ.getValue().getLatency());
+					writer.println("energy_cost: "+entryServ.getValue().getEnergyCost());
+					writer.println("accuracy: "+entryServ.getValue().getAccuracy());
+					writer.println("<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>");
+				}
+				writer.println("<------------------------------>");
+			}
+			
+			writer.println("equivalent Things per required Service Name");
+			for(Map.Entry<String, ThingsIdList> entryThingId: servNameThingsIdList.entrySet()){
+				writer.println("requiredServiceName: "+entryThingId.getKey());
+				List<String> thingsIdList = entryThingId.getValue().getEqThings();
+				writer.println("list of devId");		
+				for(String devId: thingsIdList){
+					writer.println("devId: "+ devId);
+					writer.println("<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>");
+				}
+				writer.println("<------------------------------>");
+			}
+			
+			writer.println("matrixM");
+			for(Map.Entry<String, TransIdList> entryTransId: matrixM.entrySet()){
+				writer.println("devId: "+entryTransId.getKey());
+				List<String> transIdList = entryTransId.getValue().getTransIdList();
+				writer.println("list of devId");		
+				for(String transId: transIdList){
+					writer.println("transId: "+ transId);
+					writer.println("<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>");
+				}
+				writer.println("<------------------------------>");
+			}
+			
+			writer.println("teta: "+teta);
+			writer.println("<------------------------------>");
+			writer.println("priority: "+prio.name());
+			writer.println("<------------------------------>");
+			writer.println("policy: "+policy.name());
 			writer.println("########################################");
 			writer.println("########################################");
 			writer.close();
