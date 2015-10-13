@@ -2,6 +2,9 @@ package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
+
+import java.util.HashMap;
 
 import javax.annotation.Resource;
 
@@ -23,6 +26,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public Boolean createAgreement(String offer, String transactionId, Request request);
+	public Boolean createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap);
 	
 }

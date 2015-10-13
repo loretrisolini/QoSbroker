@@ -387,14 +387,11 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						//avoiding duplicates
 						for(int i=0; i<oldEqThingsList.size(); i++){
 							for(String newDevId : newEqThingsList){
-								if(oldEqThingsList.get(i).contentEquals(newDevId)){
-									oldEqThingsList.remove(i);
-								}
-								
 								//check if the devId point to a thing that is 
 								//no more alive
 								//MONITORING OPERATION
-								if(!devIdCheckList.contains(oldEqThingsList.get(i))){
+								if(oldEqThingsList.get(i).contentEquals(newDevId) || 
+										!devIdCheckList.contains(oldEqThingsList.get(i))){
 									oldEqThingsList.remove(i);
 								}
 							}

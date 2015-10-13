@@ -75,7 +75,7 @@ public class QoSManager implements QoSManagerIF {
 	}
 	
 	@Override
-	public Boolean createAgreement(String offer, String transactionId, Request request){
+	public Boolean createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap){
 		
 		//TODO Parse Offer
 		
@@ -84,6 +84,9 @@ public class QoSManager implements QoSManagerIF {
 		
 		//read all old requests from requests DB
 		List<Pair<String, JSONObject>> requestsJsonList = bigDataRepository.readData(null, QoSConsts.REQUESTS_DB);
+		if(requestsJsonList == null){
+			return false;
+		}
 		
 		//convert JsonObj requests in request object
 		//and put it in List<transId, Request>
@@ -146,12 +149,12 @@ public class QoSManager implements QoSManagerIF {
 		}
 		
 		//read from DBs the Map<DevId, Thing> and the Map<reqServName, List<DevId>>
+		//Map<DevId, List<transId>>
 		List<Pair<String, JSONObject>> eqThingInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
 		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
 		if(eqThingInfoJson == null || eqThingInfoJson.isEmpty() || 
-				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty() ||
-				thingTransactionsJson == null || thingTransactionsJson.isEmpty()){
+				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){
 			return false;
 		}
 		
@@ -172,6 +175,26 @@ public class QoSManager implements QoSManagerIF {
 			return false;
 		}
 		
+		//fuse the matrixM read from the DB
+		//and new one computed with the ServiceAgreement operation
+		if(!matrixM.isEmpty()){
+			for(Map.Entry<String, TransIdList> entry: thingTransactionsMap.entrySet()){
+				String devId = entry.getKey();
+				
+				if(matrixM.get(devId) != null){
+					matrixM.get(devId).getTransIdList().addAll(entry.getValue().getTransIdList());
+				}
+				else{
+					matrixM.put(devId, entry.getValue());
+				}
+			}
+		}
+		else{
+			//case in which matrixM is empty
+			//so add directly all the elements
+			matrixM.putAll(thingTransactionsMap);
+		}
+		
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
 																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
@@ -183,16 +206,6 @@ public class QoSManager implements QoSManagerIF {
 		
 		return true;
 	}
-	
-//	public NegotiationInterface getNegotiator() {
-//	return negotiator;
-//}
-//
-//public void setNegotiator(NegotiationInterface negotiator) {
-//	this.negotiator = negotiator;
-//}
-	
-	
 
 	public QoSCalculatorIF getQosCalculator() {
 		return qosCalculator;
@@ -209,5 +222,13 @@ public class QoSManager implements QoSManagerIF {
 	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
 		this.bigDataRepository = bigDataRepository;
 	}
+	
+//	public NegotiationInterface getNegotiator() {
+//	return negotiator;
+//}
+//
+//public void setNegotiator(NegotiationInterface negotiator) {
+//	this.negotiator = negotiator;
+//}
 
 }

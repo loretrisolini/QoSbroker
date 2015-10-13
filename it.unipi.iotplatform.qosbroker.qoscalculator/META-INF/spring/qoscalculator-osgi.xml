@@ -6,7 +6,7 @@
        http://www.springframework.org/schema/osgi  
        http://www.springframework.org/schema/osgi/spring-osgi.xsd"> 
 		
-    <osgi:service id="QosCalculatorService" ref="QoSCalculator"
+    <osgi:service id="QoSCalculatorService" ref="QoSCalculator"
         interface="it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF" />
 
 </beans>

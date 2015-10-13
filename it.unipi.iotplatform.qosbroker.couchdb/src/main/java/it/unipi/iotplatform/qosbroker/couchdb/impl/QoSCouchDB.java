@@ -38,9 +38,9 @@ public class QoSCouchDB implements QoSBigDataRepository{
 	@Value("${couchdb_port:5984}")
 	private String couchDB_PORT;
 	
-	@Value("${couchdb_names}")
-	private String[] couchDB_NAME;
-	
+//	@Value("${couchdb_names}")
+//	private String[] couchDB_NAME;
+
 	@Value("${couchdb_username:null}")
 	private String couchDB_USERNAME;
 	@Value("${couchdb_password:null}")
@@ -337,13 +337,13 @@ public class QoSCouchDB implements QoSBigDataRepository{
 		return response;
 	}
 
-	public String[] getCouchDB_NAME() {
-		return couchDB_NAME;
-	}
-
-	public void setCouchDB_NAME(String[] couchDB_NAME) {
-		this.couchDB_NAME = couchDB_NAME;
-	}
+//	public String[] getCouchDB_NAME() {
+//		return couchDB_NAME;
+//	}
+//
+//	public void setCouchDB_NAME(String[] couchDB_NAME) {
+//		this.couchDB_NAME = couchDB_NAME;
+//	}
 
 
 }

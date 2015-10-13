@@ -10,7 +10,9 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
+import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.io.PrintWriter;
@@ -22,7 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,10 +73,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 	
-	private static final AtomicInteger serviceIdCounter = new AtomicInteger();
-	private static final AtomicInteger thingIdCounter = new AtomicInteger();
-	private static final AtomicInteger thingServiceIdCounter = new AtomicInteger();
-	
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
 			.newCachedThreadPool();
@@ -83,8 +80,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
-	private final QoSManager qosManager = new QoSManager();
-	
+	private QoSManagerIF qosManager;
+	private HashMap<String, TransIdList> thingTransactionsMap;
 	private QoSMonitorIF qosMonitor;
 	private Ngsi10Interface qosMonitorNgsi;
 	
@@ -606,7 +603,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
 		
-		qosManager.createAgreement(negotiationOffer, transactionId, request);
+		qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap);
 		
 		
 		logger.info("############## createAgreement ###############");
@@ -876,9 +873,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		if(!checkServiceAgreementRequestConditions){
 			return false;
 		}
-		else{
-			//qosMonitor
-		}
 		
 		return true;
 	}
@@ -887,7 +881,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
 		try{
-			PrintWriter writer = new PrintWriter("ThingsMappings.txt", "UTF-8");
+			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ThingsMappings.txt", "UTF-8");
 
 			writer.println("####################################");
 			writer.println("####################################");
@@ -953,7 +947,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 		//Map<devId, transId> represents the devId that respect
 		//the requirements of the transaction with transId
-		HashMap<String, String> thingTransactionsMap = new HashMap<>();
+		thingTransactionsMap = new HashMap<>();
 		
 		for(Map.Entry<String, ThingsIdList> entry: serviceEquivalentThings.entrySet()){
 			
@@ -991,8 +985,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				if((latency == null || latency < maxRespTime) && (servAccuracy == null || servAccuracy >= accuracy)){
 					constraints = true;
 					
+					TransIdList transIdList = new TransIdList();
+					transIdList.getTransIdList().add(transId);
+					
 					//put an entry <devId, transId> in the Map<devId,transId>
-					thingTransactionsMap.put(eqThingDevId, transId);
+					thingTransactionsMap.put(eqThingDevId, transIdList);
 				}
 
 			}
@@ -1005,10 +1002,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				return false;
 			}
 
-		}
-		
-		if(thingTransactionsMap.isEmpty() && !qosMonitor.updateThingTransactions(thingTransactionsMap)){
-			return false;
 		}
 		
 		return true;
@@ -1108,6 +1101,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	public void setQosMonitorNgsi(Ngsi10Interface qosMonitorNgsi) {
 		this.qosMonitorNgsi = qosMonitorNgsi;
+	}
+
+	public QoSManagerIF getQosManager() {
+		return qosManager;
+	}
+
+	public void setQosManager(QoSManagerIF qosManager) {
+		this.qosManager = qosManager;
 	}
 
 

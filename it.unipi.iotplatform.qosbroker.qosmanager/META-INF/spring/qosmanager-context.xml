@@ -2,9 +2,18 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
-	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	http://www.springframework.org/schema/osgi  
+    http://www.springframework.org/schema/osgi/spring-osgi.xsd">
+
+	
+	<bean id="QoSManager" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSManager">
+  		<property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property> 
+    	<property name="qosCalculator" ref="QoSCalculatorService"></property> 
+	</bean>
 
 	<context:component-scan base-package="eu.neclab.iotplatform" />
 
@@ -15,12 +24,10 @@
  		<property name="ngsi9Impl" ref="QoSNgsi9Interface"></property>
 		<property name="ngsi10Requestor" ref="QoSNgsi10Requester"></property>
   		<property name="qosMonitorNgsi" ref="QoSMonitorServiceNgsi"></property>
-		<property name="qosMonitor" ref="QoSMonitorService"></property>       
+		<property name="qosMonitor" ref="QoSMonitorService"></property>
+		<property name="qosManager" ref="QoSManager"></property>           
 <!-- 		<property name="negotiator" ref="negotiationServiceOSGI"></property>  -->
 	</bean>
+
 	
-	<bean id="QoSManager" class="it.unipi.iotplatform.qosbroker.qosmanager.impl.QoSManager">
-  		<property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property> 
-    	<property name="qosCalculator" ref="QoSCalculatorService"></property> 
-	</bean>
 </beans>

@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -15,11 +16,17 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /* class that contain the List<DevId> */
 public class TransIdList extends DataStructure{
 
+
 	@XmlElementWrapper(name = "transIdList")
 	@XmlElement(name = "transId")
 	@JsonProperty("transactions")
 	private List<String> transIdList;
 
+	public TransIdList() {
+
+		this.transIdList = new ArrayList<>();
+	}
+	
 	public List<String> getTransIdList() {
 		return transIdList;
 	}

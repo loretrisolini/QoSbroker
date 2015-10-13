@@ -237,42 +237,42 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Priority prio,
 			Policy policy) {
 		
-//		Reserveobj res = new Reserveobj();
-//		
-//		//Backup of the requests list List<transId, Request>
-//		 List<Pair<String, Request>> requestsBck = cloneRequests(requests);
-//		
-//		//create Map<thingId, <c_i, z_i>> from the eqThingInfo Map<DevId, Thing>
-//		HashMap<String, ThingAssignmentParams> assignmentParamsMap = createAssignmentParamsMap(eqThingInfo);
-//		
-//		//upper bound for utilization
-//		Double ni = k*(Math.pow(2, 1/k)-1);
-//		
-//		res.feasible = true;
-//		
-//		double ds, d;
-//		
-//		double INF = Double.POSITIVE_INFINITY;
-//
-//		//List of thingIds that satisfy the constraints
-//		List<Integer> Fjr;
-//		
-//		//iterate over the service requests
-//		while(res.feasible && !requests.isEmpty()){
-//			
-//			ds = -1 * INF;
-//			
-//			//temporary allocation object
-//			//<transId, servName, List<DevId>>
-//			AllocationObj allocationTemp = new AllocationObj();
-//			
-//			//index to identify the position of the ServiceObject 
-//			//on which an assignment is executed
-//			int serviceIndex = 0;
-//			int j = 0;
-//			
-//			//iterate over the list of request identify by transId
-//			for(Pair<String, Request> servRequest: requests){
+		Reserveobj res = new Reserveobj();
+		
+		//Backup of the requests list List<transId, Request>
+		 List<Pair<String, Request>> requestsBck = cloneRequests(requests);
+		
+		//create Map<thingId, <c_i, z_i>> from the eqThingInfo Map<DevId, Thing>
+		HashMap<String, ThingAssignmentParams> assignmentParamsMap = createAssignmentParamsMap(eqThingInfo);
+		
+		//upper bound for utilization
+		Double ni = k*(Math.pow(2, 1/k)-1);
+		
+		res.feasible = true;
+		
+		double ds, d;
+		
+		double INF = Double.POSITIVE_INFINITY;
+
+		//List of thingIds that satisfy the constraints
+		List<Integer> Fjr;
+		
+		//iterate over the service requests
+		while(res.feasible && !requests.isEmpty()){
+			
+			ds = -1 * INF;
+			
+			//temporary allocation object
+			//<transId, servName, List<DevId>>
+			AllocationObj allocationTemp = new AllocationObj();
+			
+			//index to identify the position of the ServiceObject 
+			//on which an assignment is executed
+			int serviceIndex = 0;
+			int j = 0;
+			
+			//iterate over the list of request identify by transId
+			for(Pair<String, Request> servRequest: requests){
 //				
 //				//get the transaId that identify a request with multiple
 //				//service requests
@@ -406,8 +406,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 //					
 //					//index of the Service taken in consideration
 //					j++;
-//				}
-//			}
+				}
+			}
 //				
 //			if(res.feasible){
 //				
@@ -706,7 +706,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 
 		try{
-			PrintWriter writer = new PrintWriter("InputGap.txt", "UTF-8");
+			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/InputGap.txt", "UTF-8");
 
 			writer.println("####################################");
 			writer.println("####################################");
@@ -1043,7 +1043,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	private List<Integer> checkConstraints(
 			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
 			HashMap<String, Thing> eqThingInfo,
-			HashMap<String, List<String>> matrixM, int split, Double ni,
+			HashMap<String, TransIdList> matrixM, int split, Double ni,
 			double teta, Object object) {
 		
 		
