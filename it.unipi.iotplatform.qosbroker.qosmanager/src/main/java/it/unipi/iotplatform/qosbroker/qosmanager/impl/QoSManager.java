@@ -200,6 +200,11 @@ public class QoSManager implements QoSManagerIF {
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
 																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
+		//allocation failed
+		if(result == null){
+			return false;
+		}
+		
 		List<ContextRegistration> allocationSchema = null;
 		if(result.isFeas()){
 			allocationSchema = result.getAllocationSchema();
