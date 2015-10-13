@@ -1,11 +1,12 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Document;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 
 public class QoSManager implements QoSManagerIF {
 
@@ -198,13 +200,46 @@ public class QoSManager implements QoSManagerIF {
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
 																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
+		List<ContextRegistration> allocationSchema = null;
+		if(result.isFeas()){
+			allocationSchema = result.getAllocationSchema();
+			
+			//store new matrixM if allocation feasible
+			List<Pair<String, JSONObject>> matrixMJson = TransIdList.fromJavaFormatToDbFormat(matrixM, TransIdList.class);
+			if(matrixMJson == null){
+				return false;
+			}
+			else{
+				bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB);
+			}
+			
+			//convert the new request in JSON and add thins one to the old
+			//list of request read from the DB
+			JSONObject newRequestJson = Request.fromJaxbToJson(request, Request.class);
+			//store new request Result if allocation feasible			
+			requestsJsonList.add(new Pair<String, JSONObject>(transactionId, newRequestJson));
+			bigDataRepository.storeData(requestsJsonList, QoSConsts.REQUESTS_DB);
+			
+			//store new allocation schemas if allocation is feasible
+			List<Pair<String, JSONObject>> allocationSchemaJson = new ArrayList<Pair<String, JSONObject>>();
+			
+			for(ContextRegistration contReg: allocationSchema){
+				JSONObject contRegJson = DataStructure.fromJaxbToJson(contReg, ContextRegistration.class);
+				
+				//there is only one id, the one relative to transactionId
+				String transId = contReg.getListEntityId().get(0).getId();
+				
+				allocationSchemaJson.add(new Pair<String, JSONObject>(transId ,contRegJson));
+			}
+			bigDataRepository.storeData(allocationSchemaJson, QoSConsts.ALLOCATION_DB);
+			
+			return true;
+		}
+		else{
+			return false;
+		}
 		
-		
-		//TODO store new request Result if allocation feasible
-		
-		//TODO store new allocation schemas if allocation is feasible
-		
-		return true;
+
 	}
 
 	public QoSCalculatorIF getQosCalculator() {

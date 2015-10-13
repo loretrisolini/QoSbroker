@@ -11,6 +11,7 @@ import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qoscalculator.datamodel.ThingAssignmentParams;
 
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +20,10 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
-import eu.neclab.iotplatform.ngsi.api.datamodel.NgsiStructure;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 
 public class QoSCalculator implements QoSCalculatorIF {
 
@@ -54,14 +54,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//theta value
 		Double z = 0.0;
 		
-		//Map<thingId, <c_i, z_i>>
-		HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap;
+		//Map<devId, <c_i, z_i>>
+		HashMap<String, ThingAssignmentParams> assignmentsParamsMap;
 		
 		//Map<transId, Map<reqServName, List<devId>>>
-		HashMap<String, HashMap<Integer, ThingsIdList>> allocationSchema;
+		HashMap<String, HashMap<String, AllocationObj>> allocationSchema;
 
 		Reserveobj() {
-			allocationSchema = new HashMap<>();
+			allocationSchema = new HashMap<String, HashMap<String, AllocationObj>>();
 
 		}
 		
@@ -132,17 +132,67 @@ public class QoSCalculator implements QoSCalculatorIF {
 		if(res[imax].feasible){
 			ret.setFeas(true);
 
-////			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax], totalThingsMap, totalRequestedServicesMap);
-//			
-////			ret.setAllocationSchema(ngsiAllocationSchema);
-////			
-////			ret.setWhich(imax);
+			List<ContextRegistration> ngsiAllocationSchema = createNgsiAllocationSchema(res[imax]);
+			
+			ret.setAllocationSchema(ngsiAllocationSchema);
+			
+			ret.setWhich(imax);
+			
+			printAllocationSchema(res[imax].allocationSchema);
 		}
 		
 		return ret;
 	}
 
-	
+
+
+	private void printAllocationSchema(
+			HashMap<String, HashMap<String, AllocationObj>> allocationSchema) {
+		
+		try{
+			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ResultGap.txt", "UTF-8");
+
+			writer.println("####################################");
+			writer.println("####################################");
+			
+			for(Map.Entry<String, HashMap<String, AllocationObj>> entry: allocationSchema.entrySet()){
+				writer.println("transId: "+entry.getKey());
+				writer.println("<---------------------------------------->");
+				
+				HashMap<String, AllocationObj> services = entry.getValue();
+				
+				writer.println("services allocated:");
+				for(Map.Entry<String, AllocationObj> entryAllocation: services.entrySet()){
+					writer.println("service Name: "+entryAllocation.getKey());
+					
+					writer.println("split: "+entryAllocation.getValue().split);
+					writer.println("f_ij: "+entryAllocation.getValue().f_ij);
+					writer.println("u_ij: "+entryAllocation.getValue().u_ij);
+					
+					List<String> devIdList = entryAllocation.getValue().devIdList;
+					
+					writer.println("Things allocated: ");
+					for(String devId: devIdList){
+						writer.println("thing: "+devId);
+						writer.println("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>");
+					}
+					writer.println("<ooooooooooooooooooooooooooooooooooo>");
+				}
+				writer.println("<---------------------------------------->");
+				writer.println("<---------------------------------------->");
+			}
+			
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+
+
 
 	/**
 	 * Execute the heuristic specifically tailored for battery consumption.
@@ -254,291 +304,341 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		double INF = Double.POSITIVE_INFINITY;
 
-		//List of thingIds that satisfy the constraints
-		List<Integer> Fjr;
+		Double maxPriority = 0.0;
+		Double secondMaxPriority = 0.0;
+		
+		//List of devId that satisfy the constraints
+		List<String> Fjr;
+
+		//temporary allocation object
+		//<transId, servName, List<DevId>>
+		AllocationObj allocationTemp = new AllocationObj();
+		
+		//index to identify the position of the ServiceObject 
+		//on which an assignment is executed
+		int requestIndex = 0;
+		int serviceIndex = 0;
+		int j = 0;
+		int i = 0;
 		
 		//iterate over the service requests
 		while(res.feasible && !requests.isEmpty()){
 			
 			ds = -1 * INF;
-			
-			//temporary allocation object
-			//<transId, servName, List<DevId>>
-			AllocationObj allocationTemp = new AllocationObj();
-			
-			//index to identify the position of the ServiceObject 
-			//on which an assignment is executed
-			int serviceIndex = 0;
-			int j = 0;
-			
+
 			//iterate over the list of request identify by transId
 			for(Pair<String, Request> servRequest: requests){
-//				
-//				//get the transaId that identify a request with multiple
-//				//service requests
-//				String transId = servRequest.getLeft();
-//				
-//				//Request object contains
-//				//operationType, QoSRequirements, LocationRequirements,
-//				//required service list
-//				Request requestObj = servRequest.getRight();
-//				
-//				logger.debug("request with TransId: "+transId);
-//				
-//				//Get the list of required services for this request
-//				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
-//				
-//				//iterate over the List of required services in the request
-//				//identified by transId
-//				for(String reqServiceName: reqServicesList){
-//					
-//					logger.debug("ServiceRequest Name: "+reqServiceName+
-//									"inside request with TransId: "+transId);
-//					
-//					//coefficientMap ha as key the transId
-//					//so i get the first elem of array transId_servId
-//					List<Integer> Sj = factorization(servPeriodsMap.get(transId).getNj());
-//					
-//					//var that a trial to assign one service
-//					//to only one thing has been done
-//					Boolean oneServiceToOneThingTrial = true;
-//					
-//					//iterate over the list of split factors
-//					//of a service on multiple things
-//					while(!res.feasible || !Sj.isEmpty()){
-//						
-//						int split;
-//						
-//						//split says to how many things assign the service
-//						if(oneServiceToOneThingTrial){ 
-//							split = 1;
-//							oneServiceToOneThingTrial = false;
-//						}
-//						else{
-//							split = chooseFactor(Sj, policy);
-//						}
-//						logger.debug("split factor= "+String.valueOf(split));
-//						
-//						//R is used iterate in case of 
-//						//assignment to multiple things
-//						int R = split;
-//						
-//						//iterate over the R that indicates the number
-//						//of suballocation for the service servId
-//						while(res.feasible && R!=0){
-//							
-//							ds = -1 * INF;
-//							
-//							for(int r = 0; r<R; r++){
-//	
-//								//List of devId that satisfy
-//								//the constraints about
-//								//utilization and residual battery
-//								Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, matrixM, 
-//																		split, ni, teta, null);
-//								
-//								//there is no thing that satisfy the
-//								//requirements
-//								if(Fjr.isEmpty()){
-//									
-//									logger.debug("Fjr is empty");
-//									
-//									res.feasible = false;
-//									break;
-//								}
-//								
-//								//get the id of the Thing that have max priority
-//								Integer tID_maxPriority = getArgMaxPriority(equivalentThingsParamsMap, Fjr, priorityIndex);
-//								
-//								logger.debug("thingId with max priority: "+tID_maxPriority.toString());
-//								
-//								//only one thing satisfy the constraints
-//								//about utilization and residual battery
-//								if(Fjr.size() == 1){
-//									d = INF;
-//								}
-//								else{
-//									//difference between the max and the second max priority
-//									d = getDiffMaxAndSecondMax(tID_maxPriority, equivalentThingsParamsMap, Fjr, priorityIndex);
-//									
-//									logger.debug("difference d="+String.valueOf(d));
-//								}
-//								
-//								if(d > ds){
-//									ds = d;
-//									
-//									//allocation of the service given by transId, servId 
-//									//to a thing with a thingService thingId, thingServiceId
-//									allocationTemp.transId = transId;
-//									allocationTemp.servId = servId;
-//									
-//									ThingIdThingServiceIdPair tId_tsId = new ThingIdThingServiceIdPair();
-//									tId_tsId.setThingId(tID_maxPriority);
-//									Integer thingServiceId = equivalentThingsParamsMap.get(tID_maxPriority).getThingServiceId();
-//									tId_tsId.setThingServiceId(thingServiceId);
-//									
-//									//take the pair thingId, thingServiceId to which allocate the service
-//									//with servId in the request with transId
-//									allocationTemp.thingIdThingServiceIdAssignments.add(tId_tsId);
-//									
-//									//value of the split of the service
-//									allocationTemp.split = s_p;
-//									
-//									//store the index of the service for which
-//									//a list of things has been assigned
-//									serviceIndex = j;
-//								}
-//								
-//								Fjr.clear();
-//							}
-//							
-//							if(res.feasible)
-//								R--;
-//	
-//						}
-//						//if a feasible allocation is found
-//						//stop the cicle here
-//						if(res.feasible) break;
-//						
-//						//remove a split factor from the list
-//						Sj.remove(s_p);
-//					}
-//					
-//					//index of the Service taken in consideration
-//					j++;
+				
+				//get the transaId that identify a request with multiple
+				//service requests
+				String transId = servRequest.getLeft();
+				
+				//Request object contains
+				//operationType, QoSRequirements, LocationRequirements,
+				//required service list
+				Request requestObj = servRequest.getRight();
+				
+				logger.debug("request with TransId: "+transId);
+				
+				//Get the list of required services for this request
+				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
+				
+				//iterate over the List of required services in the request
+				//identified by transId
+				for(String reqServiceName: reqServicesList){
+					
+					//get the list<DevId> for that reqServName
+					//this list represents the list of equivalent things
+					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
+					
+					logger.debug("ServiceRequest Name: "+reqServiceName+
+									"inside request with TransId: "+transId);
+					
+					//coefficientMap ha as key the transId
+					//so i get the first elem of array transId_servId
+					List<Integer> Sj = factorization(servPeriodsMap.get(transId).getNj());
+					
+					//var that a trial to assign one service
+					//to only one thing has been done
+					Boolean oneServiceToOneThingTrial = true;
+					
+					//iterate over the list of split factors
+					//of a service on multiple things
+					while(!res.feasible || !Sj.isEmpty()){
+						
+						int split;
+						
+						//split says to how many things assign the service
+						if(oneServiceToOneThingTrial){ 
+							split = 1;
+							oneServiceToOneThingTrial = false;
+						}
+						else{
+							split = chooseFactor(Sj, policy);
+						}
+						logger.debug("split factor= "+String.valueOf(split));
+						
+						//R is used to iterate in case of 
+						//assignment to multiple things
+						int R = split;
+						
+						//iterate over the R that indicates the number
+						//of suballocation for the service servId
+						while(res.feasible && R!=0){
+							
+							ds = -1 * INF;
+							
+							for(int r = 0; r<R; r++){
+	
+								//List of devId that satisfy
+								//the constraints about
+								//utilization and residual battery
+								Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
+														matrixM, transId, reqServiceName, split, ni, teta, null);
+								
+								//there is no thing that satisfy the
+								//requirements
+								if(Fjr.isEmpty()){
+									
+									logger.debug("Fjr is empty");
+									
+									if(policy == Policy.MAX_SPLIT)
+										res.feasible = false;
+									break;
+								}
+								
+								if(Fjr.size() == R){
+									
+									//TODO direct allocation of service reqServName
+									
+								}
+								
+								//get the devId of the Thing that have max priority
+								//at the same time set maxPriority and secondMaxPriority
+								String devId_maxPriority = getArgMaxPriority(Fjr, eqThingInfo, prio, servPeriodsMap, 
+																reqServiceName, transId, split, maxPriority, secondMaxPriority);
+								
+								logger.debug("devId with max priority: " + devId_maxPriority);
+								
+								//only one thing satisfy the constraints
+								//about utilization and residual battery
+								if(Fjr.size() == 1){
+									d = INF;
+								}
+								else{
+									//difference between the max and the second max priority
+									d = maxPriority - secondMaxPriority;
+									
+									maxPriority = 0.0;
+									secondMaxPriority = 0.0;
+									logger.debug("difference d="+String.valueOf(d));
+								}
+								
+								if(d > ds){
+									ds = d;
+									
+									//allocation of the service given by transId, reqServName 
+									//to a thing with a thingService thingId, thingServiceId
+									allocationTemp.transId = transId;
+									
+									allocationTemp.serviceName = reqServiceName;
+									
+									//compute pair f_ij, u_ij
+									Pair<Double, Double> f_u_ij = computeF_U(devId_maxPriority, servPeriodsMap, transId, eqThingInfo, reqServiceName);
+									if(f_u_ij == null){
+										res.feasible = false;
+										return res;
+									}
+									
+									allocationTemp.f_ij = f_u_ij.getLeft();
+									allocationTemp.u_ij = f_u_ij.getRight();
+									allocationTemp.split = split;
+									
+									//add the devId
+									allocationTemp.devIdList.add(devId_maxPriority);
+									
+									//store the index of the service for which
+									//a list of things has been assigned
+									requestIndex = i;
+									serviceIndex = j;
+								}
+								
+								Fjr.clear();
+							}
+							
+							if(res.feasible)
+								R--;
+	
+						}
+						//if a feasible allocation is found
+						//stop the cicle here
+						if(res.feasible) break;
+						
+						allocationTemp.devIdList.clear();
+						
+						//remove a split factor from the list
+						Sj.remove(split);
+					}
+					
+					//index of the Service taken in consideration
+					j++;
 				}
+				
+				//index of the Request with multiple services
+				i++;
 			}
-//				
-//			if(res.feasible){
-//				
-//				if(res.allocationSchema.get(allocationTemp.transId) == null){
-//					res.allocationSchema.put(allocationTemp.transId, new HashMap<Integer, AllocationObj>());
-//				}
-//				
-//				//update the allocationSchema with the new allocation for the service servId
-//				//Map<transId, Map<servId, List<tId_tsId>>
-//				res.allocationSchema.get(allocationTemp.transId).put(allocationTemp.servId, allocationTemp);
-//				
-//				logger.debug("alloction of service request with transId="+allocationTemp.transId+
-//								"and servId="+allocationTemp.servId.toString());
-//				logger.debug("allocated with a spli factor "+String.valueOf(allocationTemp.split));
-//				
-//				//update assignments params c_i+(u_ij/s_p), z_i-(f_ij/s_p)
-//				updateAssignmentsParams(assignmentsParamsMap, 
-//						mappingServEqThings.get(allocationTemp.transId).get(serviceIndex).getThingServiceExecFeatureMap(), 
-//						allocationTemp.thingIdThingServiceIdAssignments,
-//						allocationTemp.split);
-//				
-//				
-//				//remove ServiceAssignments object from the mapping
-//				mappingServEqThings.get(allocationTemp.transId).remove(serviceIndex);
-//			}
-//			else return res;
-//			
-//			//Local optimization
-//			if(!battery && res.feasible){
-//				
-//				logger.debug("Local Optimization");
-//				
-//				//itearate over the list <transId, List<servId, Map<thingId, <tsId, f_ij, u_ij, p[]>>>>
-//				for(Map.Entry<String, List<ServiceAssignments>> entry : mappingServEqThingsBck.entrySet()){
-//					
-//					//get the transId with which the request is identified 
-//					String transId = entry.getKey();
-//					List<ServiceAssignments> servAssignmentList = entry.getValue();
-//					
-//					//iterate over the list <servId, Map<thingId, <tsId, f_ij, u_ij, p[]>>
-//					for(ServiceAssignments servAssignment: servAssignmentList){
-//						
-//						//map of equivalent thing services associated to the thing
-//						//with the params <f_ij, u_ij, p_ij>
-//						HashMap<Integer, ServiceExecutionFeature> equivalentThingsParamsMap = servAssignment.getThingServiceExecFeatureMap();
-//						
-//						//get the servId of the requested service
-//						Integer servId = servAssignment.getServId();
-//						
-//						//get the Allocation associated to the pair transId, servId
-//						AllocationObj allocation = res.allocationSchema.get(transId).get(servId);
-//						
-//						//get the split factor for that allocation
-//						int split = allocation.split;
-//						
-//						logger.debug("split factor="+String.valueOf(split));
-//						
-//						for(int s = 0; s<split; s++){
-//						
-//							int thingId_sub = allocation.thingIdThingServiceIdAssignments.get(s).getThingId();
-//							
-//							logger.debug("try to substitute the thing with id="+String.valueOf(thingId_sub));
-//							
-//							//check the constraints excluding the thing with id thingId_sub
-//							Fjr = checkConstraints(equivalentThingsParamsMap, 
-//									assignmentsParamsMap, split, ni, teta, 
-//									allocation.thingIdThingServiceIdAssignments.get(s).getThingId());
-//							
-//							//get the id (from Fjr) of the thing with max residualBattery
-//							int thingId_star = getArgMaxResidualBattery(assignmentsParamsMap, Fjr);
-//							
-//							logger.debug("thingId* with max residual battery="+String.valueOf(thingId_star));
-//							
-//							//get the max residual battery value
-//							Double maxResidualBattery = assignmentsParamsMap.get(thingId_star).getResidualBattery();
-//							logger.debug("max residual battery value="+String.valueOf(maxResidualBattery));
-//							
-//							//z_i'-f_i'j residual battery value of the thing to substitute
-//							double residualBatt_sub = assignmentsParamsMap.get(thingId_sub).getResidualBattery();
-//							logger.debug("residual battery value of thing to substitute="+String.valueOf(residualBatt_sub));
-//							
-//							//if the max value of residual battery is greater than
-//							//the value of residual battery of the thing to substitute
-//							//there is a change in the allocation
-//							if(maxResidualBattery > residualBatt_sub){
-//								
-//								//create a new pair tId_tsId for the thingId*
-//								//with the max residual battery value
-//								ThingIdThingServiceIdPair tId_tsId_star = new ThingIdThingServiceIdPair();
-//								tId_tsId_star.setThingId(thingId_star);
-//								Integer thingServiceId = equivalentThingsParamsMap.get(thingId_star).getThingServiceId();
-//								tId_tsId_star.setThingServiceId(thingServiceId);
-//								
-//								allocation.thingIdThingServiceIdAssignments.add(tId_tsId_star);
-//								
-//								//remove the old thing substituted
-//								allocation.thingIdThingServiceIdAssignments
-//											.remove(allocation.thingIdThingServiceIdAssignments.get(s));
-//								
-//								//update the allocation in reservation object
-//								//TODO List<AllocationObj> -> List<tId_tsId>
-//								res.allocationSchema.get(transId).put(servId, allocation);
-//								
-//								//update the value of the thing substituted
-//								//c_i-(u_ij/split) and z_i+(f_ij/split)
-//								//using -split
-//								ArrayList<ThingIdThingServiceIdPair> tId_tsIdList = new ArrayList<>();
-//								ThingIdThingServiceIdPair tId_tsId_sub = new ThingIdThingServiceIdPair();
-//								tId_tsId_sub.setThingId(thingId_sub);
-//								tId_tsId_sub.setThingServiceId(thingServiceId);
-//								tId_tsIdList.add(tId_tsId_sub);
-//								updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, -split);
-//								
-//								//update the value of the new thing allocated
-//								//c_i+(u_ij/split) and z_i-(f_ij/split)
-//								tId_tsIdList.clear();
-//								tId_tsIdList.add(tId_tsId_star);
-//								updateAssignmentsParams(assignmentsParamsMap, equivalentThingsParamsMap, tId_tsIdList, split);
-//							}
-//						}
-//					}
-//					
-//				}
-//				
-//			}
-//		}
-//		
-//		res.assignmentsParamsMap = assignmentsParamsMap;
+				
+			if(res.feasible){
+				
+				//update the allocationSchema with the new allocation for the service servId
+				//Map<transId, Map<servId, List<tId_tsId>>
+				res.allocationSchema.get(allocationTemp.transId).put(allocationTemp.serviceName, allocationTemp);
+				
+				logger.debug("alloction of service request with transId="+allocationTemp.transId+
+								"and servId="+allocationTemp.serviceName);
+				logger.debug("allocated with a spli factor "+String.valueOf(allocationTemp.split));
+				
+				//update assignments params c_i+(u_ij/s_p), z_i-(f_ij/s_p)
+				updateAssignmentsParams(assignmentParamsMap, allocationTemp, 1, null);
+
+				//remove service in the list of the request object
+				//request obj index is requestIndex, service index is serviceIndex
+				requests.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
+				
+				allocationTemp.devIdList.clear();
+				i=0;
+				j=0;
+			}
+			else return res;
+		}
 		
-		return null;
+		//Local optimization
+		if(prio != Priority.BATTERY && res.feasible){
+			
+			logger.debug("Local Optimization");
+			
+			//iterate over the list of request identify by transId
+			for(Pair<String, Request> servRequest : requestsBck){
+				
+				//get the transaId that identify a request with multiple
+				//service requests
+				String transId = servRequest.getLeft();
+				
+				//Request object contains
+				//operationType, QoSRequirements, LocationRequirements,
+				//required service list
+				Request requestObj = servRequest.getRight();
+				
+				logger.debug("request with TransId: "+transId);
+				
+				//Get the list of required services for this request
+				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
+				
+				//iterate over the List of required services in the request
+				//identified by transId
+				for(String reqServiceName: reqServicesList){
+					
+					//get the list<DevId> for that reqServName
+					//this list represents the list of equivalent things
+					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
+					
+					//get the Allocation associated to the pair transId, servId
+					AllocationObj allocation = res.allocationSchema.get(transId).get(reqServiceName);
+					
+					//get the split factor for that allocation
+					int split = allocation.split;
+					
+					logger.debug("split factor="+String.valueOf(split));
+					
+					for(int s = 0; s<split; s++){
+					
+						String devId_substitution = allocation.devIdList.get(s);
+						
+						logger.debug("try to substitute the thing with id= "+devId_substitution);
+						
+						//check the constraints excluding the thing with id thingId_sub
+						Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
+								matrixM, transId, reqServiceName, split, ni, teta, devId_substitution);
+						
+						//get the id (from Fjr) of the thing with max residualBattery
+						String devId_star = getArgMaxResidualBattery(assignmentParamsMap, Fjr);
+						
+						logger.debug("thingId* with max residual battery="+devId_star);
+						
+						//get the max residual battery value
+						Double maxResidualBattery = assignmentParamsMap.get(devId_star).getResidualBattery();
+						logger.debug("max residual battery value="+String.valueOf(maxResidualBattery));
+						
+						//z_i'-f_i'j residual battery value of the thing to substitute
+						double residualBatt_substitution = assignmentParamsMap.get(devId_substitution).getResidualBattery();
+						logger.debug("residual battery value of thing to substitute="+String.valueOf(residualBatt_substitution));
+						
+						//if the max value of residual battery is greater than
+						//the value of residual battery of the thing to substitute
+						//there is a change in the allocation
+						if(maxResidualBattery > residualBatt_substitution){
+							
+							//update the value of the thing substituted
+							//c_i-(u_ij/split) and z_i+(f_ij/split)
+							//using -split
+							updateAssignmentsParams(assignmentParamsMap, allocationTemp, -1, devId_substitution);
+							
+							//add the new thing
+							allocation.devIdList.add(devId_star);
+							
+							//remove the old thing substituted
+							allocation.devIdList.remove(devId_substitution);
+
+							//update the value of the new thing allocated
+							//c_i+(u_ij/split) and z_i-(f_ij/split)
+							updateAssignmentsParams(assignmentParamsMap, allocationTemp, 1, devId_star);
+							
+							//update the allocation in reservation object
+							//TODO List<AllocationObj> -> List<tId_tsId>
+							res.allocationSchema.get(transId).put(reqServiceName, allocation);
+
+						}
+					}
+				}
+				
+			}
+			
+		}
+	
+		res.assignmentsParamsMap = assignmentParamsMap;
+		
+		return res;
 	}
+
+	/* function to update c_i and z_i */
+	private void updateAssignmentsParams(
+			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
+			AllocationObj allocationTemp, int i, String _devId) {
+		
+		List<String> devIdList = allocationTemp.devIdList;
+		int split = allocationTemp.split;
+		Double u_ij = allocationTemp.u_ij;
+		Double f_ij = allocationTemp.f_ij;
+		
+		if(_devId == null){
+			for(String devId: devIdList){
+				
+				Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
+				assignmentParamsMap.get(devId).setTotalUtilization(c_i + i*(u_ij/split));
+				
+				Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
+				assignmentParamsMap.get(devId).setResidualBattery(z_i - i*(f_ij/split));
+			}
+		}
+		else{
+			Double c_i = assignmentParamsMap.get(_devId).getTotalUtilization();
+			assignmentParamsMap.get(_devId).setTotalUtilization(c_i + i*(u_ij/split));
+			
+			Double z_i = assignmentParamsMap.get(_devId).getResidualBattery();
+			assignmentParamsMap.get(_devId).setResidualBattery(z_i - i*(f_ij/split));
+		}
+	}
+
 
 
 //	/* function to create a table that say the list of DevId of the
@@ -696,6 +796,58 @@ public class QoSCalculator implements QoSCalculatorIF {
 //	    return dist <= circle.getRadius();
 //	}
 	
+	/* function to get the max priority */
+	private String getArgMaxPriority(List<String> Fjr,
+			HashMap<String, Thing> eqThingInfo, Priority prio,
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			String reqServiceName, String transactionId, int split,
+			Double maxPriority,
+			Double secondMaxPriority) {
+		
+		maxPriority = -1 * Double.POSITIVE_INFINITY;
+		
+		String devId_MaxPriority = null; 
+		
+		for(String devId: Fjr){
+			
+			//compute pair f_ij, u_ij
+			Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
+			
+			if(f_u_ij == null){
+				continue;
+			}
+			
+			Double f_ij = f_u_ij.getLeft();
+			Double u_ij = f_u_ij.getRight();
+			
+			Double p_ij = null;
+			
+			if(prio == Priority.BATTERY){
+				p_ij = f_ij;
+			}
+			else{
+				if(prio == Priority.UTILIZATION){
+					p_ij = u_ij;
+				}
+				else{
+					p_ij = Math.random();
+				}
+			}
+			
+			if(p_ij > maxPriority){
+				secondMaxPriority = maxPriority;
+				
+				maxPriority = p_ij;
+				
+				devId_MaxPriority = devId;
+			}
+		}
+		
+		return devId_MaxPriority;
+	}
+
+
+
 	/* function to print the input values of the GAP algorithm */
 	private void printInputGap(int k, List<Pair<String, Request>> requests,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
@@ -778,100 +930,93 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 	}
 
+	/* function to create the ngsi allocation schema from the Reserveobj object */
+	private List<ContextRegistration> createNgsiAllocationSchema(Reserveobj reserveobj) {
+		
+		HashMap<String, HashMap<String, AllocationObj>> allocationSchema = reserveobj.allocationSchema;
+		
+		List<ContextRegistration> contRegList = new ArrayList<>();
+		
+		//for each transId
+		for(Map.Entry<String, HashMap<String, AllocationObj>> entry : allocationSchema.entrySet()){
+			
+			String transId = entry.getKey();
+			ContextRegistration contReg = new ContextRegistration();
+			
+			List<EntityId> entityIdList = new ArrayList<>();
+			EntityId entId = new EntityId();
+			entId.setId(transId);
+			entId.setIsPattern(false);
+			entId.setType(URI.create("Allocation"));
+			entityIdList.add(entId);
+			
+			contReg.setListEntityId(entityIdList);
+			
+			HashMap<String, AllocationObj> servicesAllocation = entry.getValue();
+			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
+			
+			ContextRegistrationAttribute contRegAttr = new ContextRegistrationAttribute();
+			
+			//for each servName in a request identify by transId
+			for(Map.Entry<String, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
+
+				String serviceName = entryAllocation.getKey();
+				
+				contRegAttr.setName(serviceName);
+				contRegAttr.setType(URI.create("service"));
+				
+				List<ContextMetadata> contMetadataList = new ArrayList<>();
+				
+				List<String> allocationDevIdList = entryAllocation.getValue().devIdList;
+				
+				for(String devId: allocationDevIdList){
+					
+					ContextMetadata contMetadata = new ContextMetadata();
+					
+					String contextEntityId = devId;
+					String attrName = serviceName;
+					
+					contMetadata.setName(serviceName);
+					contMetadata.setType(URI.create("string"));
+					contMetadata.setValue(contextEntityId+"::"+attrName);
+					
+					contMetadataList.add(contMetadata);
+				}
+				
+				contRegAttr.setMetaData(contMetadataList);
+			}
+			
+			contRegAttrList.add(contRegAttr);
+			contReg.setListContextRegistrationAttribute(contRegAttrList);
+			contRegList.add(contReg);
+		}
+		
+		return contRegList;
+	}
 
 
-//	/* function to create the ngsi allocation schema from the Reserveobj object */
-//	private List<ContextRegistration> createNgsiAllocationSchema(
-//			Reserveobj reserveobj, HashMap<Integer, Thing> totalThingsMap, 			
-//			HashMap<String, HashMap<Integer, String>> totalRequestedServicesMap) {
-//		
-//		HashMap<String, HashMap<Integer, AllocationObj>> allocationSchema = reserveobj.allocationSchema;
-//		
-//		List<ContextRegistration> contRegList = new ArrayList<>();
-//		
-//		//for each transId
-//		for(Map.Entry<String, HashMap<Integer, AllocationObj>> entry : allocationSchema.entrySet()){
-//			
-//			String transId = entry.getKey();
-//			ContextRegistration contReg = new ContextRegistration();
-//			
-//			List<EntityId> entityIdList = new ArrayList<>();
-//			EntityId entId = new EntityId();
-//			entId.setId(transId);
-//			entId.setIsPattern(false);
-//			entId.setType(URI.create("Allocation"));
-//			entityIdList.add(entId);
-//			
-//			contReg.setListEntityId(entityIdList);
-//			
-//			HashMap<Integer, AllocationObj> servicesAllocation = entry.getValue();
-//			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
-//			
-//			ContextRegistrationAttribute contRegAttr = new ContextRegistrationAttribute();
-//			
-//			//for each servId in a request identify by transId
-//			for(Map.Entry<Integer, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
-//				
-//				Integer servId = entryAllocation.getKey();
-//				String serviceName = totalRequestedServicesMap.get(transId)
-//										.get(servId);
-//				
-//				contRegAttr.setName(serviceName);
-//				contRegAttr.setType(URI.create("service"));
-//				
-//				List<ContextMetadata> contMetadataList = new ArrayList<>();
-//				
-//				List<ThingIdThingServiceIdPair> allocationList = 
-//						entryAllocation.getValue().thingIdThingServiceIdAssignments;
-//				for(ThingIdThingServiceIdPair tId_tsId: allocationList){
-//					
-//					ContextMetadata contMetadata = new ContextMetadata();
-//					
-////					String contextEntityId = totalThingsMap.get(tId_tsId.getThingId()).getContextEntityId();
-////					String attrName = totalThingsMap.get(tId_tsId.getThingId()).getThingServices()
-////										.get(tId_tsId.getThingServiceId()).getServiceName();
-//					
-//					contMetadata.setName(String.valueOf(tId_tsId.getThingId()));
-//					contMetadata.setType(URI.create("string"));
-//					contMetadata.setValue(contextEntityId+"::"+attrName);
-//					
-//					contMetadataList.add(contMetadata);
-//				}
-//				
-//				contRegAttr.setMetaData(contMetadataList);
-//			}
-//			
-//			contRegAttrList.add(contRegAttr);
-//			contReg.setListContextRegistrationAttribute(contRegAttrList);
-//			contRegList.add(contReg);
-//		}
-//		
-//		return contRegList;
-//	}
+	
+	/* function to get the thingId to which is associated the max residualBatteryLevel */
+	private String getArgMaxResidualBattery(
+			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
+			List<String> Fjr) {
+		
+		String devId_maxResidualBattery = null;
+		Double maxResidualBattery = Double.NEGATIVE_INFINITY;
+		
+		for(String devId: Fjr){
+			
+			Double residualBattery = assignmentParamsMap.get(devId).getResidualBattery();
+			if(residualBattery > maxResidualBattery){
+				maxResidualBattery = residualBattery;
+				
+				devId_maxResidualBattery = devId;
+			}
+		}
+		
+		return devId_maxResidualBattery;
+	}
 
-
-//	
-//	/* function to get the thingId to which is associated the max residualBatteryLevel */
-//	private int getArgMaxResidualBattery(
-//			HashMap<Integer, ThingAssignmentParams> assignmentsParamsMap,
-//			List<Integer> Fjr) {
-//		
-//		int thingId_maxResidualBattery = 0;
-//		Double maxResidualBattery = Double.NEGATIVE_INFINITY;
-//		
-//		for(Integer thingId: Fjr){
-//			
-//			Double residualBattery = assignmentsParamsMap.get(thingId).getResidualBattery();
-//			if(residualBattery > maxResidualBattery){
-//				maxResidualBattery = residualBattery;
-//				
-//				thingId_maxResidualBattery = thingId;
-//			}
-//		}
-//		
-//		return thingId_maxResidualBattery;
-//	}
-//
 //	/* function to update c_i and z_i, given Map<thingId, <c_i, z_i>>,
 //	 * Map<thingId, <thingServiceId, f_ij, u_ij, p[]>>,
 //	 * List<thingId, thingServiceId>, the split */
@@ -1040,15 +1185,116 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 
 
-	private List<Integer> checkConstraints(
+	private List<String> checkConstraints(
 			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
 			HashMap<String, Thing> eqThingInfo,
-			HashMap<String, TransIdList> matrixM, int split, Double ni,
-			double teta, Object object) {
+			List<String> eqThings,
+			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, TransIdList> matrixM, 
+			String transactionId,
+			String reqServiceName,
+			int split, Double ni,
+			double teta, String devIdExcluded) {
 		
+		List<String> Fjr = new ArrayList<>();
 		
-		return null;
+		//iterate over the list of equivalent things
+		//to check constraints
+		for(String devId: eqThings){
+			
+			logger.debug("devId: "+devId);
+			
+			if(devIdExcluded == null || !devId.contentEquals(devIdExcluded)){
+				//check if the devId can check the matrixM
+				//because every transaction have
+				//a list of restrictions so it can be
+				//select only a subset of the equivalent things
+				if(matrixM.get(devId) != null){
+					
+					//check if the devId respect the constraints for that
+					//transaction identified by the transactionId
+					if(matrixM.get(devId).getTransIdList().contains(transactionId)){
+						
+						logger.debug("devId "+devId+" respects the constraints of the transId "+transactionId);
+						
+						Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
+						
+						if(f_u_ij == null){
+							continue;
+						}
+						
+						Double f_ij = f_u_ij.getLeft();
+						Double u_ij = f_u_ij.getRight();
+						
+						logger.debug("f_ij: "+f_ij + " f_ij/split "+(f_ij/split));
+						logger.debug("u_ij: "+u_ij + " u_ij/split "+(u_ij/split));
+						
+						//get c_i and z_i
+						Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
+						Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
+						
+						logger.debug("c_i: "+c_i);
+						logger.debug("z_i: "+z_i);
+						//check the constraints about ni and teta
+						if(c_i + (u_ij/split) < ni && z_i - (f_ij/split) > teta){
+							Fjr.add(devId);
+						}
+						
+					}
+				}
+			}
+		}
+		
+		return Fjr;
 	}
+
+
+
+	private Pair<Double, Double> computeF_U(String devId,
+		HashMap<String, ServicePeriodParams> servPeriodsMap,
+		String transactionId, HashMap<String, Thing> eqThingInfo,
+		String reqServiceName) {
+	
+		//get all the variables to compute
+		//f_ij and u_ij, checking that
+		//they were not null
+		Double battery = null;
+		Double enCost = null;
+		Double latency = null;
+		Boolean varsOK = false;
+		//coeff is h/p_j
+		Integer coeff = servPeriodsMap.get(transactionId).getNj();
+		Double p_j = servPeriodsMap.get(transactionId).getPeriod();
+		
+		//it is checked that all vars are not null
+		if(eqThingInfo.get(devId)!=null){
+			if(eqThingInfo.get(devId).getBatteryLevel() != null){
+				battery = eqThingInfo.get(devId).getBatteryLevel();
+			}
+			
+			if(eqThingInfo.get(devId).getServicesList().get(reqServiceName).getLatency() != null){
+				latency = eqThingInfo.get(devId).getServicesList().get(reqServiceName).getLatency();
+			}
+			
+			if(eqThingInfo.get(devId).getServicesList().get(reqServiceName).getEnergyCost() != null){
+				enCost = eqThingInfo.get(devId).getServicesList().get(reqServiceName).getEnergyCost();
+				varsOK = true;
+			}
+			
+			if(!varsOK){
+				return null;
+			}
+		}
+		else{
+			return null;
+		}
+		
+		//compute f_ij and u_ij
+		Double f_ij = coeff * enCost/battery/100;
+		Double u_ij = latency/p_j;
+		
+		return new Pair<Double, Double>(f_ij, u_ij);
+}
 
 
 

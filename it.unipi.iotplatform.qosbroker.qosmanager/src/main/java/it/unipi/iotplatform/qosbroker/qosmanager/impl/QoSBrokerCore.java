@@ -603,22 +603,30 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
 		
-		qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap);
-		
-		
-		logger.info("############## createAgreement ###############");
-		
-		
 		ServiceAgreementResponse response = new ServiceAgreementResponse();
+
 		
-		response.setServiceID("home_service");
-		
-		StatusCode statusCodeEx = new StatusCode(
-				Code.OK_200.getCode(),
-				ReasonPhrase.OK_200.toString(), "Succes Operation");
-		
-		response.setErrorCode(statusCode);
-		
+		if(!qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap)){
+			
+			response.setServiceID("");
+			
+			statusCode = new StatusCode(
+					Code.INTERNALERROR_500.getCode(),
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Failed Operation");
+			
+			response.setErrorCode(statusCode);
+		}
+		else{
+			
+			response.setServiceID("transactionId");
+			
+			statusCode = new StatusCode(
+					Code.OK_200.getCode(),
+					ReasonPhrase.OK_200.toString(), "Success Operation");
+			
+			response.setErrorCode(statusCode);
+		}
+
 		return response;
 	}
 
