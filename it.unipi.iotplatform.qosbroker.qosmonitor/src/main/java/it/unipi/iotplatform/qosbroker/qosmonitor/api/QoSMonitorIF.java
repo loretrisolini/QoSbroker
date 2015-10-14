@@ -12,5 +12,5 @@ public interface QoSMonitorIF {
 	public StatusCode updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings);
 	
-	public boolean updateThingTransactions(HashMap<String, String> thingTransactionMap);
+//	public boolean updateThingTransactions(HashMap<String, String> thingTransactionMap);
 }

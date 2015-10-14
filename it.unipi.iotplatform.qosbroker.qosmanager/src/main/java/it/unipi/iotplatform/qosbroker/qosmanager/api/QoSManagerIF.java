@@ -28,6 +28,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public StatusCode createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap);
+	public StatusCode createAgreement(String offer, String transactionId, Request request);//, HashMap<String, TransIdList> thingTransactionsMap);
 	
 }

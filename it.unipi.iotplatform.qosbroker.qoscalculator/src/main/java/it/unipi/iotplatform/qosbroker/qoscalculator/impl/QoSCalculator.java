@@ -24,11 +24,15 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 
 public class QoSCalculator implements QoSCalculatorIF {
 
@@ -104,7 +108,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
 	 * @param eqThingInfo Map<devId, Thing>
 	 * @param servNameThingsIdList Map<reServName, List<DevId>>
-	 * @param matrixM Map<devId, List<transId>> fro requirements
 	 * @param epsilon the tolerance used to stop iterations
 	 * @return the ReservationResults object
 	 */
@@ -114,12 +117,22 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, TransIdList> matrixM,
+			//HashMap<String, TransIdList> matrixM,
 			double epsilon) {
 		
 		Reserveobj[] res = new Reserveobj[3];
 		
 		ReservationResults ret = new ReservationResults();
+		
+		HashMap<String, List<String>> matrixM = createMatrixM(requests,eqThingInfo,servNameThingsIdList);
+		if(matrixM == null){
+			StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
+					QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation() " + operationStatus);
+			ret.setStatusCode(statusCode);
+			
+			operationStatus="";
+			return ret;
+		}
 		
 		try{
 			Priority prio = Priority.BATTERY;
@@ -186,7 +199,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
 	 * @param eqThingInfo Map<devId, Thing>
 	 * @param servNameThingsIdList Map<reServName, List<DevId>>
-	 * @param matrixM Map<devId, List<transId>> fro requirements
 	 * @param epsilon the tolerance used to stop iterations
 	 * @param prio say which value using as priority p_ij
 	 * @param policy say if must be used max or min split policy
@@ -197,7 +209,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, TransIdList> matrixM,
+			HashMap<String, List<String>> matrixM,
 			double epsilon,
 			Priority prio,
 			Policy policy) throws UnsupportedEncodingException,FileNotFoundException{
@@ -255,7 +267,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
 	 * @param eqThingInfo Map<devId, Thing>
 	 * @param servNameThingsIdList Map<reServName, List<DevId>>
-	 * @param matrixM Map<devId, List<transId>> fro requirements
+	 * @param matrixM Map<transId::servName, List<devId>> list of devId that respect 
+	 * 					restrictions for that transaction
 	 * @param teta the teta for the constraint on z_i - f_ij > teta
 	 * @param prio say which value using as priority p_ij
 	 * @param policy say if must be used max or min split policy
@@ -266,7 +279,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, TransIdList> matrixM,
+			HashMap<String, List<String>> matrixM,
 			double teta,
 			Priority prio,
 			Policy policy) throws UnsupportedEncodingException,FileNotFoundException{
@@ -388,16 +401,21 @@ public class QoSCalculator implements QoSCalculatorIF {
 								//the constraints about
 								//utilization and residual battery
 								Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
-														matrixM, transId, reqServiceName, split, ni, teta, null);
+														matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, split, ni, teta, null);
 								
 								//there is no thing that satisfy the
 								//requirements
 								if(Fjr.isEmpty()){
 									
 									logger.debug("Fjr is empty<----------------------------");
-									writer.println("Fjr is empty<----------------------------");
+									logger.debug("ServiceRequest Name: "+reqServiceName+
+											" inside request with TransId: "+transId+" no thing found<-------------------");
 									
-									operationStatus += "QoSCalculator -- GAP() ServiceRequest Name: "+reqServiceName+
+									writer.println("Fjr is empty<----------------------------");
+									writer.println("ServiceRequest Name: "+reqServiceName+
+											" inside request with TransId: "+transId+" no thing found<-------------------");
+									
+									operationStatus = "QoSCalculator -- GAP() ServiceRequest Name: "+reqServiceName+
 											" inside request with TransId: "+transId+" no thing found";
 									
 									if(policy == Policy.MAX_SPLIT)
@@ -499,9 +517,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 						Sj.remove(splitIndex);
 					}
 					
+					if(!res.feasible) break;
+					
 					//index of the Service taken in consideration
 					j++;
 				}
+				
+				if(!res.feasible) break;
 				
 				//index of the Request with multiple services
 				i++;
@@ -544,6 +566,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				j=0;
 			}
 			else{
+				writer.println("allocation Failed<------------------------------------");
 				writer.close();
 				return res;
 			}
@@ -606,7 +629,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 						//check the constraints excluding the thing with id thingId_sub
 						Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
-								matrixM, transId, reqServiceName, split, ni, teta, devId_substitution);
+								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, split, ni, teta, devId_substitution);
 						
 						//get the id (from Fjr) of the thing with max residualBattery
 						String devId_star = getArgMaxResidualBattery(assignmentParamsMap, Fjr);
@@ -740,160 +763,174 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 
 
-//	/* function to create a table that say the list of DevId of the
-//	 * things that respect the restriction of a request identified
-//	 * by the transactionId (Map<transId, List<DevId>>) */
-//	private HashMap<String, List<String>> createMatrixM(
-//			List<Pair<String, Request>> requests,
-//			HashMap<String, Thing> eqThingInfo,
-//			HashMap<String, ThingsIdList> servNameThingsIdList) {
-//		
-//		HashMap<String, List<String>> matrixM = new HashMap<>();
-//		
-//		//iterate over the list of requests
-//		for(Pair<String, Request> reqPair: requests){
-//			
-//			//get the transId, request object and list of reqServName
-//			String transId = reqPair.getLeft();
-//			Request request = reqPair.getRight();
-//			List<String> reqServNameList = request.getRequiredServicesNameList();
-//			
-//			//take the maxRespTime and accuracy from QoSrequirements of the request object
-//			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-//			Double accuracy = request.getQosRequirements().getAccuracy();
-//			
-//			logger.debug("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
-//			
-//			Point point = null;
-//			Circle circle = null;
-//			Polygon polygon = null;
-//			
-//			if(request.getLocationRequirement() != null){
-//				//take the location requirement from the LocationRequirement object in the request object
-//				Class<?> locRequirementsType = request.getLocationRequirement().getLocationRequirement().getClass();
-//				
-//				logger.debug("locRequirementsType is "+locRequirementsType.getCanonicalName());
-//				
-//				if(locRequirementsType == Point.class){
-//					point = (Point)request.getLocationRequirement().getLocationRequirement();
-//
-//				}
-//				else{
-//					if(locRequirementsType == Circle.class){
-//						circle = (Circle)request.getLocationRequirement().getLocationRequirement();
-//					}
-//					else{
-//						polygon = (Polygon)request.getLocationRequirement().getLocationRequirement();
-//					}
-//				}
-//			}
-//			
-//			//iterate over the list of required servName
-//			for(String reServName: reqServNameList){
-//				
-//				//clone the list of DevId of all equivalent things for that 
-//				//required service name
-//				List<String> eqThings = new ArrayList<>();
-//				eqThings.addAll(servNameThingsIdList.get(reServName).getEqThings());
-//				
-//				//iterate over the list of equivalent things
-//				//for that serviceName
-//				for(String devId: eqThings){
-//					
-//					//get the thing
-//					Thing t = eqThingInfo.get(devId);
-//					
-//					//get the coords of the thing
-//					Point coords = t.getCoords();
-//					
-//					//check location requirement
-//					if(coords != null){
-//						if(point != null){
-//							if(coords.getLatitude() != point.getLatitude() ||
-//									coords.getLongitude() != point.getLongitude()){
-//								eqThings.remove(devId);
-//							}
-//						}
-//						else{
-//							if(circle != null){
-//								if(!in_circle(circle, coords)){
-//									eqThings.remove(devId);
-//								}
-//							}
-//							else{
-//								if(!in_polygon(polygon, coords)){
-//									eqThings.remove(devId);
-//								}
-//							}
-//						}
-//					}
-//					
-//					//check QoSrequirements on services on a thing
-//					HashMap<String, ServiceFeatures> services = t.getServicesList();
-//					
-//					for(Map.Entry<String, ServiceFeatures> servEntry: services.entrySet()){
-//						
-//						Double latency = servEntry.getValue().getLatency();
-//						
-//						Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
-//															: servEntry.getValue().getAccuracy();
-//						
-//						//check latency and accuracy constraints
-//						if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
-//							eqThings.remove(devId);
-//						}
-//					}
-//					
-//				}
-//				
-//				//if the list of devId of the equivalentThings for
-//				//that is empty, the allocation can take place
-//				if(eqThings.isEmpty()) return null;
-//				else
-//					matrixM.put(transId, eqThings);
-//				
-//				eqThings.clear();
-//			}
-//			
-//			
-//		}
-//		
-//		return matrixM;
-//	}
+	/* function to create a table that say the list of DevId of the
+	 * things that respect the restriction of a request identified
+	 * by the transactionId (Map<transId, List<DevId>>) */
+	private HashMap<String, List<String>> createMatrixM(
+			List<Pair<String, Request>> requests,
+			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList) {
+		
+		HashMap<String, List<String>> matrixM = new HashMap<>();
+		
+		//iterate over the list of requests
+		for(Pair<String, Request> reqPair: requests){
+			
+			//get the transId, request object and list of reqServName
+			String transId = reqPair.getLeft();
+			Request request = reqPair.getRight();
+			List<String> reqServNameList = request.getRequiredServicesNameList();
+			
+			//take the maxRespTime and accuracy from QoSrequirements of the request object
+			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
+			Double accuracy = request.getQosRequirements().getAccuracy();
+			
+			logger.debug("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
+			
+			Point point = null;
+			Circle circle = null;
+			Polygon polygon = null;
+			
+			if(request.getLocationRequirement() != null){
+				//take the location requirement from the LocationRequirement object in the request object
+				Class<?> locRequirementsType = request.getLocationRequirement().getLocationRequirement().getClass();
+				
+				logger.debug("locRequirementsType is "+locRequirementsType.getCanonicalName());
+				
+				if(locRequirementsType == Point.class){
+					point = (Point)request.getLocationRequirement().getLocationRequirement();
+
+				}
+				else{
+					if(locRequirementsType == Circle.class){
+						circle = (Circle)request.getLocationRequirement().getLocationRequirement();
+					}
+					else{
+						polygon = (Polygon)request.getLocationRequirement().getLocationRequirement();
+					}
+				}
+			}
+			
+			//iterate over the list of required servName
+			for(String reqServName: reqServNameList){
+				
+				//clone the list of DevId of all equivalent things for that 
+				//required service name
+				List<String> eqThings = new ArrayList<>();
+				eqThings.addAll(servNameThingsIdList.get(reqServName).getEqThings());
+				
+				//iterate over the list of equivalent things
+				//for that serviceName
+				for(int i=0; i<eqThings.size(); i++){
+					
+					String devId = eqThings.get(i);
+					
+					//get the thing
+					Thing t = eqThingInfo.get(devId);
+					
+					//get the coords of the thing
+					Point coords = t.getCoords();
+					
+					//check location requirement
+					if(coords != null){
+						if(point != null){
+							if(coords.getLatitude() != point.getLatitude() ||
+									coords.getLongitude() != point.getLongitude()){
+								eqThings.remove(i);
+								continue;
+							}
+						}
+						else{
+							if(circle != null){
+								if(!in_circle(circle, coords)){
+									eqThings.remove(i);
+									continue;
+								}
+							}
+							else{
+								if(!in_polygon(polygon, coords)){
+									eqThings.remove(i);
+									continue;
+								}
+							}
+						}
+					}
+					
+					//check QoSrequirements on services on a thing
+					HashMap<String, ServiceFeatures> services = t.getServicesList();
+					
+					for(Map.Entry<String, ServiceFeatures> servEntry: services.entrySet()){
+						
+						//check the constraints only on the required reqServName
+						//not on all services of the thing
+						if(servEntry.getKey().contentEquals(reqServName)){
+							Double latency = servEntry.getValue().getLatency();
+							
+							Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
+																: servEntry.getValue().getAccuracy();
+							
+							//check latency and accuracy constraints
+							if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
+								eqThings.remove(i);
+								break;
+							}
+							break;
+						}
+					}
+					
+				}
+				
+				//if the list of devId of the equivalentThings for
+				//that is empty, the allocation can take place
+				if(eqThings.isEmpty()){
+					operationStatus = "no things respect restrictions of the transaction "+transId+", service: "+reqServName;
+					return null;
+				}
+				else{
+
+					matrixM.put(transId+"::"+reqServName, eqThings);
+				}
+			}
+			
+			
+		}
+		
+		return matrixM;
+	}
 
 
-//	/* function to check if a point is inside a polygon */
-//	private boolean in_polygon(Polygon polygon, Point coords) {
-//	
-//		int i;
-//		int j;
-//		
-//		List<Vertex> vertexList = polygon.getVertexList();
-//		
-//		boolean result = false;
-//		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
-//			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
-//					(vertexList.get(j).getLatitude() > coords.getLatitude())
-//					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
-//							* (coords.getLongitude() - vertexList.get(i).getLongitude())
-//							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
-//							+ vertexList.get(i).getLatitude())) {
-//				result = !result;
-//			}
-//		}
-//		
-//		return result;
-//	}
+	/* function to check if a point is inside a polygon */
+	private boolean in_polygon(Polygon polygon, Point coords) {
+	
+		int i;
+		int j;
+		
+		List<Vertex> vertexList = polygon.getVertexList();
+		
+		boolean result = false;
+		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
+			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
+					(vertexList.get(j).getLatitude() > coords.getLatitude())
+					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
+							* (coords.getLongitude() - vertexList.get(i).getLongitude())
+							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
+							+ vertexList.get(i).getLatitude())) {
+				result = !result;
+			}
+		}
+		
+		return result;
+	}
 
-//	/* function to check if a point is inside a circle */
-//	private boolean in_circle(Circle circle, Point coords) {
-//		
-//		Double x2 = Math.pow((circle.getCenterLatitude() - coords.getLatitude()), 2);
-//		Double y2 = Math.pow((circle.getCenterLongitude() - coords.getLongitude()), 2);
-//		
-//		Double dist = Math.sqrt(x2 + y2);
-//	    return dist <= circle.getRadius();
-//	}
+	/* function to check if a point is inside a circle */
+	private boolean in_circle(Circle circle, Point coords) {
+		
+		Double x2 = Math.pow((circle.getCenterLatitude() - coords.getLatitude()), 2);
+		Double y2 = Math.pow((circle.getCenterLongitude() - coords.getLongitude()), 2);
+		
+		Double dist = Math.sqrt(x2 + y2);
+	    return dist <= circle.getRadius();
+	}
 	
 	/* function to get the max priority */
 	private String getArgMaxPriority(List<String> Fjr,
@@ -954,7 +991,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, TransIdList> matrixM, double teta, Priority prio,
+			HashMap<String, List<String>> matrixM, double teta, Priority prio,
 			Policy policy) {
 		
 
@@ -1005,12 +1042,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 			}
 			
 			writer.println("matrixM");
-			for(Map.Entry<String, TransIdList> entryTransId: matrixM.entrySet()){
-				writer.println("devId: "+entryTransId.getKey());
-				List<String> transIdList = entryTransId.getValue().getTransIdList();
+			for(Map.Entry<String, List<String>> entryTransId: matrixM.entrySet()){
+				writer.println("transId: "+entryTransId.getKey());
+				List<String> devIdList = entryTransId.getValue();
 				writer.println("list of devId");		
-				for(String transId: transIdList){
-					writer.println("transId: "+ transId);
+				for(String devId: devIdList){
+					writer.println("devId: "+ devId);
 					writer.println("<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>");
 				}
 				writer.println("<------------------------------>");
@@ -1285,13 +1322,28 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 
 
-
+	/**
+	 *
+	 * @param assignmentParamsMap Map<DevId, <c_i, z_i>>
+	 * @param eqThingInfo Map<devId, Thing>
+	 * @param eqThings List<devId> equivalent things for that service
+	 * @param servPeriodsMap Map<transId, <p_j, h/p_j>>
+	 * @param eqThingsTransaction List<devId> things associated to the transaction
+	 * 			and respect the restrictions of that transaction
+	 * @param transactionId id of the transaction
+	 * @param reqServiceName required service name
+	 * @param split number to things to which assign the service
+	 * @param ni utilization upper bound
+	 * @param teta the teta for the constraint on z_i - f_ij > teta
+ 	 * @param devIdExcluded devId to exclude
+	 * @return the List<devId> that respect the constraints
+	 */
 	private List<String> checkConstraints(
 			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
 			HashMap<String, Thing> eqThingInfo,
 			List<String> eqThings,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
-			HashMap<String, TransIdList> matrixM, 
+			List<String> eqThingsTransaction, 
 			String transactionId,
 			String reqServiceName,
 			int split, Double ni,
@@ -1303,7 +1355,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		writer.println("<--------------------------->");
 		writer.println();
 		writer.println("check constraints for service "+reqServiceName+"<---------------------------");
-		logger.debug("check constraints for service "+reqServiceName);
+		logger.debug("check constraints for service "+reqServiceName+"<---------------------------");
 		
 		//iterate over the list of equivalent things
 		//to check constraints
@@ -1313,69 +1365,63 @@ public class QoSCalculator implements QoSCalculatorIF {
 			logger.debug("devId: "+devId);
 			
 			if(devIdExcluded == null || !devId.contentEquals(devIdExcluded)){
-				//check if the devId can check the matrixM
-				//because every transaction have
-				//a list of restrictions so it can be
-				//select only a subset of the equivalent things
-				if(matrixM.get(devId) != null){
 					
-					//check if the devId respect the constraints for that
-					//transaction identified by the transactionId
-					if(matrixM.get(devId).getTransIdList().contains(transactionId)){
+				//check if the devId respect the constraints for that
+				//transaction identified by the transactionId
+				if(eqThingsTransaction.contains(devId)){
+					
+					writer.println("devId "+devId+" respects the constraints of the transId "+transactionId);
+					logger.debug("devId "+devId+" respects the constraints of the transId "+transactionId);
+					
+					Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
+					
+					if(f_u_ij == null){
+						operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstarints";
 						
-						writer.println("devId "+devId+" respects the constraints of the transId "+transactionId);
-						logger.debug("devId "+devId+" respects the constraints of the transId "+transactionId);
-						
-						Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
-						
-						if(f_u_ij == null){
-							operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstarints";
-							
-							continue;
-						}
-						
-						Double f_ij = f_u_ij.getLeft();
-						Double u_ij = f_u_ij.getRight();
-						
-						writer.println("f_ij: "+f_ij);
-						writer.println("u_ij: "+u_ij);
-						logger.debug("f_ij: "+f_ij);
-						logger.debug("u_ij: "+u_ij);
-						
-						//get c_i and z_i
-						Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
-						Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
-						
-						logger.debug("c_i: "+c_i);
-						logger.debug("(u_ij/split): "+(u_ij/split));
-						logger.debug("z_i: "+z_i);
-						logger.debug("(f_ij/split): "+(f_ij/split));
-						logger.debug("split: "+split);
-						writer.println("c_i: "+c_i);
-						writer.println("(u_ij/split): "+(u_ij/split));
-						writer.println("z_i: "+z_i);
-						writer.println("(f_ij/split): "+(f_ij/split));
-						writer.println("split: "+split);
-						logger.debug("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
-						logger.debug("ni: "+ni);
-						logger.debug("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
-						logger.debug("teta: "+teta);
-						writer.println("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
-						writer.println("ni: "+ni);
-						writer.println("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
-						writer.println("teta: "+teta);
-						writer.println();
-						
-						//check the constraints about ni and teta
-						if(c_i + (u_ij/split) < ni && z_i - (f_ij/split) > teta){
-							
-							logger.debug("add devId: "+devId+" to Fjr<----------------------------");
-							writer.println("add devId: "+devId+" to Fjr<----------------------------");
-							writer.println();
-							Fjr.add(devId);
-						}
-						
+						continue;
 					}
+					
+					Double f_ij = f_u_ij.getLeft();
+					Double u_ij = f_u_ij.getRight();
+					
+					writer.println("f_ij: "+f_ij);
+					writer.println("u_ij: "+u_ij);
+					logger.debug("f_ij: "+f_ij);
+					logger.debug("u_ij: "+u_ij);
+					
+					//get c_i and z_i
+					Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
+					Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
+					
+					logger.debug("c_i: "+c_i);
+					logger.debug("(u_ij/split): "+(u_ij/split));
+					logger.debug("z_i: "+z_i);
+					logger.debug("(f_ij/split): "+(f_ij/split));
+					logger.debug("split: "+split);
+					writer.println("c_i: "+c_i);
+					writer.println("(u_ij/split): "+(u_ij/split));
+					writer.println("z_i: "+z_i);
+					writer.println("(f_ij/split): "+(f_ij/split));
+					writer.println("split: "+split);
+					logger.debug("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
+					logger.debug("ni: "+ni);
+					logger.debug("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
+					logger.debug("teta: "+teta);
+					writer.println("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
+					writer.println("ni: "+ni);
+					writer.println("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
+					writer.println("teta: "+teta);
+					writer.println();
+					
+					//check the constraints about ni and teta
+					if(c_i + (u_ij/split) < ni && z_i - (f_ij/split) > teta){
+						
+						logger.debug("add devId: "+devId+" to Fjr<----------------------------");
+						writer.println("add devId: "+devId+" to Fjr<----------------------------");
+						writer.println();
+						Fjr.add(devId);
+					}
+					
 				}
 			}
 		}

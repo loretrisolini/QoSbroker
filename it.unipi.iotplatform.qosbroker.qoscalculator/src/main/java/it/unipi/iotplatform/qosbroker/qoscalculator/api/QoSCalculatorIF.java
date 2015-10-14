@@ -19,6 +19,6 @@ public interface QoSCalculatorIF {
 												HashMap<String, ServicePeriodParams> servPeriodsMap,
 												HashMap<String, Thing> eqThingInfo,
 												HashMap<String, ThingsIdList> servNameThingsIdList,
-												HashMap<String, TransIdList> matrixM,
+												//HashMap<String, TransIdList> matrixM,
 												double epsilon);
 }

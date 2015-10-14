@@ -80,7 +80,7 @@ public class QoSManager implements QoSManagerIF {
 	}
 	
 	@Override
-	public StatusCode createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap){
+	public StatusCode createAgreement(String offer, String transactionId, Request request){//, HashMap<String, TransIdList> thingTransactionsMap){
 		
 		//TODO Parse Offer
 		
@@ -161,13 +161,13 @@ public class QoSManager implements QoSManagerIF {
 		//Map<DevId, List<transId>>
 		List<Pair<String, JSONObject>> eqThingInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
-		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
+//		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
 		if(eqThingInfoJson == null || eqThingInfoJson.isEmpty() || 
-				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty() || thingTransactionsJson==null){
+				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){// || thingTransactionsJson==null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
 					"QoSManager -- createAgreement() Error in reading thingInfo,servNameThingsIdList, thingTransactionsJson from "+ 
-					QoSConsts.THINGS_INFO_DB +", "+QoSConsts.SERV_EQ_THINGS_DB+", "+QoSConsts.REQUIREMENTS_DB);
+					QoSConsts.THINGS_INFO_DB +", "+QoSConsts.SERV_EQ_THINGS_DB);//+", "+QoSConsts.REQUIREMENTS_DB);
 			
 			return statusCode;
 		}
@@ -192,63 +192,63 @@ public class QoSManager implements QoSManagerIF {
 			return statusCode;
 		}
 
-		HashMap<String, TransIdList> matrixM = 
-				TransIdList.fromDbFormatToJavaFormat(thingTransactionsJson, TransIdList.class);
-		if(matrixM == null){
-			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
-			
-			return statusCode;
-		}
+//		HashMap<String, TransIdList> matrixM = 
+//				TransIdList.fromDbFormatToJavaFormat(thingTransactionsJson, TransIdList.class);
+//		if(matrixM == null){
+//			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+//					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+//					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
+//			
+//			return statusCode;
+//		}
 		
-		//fuse the matrixM read from the DB
-		//and new one computed with the ServiceAgreement operation
-		if(!matrixM.isEmpty()){
-			for(Map.Entry<String, TransIdList> entry: thingTransactionsMap.entrySet()){
-				String devId = entry.getKey();
-				
-				if(matrixM.get(devId) != null){
-					matrixM.get(devId).getTransIdList().addAll(entry.getValue().getTransIdList());
-				}
-				else{
-					matrixM.put(devId, entry.getValue());
-				}
-			}
-		}
-		else{
-			//case in which matrixM is empty
-			//so add directly all the elements
-			matrixM.putAll(thingTransactionsMap);
-		}
+//		//fuse the matrixM read from the DB
+//		//and new one computed with the ServiceAgreement operation
+//		if(!matrixM.isEmpty()){
+//			for(Map.Entry<String, TransIdList> entry: thingTransactionsMap.entrySet()){
+//				String devId = entry.getKey();
+//				
+//				if(matrixM.get(devId) != null){
+//					matrixM.get(devId).getTransIdList().addAll(entry.getValue().getTransIdList());
+//				}
+//				else{
+//					matrixM.put(devId, entry.getValue());
+//				}
+//			}
+//		}
+//		else{
+//			//case in which matrixM is empty
+//			//so add directly all the elements
+//			matrixM.putAll(thingTransactionsMap);
+//		}
 		
 		
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
+																		eqThingInfo, servNameThingsIdList/*, matrixM,*/, 0.001);
 		
 		List<ContextRegistration> allocationSchema = null;
 		if(result.isFeas()){
 			allocationSchema = result.getAllocationSchema();
 			
-			//store new matrixM if allocation feasible
-			List<Pair<String, JSONObject>> matrixMJson = TransIdList.fromJavaFormatToDbFormat(matrixM, TransIdList.class);
-			if(matrixMJson == null){
-				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-						"QoSManager -- createAgreement() Error conversion fromJavaFormatToDbFormat of matrixM");
-				
-				return statusCode;
-			}
-			else{
-				if(!bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB)){
-					statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-							QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-							"QoSManager -- createAgreement() Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
-					
-					return statusCode;
-				}
-			}
+//			//store new matrixM if allocation feasible
+//			List<Pair<String, JSONObject>> matrixMJson = TransIdList.fromJavaFormatToDbFormat(matrixM, TransIdList.class);
+//			if(matrixMJson == null){
+//				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+//						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+//						"QoSManager -- createAgreement() Error conversion fromJavaFormatToDbFormat of matrixM");
+//				
+//				return statusCode;
+//			}
+//			else{
+//				if(!bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB)){
+//					statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+//							QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+//							"QoSManager -- createAgreement() Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
+//					
+//					return statusCode;
+//				}
+//			}
 			
 			//convert the new request in JSON and add thins one to the old
 			//list of request read from the DB

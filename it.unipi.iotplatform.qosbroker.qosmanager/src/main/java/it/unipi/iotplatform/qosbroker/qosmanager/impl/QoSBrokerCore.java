@@ -83,7 +83,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
 	private QoSManagerIF qosManager;
-	private HashMap<String, TransIdList> thingTransactionsMap;
+//	private HashMap<String, TransIdList> thingTransactionsMap;
 	private QoSMonitorIF qosMonitor;
 	private Ngsi10Interface qosMonitorNgsi;
 	
@@ -625,7 +625,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
 
-		statusCode = qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap);
+		statusCode = qosManager.createAgreement(negotiationOffer, transactionId, request/*, thingTransactionsMap*/);
 		
 		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 			response = new ServiceAgreementResponse();
@@ -890,7 +890,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return statusCode;
 		}
 			
-		printThingsMappings(thingsInfo, serviceEquivalentThings);
+		printThingsMappings(request, thingsInfo, serviceEquivalentThings);
 		
 		//check the condition for the serviceAgreementRequest
 		//at least one thing for required service
@@ -923,7 +923,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		//Map<devId, transId> represents the devId that respect
 		//the requirements of the transaction with transId
-		thingTransactionsMap = new HashMap<>();
+//		thingTransactionsMap = new HashMap<>();
 		
 		for(Map.Entry<String, ThingsIdList> entry: serviceEquivalentThings.entrySet()){
 			
@@ -968,11 +968,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				if((latency == null || latency < maxRespTime) && (servAccuracy == null || servAccuracy >= accuracy)){
 					constraints = true;
 					
-					TransIdList transIdList = new TransIdList();
-					transIdList.getTransIdList().add(transId);
+//					TransIdList transIdList = new TransIdList();
+//					transIdList.getTransIdList().add(transId);
 					
 					//put an entry <devId, transId> in the Map<devId,transId>
-					thingTransactionsMap.put(eqThingDevId, transIdList);
+//					thingTransactionsMap.put(eqThingDevId, transIdList);
+					break;
 				}
 
 			}
@@ -1072,12 +1073,16 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return request;
 	}
 	
-	private void printThingsMappings(HashMap<String, Thing> thingsInfo,
+	private void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
 		try{
 			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ThingsMappings.txt", "UTF-8");
-
+			writer.println("Request: ");
+			writer.println(Request.fromJaxbToJson(request, Request.class));
+			
+			writer.println();
+			writer.println();
 			writer.println("####################################");
 			writer.println("####################################");
 			writer.println("ThingsInfo Map<DevId, Thing>");
@@ -1104,13 +1109,20 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					writer.println("energyCost: "+service.getValue().getEnergyCost());
 					writer.println("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
 													: service.getValue().getAccuracy());
+					writer.println("##############<<<<<<>>>>>>>#################");
+					writer.println();
 				}
 				writer.println("<<--------------------------------->>");
+				writer.println("########################################");
+				writer.println();
+				writer.println();
 			}
 			writer.println("########################################");
 			
 			writer.println("########################################");
 			writer.println("########################################");
+			writer.println();
+			writer.println();
 			writer.println("Service Equivalent ThingsId Pairs");
 			
 			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
@@ -1122,7 +1134,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					writer.println(thingId);
 				}
 				writer.println("<<--------------------------------->>");
+				writer.println();
 			}
+			writer.println();
+			writer.println();
 			writer.println("########################################");
 			writer.println("########################################");
 			writer.close();
