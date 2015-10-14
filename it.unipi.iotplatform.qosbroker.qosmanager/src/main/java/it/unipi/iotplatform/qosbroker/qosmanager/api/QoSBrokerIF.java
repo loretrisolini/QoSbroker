@@ -18,6 +18,6 @@ public interface QoSBrokerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception;
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer);
 	
 }

@@ -3,10 +3,12 @@ package it.unipi.iotplatform.qosbroker.qosmonitor.impl;
 
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
@@ -80,7 +82,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
 			queryResponse.setErrorCode(new StatusCode(
 					Code.INTERNALERROR_500.getCode(),
-					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Internal QoSMonitor Error"));
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSMonitor -- queryContext() "
+							+ "error in reading ContextElements from DB "+QoSConsts.SENS_ACT_ATTR_DB));
 			
 			return queryResponse;
 		}
@@ -91,7 +94,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
 			queryResponse.setErrorCode(new StatusCode(
 					Code.CONTEXTELEMENTNOTFOUND_404.getCode(),
-					ReasonPhrase.CONTEXTELEMENTNOTFOUND_404.toString(), "Context Element not found"));
+					ReasonPhrase.CONTEXTELEMENTNOTFOUND_404.toString(), "QoSMonitor -- queryContext() No Context Element not found"));
 			
 			return queryResponse;
 		}
@@ -119,7 +122,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		queryResponse.setContextResponseList(contextElemRespList);
 		queryResponse.setErrorCode(new StatusCode(
 				Code.OK_200.getCode(),
-				ReasonPhrase.OK_200.toString(), "Result"));
+				ReasonPhrase.OK_200.toString(), "QoSMonitor -- queryContext() OK"));
 		
 		return queryResponse;
 	}
@@ -249,15 +252,19 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
 	/* function to update ThingsInfoDB and ServNameEqThingsDB */
 	@Override
-	public boolean updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
+	public StatusCode updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
+		StatusCode statusCode;
 		
 		List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		
 		if(thingsData == null){
 			//error
-			return false;
+			
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+										+ "reading old thingsData from DB "+QoSConsts.THINGS_INFO_DB);
+			return statusCode;
 		}
 		
 		
@@ -334,7 +341,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		newThingsData = Thing.fromJavaFormatToDbFormat(thingsInfo, Thing.class);
 		
 		if(newThingsData == null){
-			return false;
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+					+ "error conversion fromJavaFormatToDbFormat newThingsData for storing in DB "+QoSConsts.THINGS_INFO_DB);
+			return statusCode;
 		}
 //		for(Map.Entry<String, Thing> entry : thingsInfo.entrySet()){
 //			
@@ -349,7 +358,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		
 		//store data
 		if(!bigDataRepository.storeData(newThingsData, QoSConsts.THINGS_INFO_DB)){
-			return false;
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+					+ "error writing newThingsInfo in DB "+QoSConsts.THINGS_INFO_DB);
+			return statusCode;
 		}
 		
 		//check the case in which update is called
@@ -361,8 +372,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			List<Pair<String, JSONObject>> servEqThingsData = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
 			
 			if(servEqThingsData == null){
-				//error
-				return false;
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+						+ "error reading old servEqThingsData in DB "+QoSConsts.SERV_EQ_THINGS_DB);
+				return statusCode;
 			}
 			
 			//conversion of data read from the DB 
@@ -408,7 +420,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			newServEqThingsData = ThingsIdList.fromJavaFormatToDbFormat(serviceEquivalentThings, ThingsIdList.class);
 			
 			if(newServEqThingsData == null){
-				return false;
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+						+ "error conversion fromJavaFormatToDbFormat newServEqThingsData for storing in DB "+QoSConsts.SERV_EQ_THINGS_DB);
+				return statusCode;
 			}
 //			for(Map.Entry<String, EquivalentThings> entry : serviceEquivalentThings.entrySet()){
 //				
@@ -423,11 +437,14 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			
 			//store data
 			if(!bigDataRepository.storeData(newServEqThingsData, QoSConsts.SERV_EQ_THINGS_DB)){
-				return false;
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+						+ "error writing newServEqThingsData in DB "+QoSConsts.SERV_EQ_THINGS_DB);
+				return statusCode;
 			}
 		}
 		
-		return true;
+		statusCode = new StatusCode(QoSCode.OK_200.getCode(), QoSReasonPhrase.OK_200.name(), "QoSMonitor -- updateThingsServicesInfo() OK");
+		return statusCode;
 		
 	}
 

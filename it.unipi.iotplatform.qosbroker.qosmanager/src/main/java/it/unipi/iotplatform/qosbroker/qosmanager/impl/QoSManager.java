@@ -93,7 +93,7 @@ public class QoSManager implements QoSManagerIF {
 		List<Pair<String, JSONObject>> requestsJsonList = bigDataRepository.readData(null, QoSConsts.REQUESTS_DB);
 		if(requestsJsonList == null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-											QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "Error in reading old requests from "+QoSConsts.REQUESTS_DB);
+											QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSManager -- createAgreement() Error in reading old requests from "+QoSConsts.REQUESTS_DB);
 			return statusCode;
 		}
 		
@@ -166,7 +166,7 @@ public class QoSManager implements QoSManagerIF {
 				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty() || thingTransactionsJson==null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"Error in reading thingInfo,servNameThingsIdList, thingTransactionsJson from "+ 
+					"QoSManager -- createAgreement() Error in reading thingInfo,servNameThingsIdList, thingTransactionsJson from "+ 
 					QoSConsts.THINGS_INFO_DB +", "+QoSConsts.SERV_EQ_THINGS_DB+", "+QoSConsts.REQUIREMENTS_DB);
 			
 			return statusCode;
@@ -177,7 +177,7 @@ public class QoSManager implements QoSManagerIF {
 			
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"Error conversion fromDbFormatToJavaFormat of eqThingInfoJson");
+					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of eqThingInfoJson");
 			
 			return statusCode;
 		}
@@ -187,7 +187,7 @@ public class QoSManager implements QoSManagerIF {
 		if(servNameThingsIdList == null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"Error conversion fromDbFormatToJavaFormat of servNameThingsIdListJson");
+					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of servNameThingsIdListJson");
 			
 			return statusCode;
 		}
@@ -197,7 +197,7 @@ public class QoSManager implements QoSManagerIF {
 		if(matrixM == null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
+					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
 			
 			return statusCode;
 		}
@@ -222,6 +222,7 @@ public class QoSManager implements QoSManagerIF {
 			matrixM.putAll(thingTransactionsMap);
 		}
 		
+		
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
 																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
@@ -235,7 +236,7 @@ public class QoSManager implements QoSManagerIF {
 			if(matrixMJson == null){
 				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-						"Error conversion fromJavaFormatToDbFormat of matrixM");
+						"QoSManager -- createAgreement() Error conversion fromJavaFormatToDbFormat of matrixM");
 				
 				return statusCode;
 			}
@@ -243,7 +244,7 @@ public class QoSManager implements QoSManagerIF {
 				if(!bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB)){
 					statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 							QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-							"Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
+							"QoSManager -- createAgreement() Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
 					
 					return statusCode;
 				}
@@ -257,7 +258,7 @@ public class QoSManager implements QoSManagerIF {
 			if(!bigDataRepository.storeData(requestsJsonList, QoSConsts.REQUESTS_DB)){
 				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-						"Error store requestsJsonList in DB "+QoSConsts.REQUESTS_DB);
+						"QoSManager -- createAgreement() Error store requestsJsonList in DB "+QoSConsts.REQUESTS_DB);
 				
 				return statusCode;
 			}
@@ -276,7 +277,7 @@ public class QoSManager implements QoSManagerIF {
 			if(!bigDataRepository.storeData(allocationSchemaJson, QoSConsts.ALLOCATION_DB)){
 				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-						"Error store allocationSchemaJson in DB "+QoSConsts.ALLOCATION_DB);
+						"QoSManager -- createAgreement() Error store allocationSchemaJson in DB "+QoSConsts.ALLOCATION_DB);
 				
 				return statusCode;
 			}

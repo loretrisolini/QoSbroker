@@ -3,6 +3,7 @@ package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
@@ -547,8 +548,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	@Override
-	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer) throws Exception{
-
+	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer){
+		
+		StatusCode statusCode;
+		ServiceAgreementResponse response;
+		
 		//transactionID to identify the service request
 		String transactionId = UUID.randomUUID().toString();
 		
@@ -565,7 +569,16 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		Restriction restriction = getRestriction(serviceRequest);
 		
 		if(restriction == null){
-			throw new Exception("No restrictions in ServiceAgreementRequest");
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"QoSBrokerCore -- createAgreement() No restrictions in ServiceAgreementRequest");
+			
+			response = new ServiceAgreementResponse();
+			
+			response.setServiceID(null);
+			
+			response.setErrorCode(statusCode);
+			
+			return response;
 		}
 
 //		CREATE THE REQUEST FROM THE INFO TAKEN FROM SERVICE_AGREEMENT_REQUEST
@@ -575,22 +588,30 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//so thre are no equal serviceName Temp, Temp is equal to Temp
 		List<String> requiredServicesName = new ArrayList<>(new LinkedHashSet<String>(serviceRequest.getAttributeList()));
 		
-		
 		//object to store the details of the service Request
 		Request request = setRequest(opType, requiredServicesName, restriction.getOperationScope());
 		if(request == null){
-			throw new Exception("error in creation of the request object");
+			
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"QoSBrokerCore -- createAgreement() error in creation of the request object");
+			
+			response = new ServiceAgreementResponse();
+			
+			response.setServiceID(null);
+			
+			response.setErrorCode(statusCode);
+			
+			return response;
 		}
 		
 //		DISCOVERY PHASE
 		
 		//get list of equivalentThings
-		StatusCode statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction, transactionId);
+		statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction, transactionId);
 		
-		if(statusCode.getCode() == Code.CONTEXTELEMENTNOTFOUND_404.getCode() ||
-				statusCode.getCode() == Code.BADREQUEST_400.getCode()){
+		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 			
-			ServiceAgreementResponse response = new ServiceAgreementResponse();
+			response = new ServiceAgreementResponse();
 			
 			response.setServiceID(null);
 			
@@ -599,23 +620,22 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return response;
 		}		
 		
-		logger.debug(request.toString());
+		logger.debug("QoSBrokerCore -- createAgreement() " + request.toString());
 		
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
-		
-		ServiceAgreementResponse response = new ServiceAgreementResponse();
 
-		
 		statusCode = qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap);
 		
 		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
+			response = new ServiceAgreementResponse();
 			
 			response.setServiceID("");
 			
 			response.setErrorCode(statusCode);
 		}
 		else{
+			response = new ServiceAgreementResponse();
 			
 			response.setServiceID("transactionId");
 			
@@ -679,7 +699,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
 				entityIdList, request.getRequiredServicesNameList(), restriction);
 		
-		logger.debug("DiscoverContextAvailabilityRequest:"
+		logger.debug("QoSBrokerCore -- discoverThings() DiscoverContextAvailabilityRequest:"
 				+ discoveryRequest.toString());
 		
 		//Get the NGSI 9 DiscoverContextAvailabilityResponse 
@@ -701,12 +721,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//request to the QoSmonitor
 			QueryContextResponse qosMonitorResponse = qosMonitorNgsi.queryContext(queryRequest);
 			
-			if(qosMonitorResponse == null){
+			if(qosMonitorResponse.getErrorCode() != null &&
+					qosMonitorResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()){
 				
-				statusCode =  new StatusCode(
-						Code.BADREQUEST_400.getCode(),
-						ReasonPhrase.BADREQUEST_400.toString(), "No response from QoSMonitor");
+				statusCode = qosMonitorResponse.getErrorCode();
 				
+				statusCode.setDetails("QoSBrokerCore -- discoverThings() "+statusCode.getDetails());
 				return statusCode;
 			}
 			
@@ -719,37 +739,36 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//if for a required serviceName there is only one thing but that thing has battery
 			//equal to zero the service cannot be considered satisfied.
 			//filter thing based on MaxRespTime in request object
-			Boolean serviceOK = 
+			statusCode = 
 					createThingsMap(ContextRegistrationResponseList, 
 									qosMonitorResponse.getListContextElementResponse(), request, transId);
 			
 			//the conditions for execution of the service
 			//allocation algorithm are not achieved
-			if(!serviceOK){
-				
-				statusCode =  new StatusCode(
-						Code.BADREQUEST_400.getCode(),
-						ReasonPhrase.BADREQUEST_400.toString(), "Service Agreement can't be achieved");
+			if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 				
 				return statusCode;
 			}
 			
 			if(discoveryResponse.getErrorCode() != null){
 				statusCode = discoveryResponse.getErrorCode();
+				statusCode.setDetails("QoSBrokerCore -- discoverThings() "+statusCode.getDetails());
 			}
 			else{
 				statusCode =  new StatusCode(
 						Code.OK_200.getCode(),
-						ReasonPhrase.OK_200.toString(), "Result");
+						ReasonPhrase.OK_200.toString(), "QoSBrokerCore -- discoverThings() OK");
 			}
 			
+			statusCode.setDetails("QoSBrokerCore -- discoverThings() "+statusCode.getDetails());
 			return statusCode;
 		}
 		else{
-			
+
 			//no elements found in the iotDiscovery
 			statusCode = discoveryResponse.getErrorCode();
-			return null;
+			statusCode.setDetails("QoSBrokerCore -- discoverThings() "+statusCode.getDetails());
+			return statusCode;
 		}
 	}
 
@@ -761,9 +780,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	if for a required serviceName there is only one thing but that thing has battery
 	equal to zero the service cannot be considered satisfied.
 	filter thing based on MaxRespTime in request object */
-	private Boolean createThingsMap(
+	private StatusCode createThingsMap(
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
 			List<ContextElementResponse> qosMonitorResponse, Request request, String transId) {
+		
+		StatusCode statusCode;
 		
 		//Map<reqServName, List<DevID>>
 		HashMap<String, ThingsIdList> serviceEquivalentThings = new HashMap<>();
@@ -851,7 +872,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				}
 			}
 			else{
-				logger.debug("ERROR: devId is not set, Thing can be stored");
+				logger.debug("createThingsMap() ERROR: devId is not set, Thing can be stored");
 			}
 			
 		}
@@ -862,22 +883,30 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//if the update operation of ThingsInfoDB and ServEqThingsDB
 		//is not correct, it is useless continue with
 		//allocation procedure
-		if(!qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings)) return false;
+		statusCode = qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings); 
 		
+		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
+			statusCode.setDetails("createThingsMap() "+statusCode.getDetails());
+			return statusCode;
+		}
+			
 		printThingsMappings(thingsInfo, serviceEquivalentThings);
 		
 		//check the condition for the serviceAgreementRequest
 		//at least one thing for required service
 		//if only one thing for a service the Thing
 		//battery must be != null
-		Boolean checkServiceAgreementRequestConditions =
+		statusCode  =
 					checkServiceAllocationConditions(serviceEquivalentThings, thingsInfo, request, transId);
 		
-		if(!checkServiceAgreementRequestConditions){
-			return false;
+		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
+			statusCode.setDetails("createThingsMap() "+statusCode.getDetails());
+			return statusCode;
 		}
 		
-		return true;
+		statusCode = new StatusCode(QoSCode.OK_200.getCode(), QoSReasonPhrase.OK_200.name(), "createThingsMap() OK");
+		
+		return statusCode;
 	}
 
 	
@@ -886,10 +915,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	at least one thing for required service
 	if only one thing for a service the Thing
 	battery must be != null */
-	private Boolean checkServiceAllocationConditions(
+	private StatusCode checkServiceAllocationConditions(
 			HashMap<String, ThingsIdList> serviceEquivalentThings,
 			HashMap<String, Thing> thingsInfo, Request request, String transId) {
 
+		StatusCode statusCode;
+		
 		//Map<devId, transId> represents the devId that respect
 		//the requirements of the transaction with transId
 		thingTransactionsMap = new HashMap<>();
@@ -899,7 +930,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			List<String> eqThings = entry.getValue().getEqThings();
 			
 			if(eqThings.isEmpty()){
-				return false;
+				
+				statusCode = new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(), QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), 
+												"checkServiceAllocationConditions() service "+entry.getKey()+" has no things associated");
+				
+				return statusCode;
 			}
 			
 			if(eqThings.size() == 1){
@@ -907,7 +942,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				String eqThingDevId = eqThings.get(0);
 				
 				if(thingsInfo.get(eqThingDevId).getBatteryLevel()==null){
-					return false;
+					statusCode = new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(), QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), 
+							"checkServiceAllocationConditions() service "+entry.getKey()+" equivalent thing "+eqThingDevId+" has no battery value");
+					
+					return statusCode;
 				}
 			}
 			
@@ -944,12 +982,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//so it is useless continue in the allocation
 			//process
 			if(!constraints){
-				return false;
+				statusCode = new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(), QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), 
+						"checkServiceAllocationConditions() service "+entry.getKey()+
+						" has no equivalent things that respect requirements maxRespTime and/or accuracy");
+				
+				return statusCode;
 			}
 
 		}
 		
-		return true;
+		statusCode = new StatusCode(QoSCode.OK_200.getCode(), QoSReasonPhrase.OK_200.name(), "checkServiceAllocationConditions() OK");
+		
+		return statusCode;
 	}
 
 	/* get Restriction from serviceRequest */

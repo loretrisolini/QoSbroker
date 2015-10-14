@@ -153,10 +153,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				printAllocationSchema(res[imax].allocationSchema);
 				
-				StatusCode statusCode= new StatusCode(QoSCode.OK_200.getCode(),QoSReasonPhrase.OK_200.name(), operationStatus);
+				StatusCode statusCode= new StatusCode(QoSCode.OK_200.getCode(),QoSReasonPhrase.OK_200.name(), "QoSCalculator -- computeAllocation()" + operationStatus);
 				ret.setStatusCode(statusCode);
-				
 				operationStatus = "";
+				
 				return ret;
 			}
 
@@ -169,9 +169,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		}
 		
 		StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
-												QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), operationStatus);
+												QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation()" + operationStatus);
 		ret.setStatusCode(statusCode);
-		
 		operationStatus = "";
 		
 		return ret;
@@ -398,7 +397,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 									logger.debug("Fjr is empty<----------------------------");
 									writer.println("Fjr is empty<----------------------------");
 									
-									operationStatus = "ServiceRequest Name: "+reqServiceName+
+									operationStatus += "QoSCalculator -- GAP() ServiceRequest Name: "+reqServiceName+
 											" inside request with TransId: "+transId+" no thing found";
 									
 									if(policy == Policy.MAX_SPLIT)
@@ -677,7 +676,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		res.assignmentsParamsMap = assignmentParamsMap;
 		writer.close();
 		
-		operationStatus = "allocation operation OK";
+		operationStatus += "QoSCalculator -- GAP() allocation operation OK";
 		
 		return res;
 	}
@@ -1330,7 +1329,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 						Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
 						
 						if(f_u_ij == null){
-							operationStatus = "f_u_ij null in checkConstarints";
+							operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstarints";
 							
 							continue;
 						}
