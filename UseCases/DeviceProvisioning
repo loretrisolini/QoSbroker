@@ -1,0 +1,268 @@
+DEVICE PREPROVISIONING<-------------------------------
+
+POST http://localhost:4041/iot/devices
+
+fiware-service: smartSensor
+fiware-servicepath: /Pisa/University/
+
+{
+    "name": "sensor_1", 
+    "entity_type": "environment",
+    "attributes": [
+      {
+        "name": "battery",
+        "type": "integer"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "lazy": [
+      {
+        "name": "battery",
+        "type": "integer"
+      },
+      {
+        "name": "degrees",
+        "type": "float"
+      },
+	  {
+	    "name": "humidity",
+	    "type": "float"
+	  },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "commands": [
+      {
+        "name": "power",
+        "type": "string"
+      }
+	],
+
+  "internal_attributes": {
+    "lwm2mResourceMapping": {
+      "battery" : {
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 1
+      },
+      "degrees" : {
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 2
+      },
+      "humidity" :{
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 3
+	  },
+      "coords" :{
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 4
+	  },
+      "power" : {
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 5
+      }
+    }
+  }
+}
+
+
+POST http://localhost:4041/iot/devices
+
+fiware-service: smartSensor
+fiware-servicepath: /Pisa/University/
+
+{
+    "name": "sensor_2",
+    "entity_type": "temperature",
+    "attributes": [
+      {
+        "name": "battery",
+        "type": "integer"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "lazy": [
+      {
+        "name": "degrees",
+        "type": "float"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "commands": [
+      {
+        "name": "power",
+        "type": "string"
+      }
+	],
+
+  "internal_attributes": {
+    "lwm2mResourceMapping": {
+      "battery" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 1
+      },
+      "degrees" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 2
+      },
+      "coords" :{
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 3
+	  },
+      "power" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 4
+      }
+    }
+  }
+}
+
+POST http://localhost:4041/iot/devices
+
+fiware-service: smartSensor
+fiware-servicepath: /Pisa/University/
+
+{
+    "name": "sensor_3",
+    "entity_type": "environment",
+    "attributes": [
+      {
+        "name": "battery",
+        "type": "integer"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "lazy": [
+      {
+        "name": "degrees",
+        "type": "float"
+      },
+	  {
+	    "name": "CO2",
+	    "type": "float"
+	  },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "commands": [
+      {
+        "name": "power",
+        "type": "string"
+      }
+	],
+
+  "internal_attributes": {
+    "lwm2mResourceMapping": {
+	  "battery" : {
+        "objectType": 7399,
+        "objectInstance": 0,
+        "objectResource": 1
+      },
+      "degrees" : {
+        "objectType": 7399,
+        "objectInstance": 0,
+        "objectResource": 2
+      },
+      "CO2" : {
+        "objectType": 7399,
+        "objectInstance": 0,
+        "objectResource": 3
+      },
+      "coords" :{
+        "objectType": 7399,
+        "objectInstance": 0,
+        "objectResource": 4
+	  },
+      "power" : {
+        "objectType": 7399,
+        "objectInstance": 0,
+        "objectResource": 5
+      }
+    }
+  }
+}
+
+POST http://localhost:4041/iot/devices
+
+fiware-service: smartSensor
+fiware-servicepath: /Pisa/University/
+
+{
+    "name": "sensor_4",
+    "entity_type": "temperature",
+    "attributes": [
+      {
+        "name": "battery",
+        "type": "integer"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "lazy": [
+      {
+        "name": "degrees",
+        "type": "float"
+      },
+      {
+        "name": "coords",
+        "type": "coords"
+      }
+    ],
+    "commands": [
+      {
+        "name": "power",
+        "type": "string"
+      }
+	],
+
+  "internal_attributes": {
+    "lwm2mResourceMapping": {
+	  "battery" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 1
+      },
+      "degrees" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 2
+      },
+      "coords" :{
+        "objectType": 7392,
+        "objectInstance": 0,
+        "objectResource": 3
+	  },
+      "power" : {
+        "objectType": 7396,
+        "objectInstance": 0,
+        "objectResource": 4
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+create /7399/0
+set /7399/0 1 90
+set /7399/0 2 24
+set /7399/0 3 24.6
+set /7399/0 4 63
+set /7399/0 5 44
+set /7399/0 6 2
+set /7399/0 7 "On"
+connect localhost 60001 sensor_3 /
