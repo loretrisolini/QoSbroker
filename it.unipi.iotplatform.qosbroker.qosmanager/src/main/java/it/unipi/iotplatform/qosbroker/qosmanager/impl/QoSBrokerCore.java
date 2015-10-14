@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
@@ -606,23 +607,17 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		ServiceAgreementResponse response = new ServiceAgreementResponse();
 
 		
-		if(!qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap)){
+		statusCode = qosManager.createAgreement(negotiationOffer, transactionId, request, thingTransactionsMap);
+		
+		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 			
 			response.setServiceID("");
-			
-			statusCode = new StatusCode(
-					Code.INTERNALERROR_500.getCode(),
-					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Failed Operation");
 			
 			response.setErrorCode(statusCode);
 		}
 		else{
 			
 			response.setServiceID("transactionId");
-			
-			statusCode = new StatusCode(
-					Code.OK_200.getCode(),
-					ReasonPhrase.OK_200.toString(), "Success Operation");
 			
 			response.setErrorCode(statusCode);
 		}
@@ -885,65 +880,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return true;
 	}
 
-	private void printThingsMappings(HashMap<String, Thing> thingsInfo,
-			HashMap<String, ThingsIdList> serviceEquivalentThings) {
-		
-		try{
-			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ThingsMappings.txt", "UTF-8");
-
-			writer.println("####################################");
-			writer.println("####################################");
-			writer.println("ThingsInfo Map<DevId, Thing>");
-			
-			for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
-				writer.println("DevId: "+entryThing.getKey());
-				
-				writer.println("batteryLevel:");
-				writer.println(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
-													: entryThing.getValue().getBatteryLevel().toString());
-				writer.println("coords:");
-				writer.println(entryThing.getValue().getCoords()==null ? "coords==null" 
-													: entryThing.getValue().getCoords().getLatitude()+","+
-													entryThing.getValue().getCoords().getLongitude());
-				
-				writer.println("Services on Thing with devId "+entryThing.getKey()+": ");
-				HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
-				for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
-					
-					writer.println("ServiceName: "+service.getKey());
-					
-					writer.println("ServiceFeatures:");
-					writer.println("latency: "+service.getValue().getLatency());
-					writer.println("energyCost: "+service.getValue().getEnergyCost());
-					writer.println("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
-													: service.getValue().getAccuracy());
-				}
-				writer.println("<<--------------------------------->>");
-			}
-			writer.println("########################################");
-			
-			writer.println("########################################");
-			writer.println("########################################");
-			writer.println("Service Equivalent ThingsId Pairs");
-			
-			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
-				
-				writer.println("Required Service Name: "+entryEqThings.getKey());
-				writer.println("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
-				List<String> eqThings = entryEqThings.getValue().getEqThings();
-				for(String thingId: eqThings){
-					writer.println(thingId);
-				}
-				writer.println("<<--------------------------------->>");
-			}
-			writer.println("########################################");
-			writer.println("########################################");
-			writer.close();
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
-	}
+	
 
 	/* check the condition for the serviceAgreementRequest
 	at least one thing for required service
@@ -1089,6 +1026,66 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		request.setEntityIdList(responseEntIdList);
 		
 		return request;
+	}
+	
+	private void printThingsMappings(HashMap<String, Thing> thingsInfo,
+			HashMap<String, ThingsIdList> serviceEquivalentThings) {
+		
+		try{
+			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ThingsMappings.txt", "UTF-8");
+
+			writer.println("####################################");
+			writer.println("####################################");
+			writer.println("ThingsInfo Map<DevId, Thing>");
+			
+			for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
+				writer.println("DevId: "+entryThing.getKey());
+				
+				writer.println("batteryLevel:");
+				writer.println(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
+													: entryThing.getValue().getBatteryLevel().toString());
+				writer.println("coords:");
+				writer.println(entryThing.getValue().getCoords()==null ? "coords==null" 
+													: entryThing.getValue().getCoords().getLatitude()+","+
+													entryThing.getValue().getCoords().getLongitude());
+				
+				writer.println("Services on Thing with devId "+entryThing.getKey()+": ");
+				HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
+				for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
+					
+					writer.println("ServiceName: "+service.getKey());
+					
+					writer.println("ServiceFeatures:");
+					writer.println("latency: "+service.getValue().getLatency());
+					writer.println("energyCost: "+service.getValue().getEnergyCost());
+					writer.println("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
+													: service.getValue().getAccuracy());
+				}
+				writer.println("<<--------------------------------->>");
+			}
+			writer.println("########################################");
+			
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.println("Service Equivalent ThingsId Pairs");
+			
+			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
+				
+				writer.println("Required Service Name: "+entryEqThings.getKey());
+				writer.println("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
+				List<String> eqThings = entryEqThings.getValue().getEqThings();
+				for(String thingId: eqThings){
+					writer.println(thingId);
+				}
+				writer.println("<<--------------------------------->>");
+			}
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	public void setNgsi10Requester(Ngsi10Requester ngsi10Requester) {

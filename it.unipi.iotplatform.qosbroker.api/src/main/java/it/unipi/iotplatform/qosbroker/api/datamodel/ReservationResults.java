@@ -3,6 +3,7 @@ package it.unipi.iotplatform.qosbroker.api.datamodel;
 import java.util.List;
 
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class ReservationResults {
 
@@ -11,6 +12,8 @@ public class ReservationResults {
 	private boolean isFeas;
 	
 	private int which;
+	
+	private StatusCode statusCode;
 	
 	public List<ContextRegistration> getAllocationSchema() {
 		return allocationSchema;
@@ -34,5 +37,13 @@ public class ReservationResults {
 
 	public void setWhich(int which) {
 		this.which = which;
+	}
+
+	public StatusCode getStatusCode() {
+		return statusCode;
+	}
+
+	public void setStatusCode(StatusCode statusCode) {
+		this.statusCode = statusCode;
 	}
 }

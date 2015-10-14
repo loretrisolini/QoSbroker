@@ -8,6 +8,8 @@ import java.util.HashMap;
 
 import javax.annotation.Resource;
 
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
+
 @Resource
 public interface QoSManagerIF {
 
@@ -26,6 +28,6 @@ public interface QoSManagerIF {
 	 * @param offer is the offer
 	 * 
 	 */
-	public Boolean createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap);
+	public StatusCode createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap);
 	
 }

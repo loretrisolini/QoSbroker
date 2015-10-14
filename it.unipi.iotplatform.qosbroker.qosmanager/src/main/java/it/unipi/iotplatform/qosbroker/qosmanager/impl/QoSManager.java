@@ -1,7 +1,9 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
@@ -32,6 +34,7 @@ import org.w3c.dom.Document;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class QoSManager implements QoSManagerIF {
 
@@ -77,9 +80,11 @@ public class QoSManager implements QoSManagerIF {
 	}
 	
 	@Override
-	public Boolean createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap){
+	public StatusCode createAgreement(String offer, String transactionId, Request request, HashMap<String, TransIdList> thingTransactionsMap){
 		
 		//TODO Parse Offer
+		
+		StatusCode statusCode;
 		
 		//counter for the number of service requests
 		int k=0;
@@ -87,7 +92,9 @@ public class QoSManager implements QoSManagerIF {
 		//read all old requests from requests DB
 		List<Pair<String, JSONObject>> requestsJsonList = bigDataRepository.readData(null, QoSConsts.REQUESTS_DB);
 		if(requestsJsonList == null){
-			return false;
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+											QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "Error in reading old requests from "+QoSConsts.REQUESTS_DB);
+			return statusCode;
 		}
 		
 		//convert JsonObj requests in request object
@@ -156,25 +163,43 @@ public class QoSManager implements QoSManagerIF {
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
 		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
 		if(eqThingInfoJson == null || eqThingInfoJson.isEmpty() || 
-				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){
-			return false;
+				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty() || thingTransactionsJson==null){
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"Error in reading thingInfo,servNameThingsIdList, thingTransactionsJson from "+ 
+					QoSConsts.THINGS_INFO_DB +", "+QoSConsts.SERV_EQ_THINGS_DB+", "+QoSConsts.REQUIREMENTS_DB);
+			
+			return statusCode;
 		}
 		
 		HashMap<String, Thing> eqThingInfo = Thing.fromDbFormatToJavaFormat(eqThingInfoJson, Thing.class);
 		if(eqThingInfo == null){
-			return false;
+			
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"Error conversion fromDbFormatToJavaFormat of eqThingInfoJson");
+			
+			return statusCode;
 		}
 		
 		HashMap<String, ThingsIdList> servNameThingsIdList = 
 				ThingsIdList.fromDbFormatToJavaFormat(servNameThingsIdListJson, ThingsIdList.class);
 		if(servNameThingsIdList == null){
-			return false;
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"Error conversion fromDbFormatToJavaFormat of servNameThingsIdListJson");
+			
+			return statusCode;
 		}
 
 		HashMap<String, TransIdList> matrixM = 
 				TransIdList.fromDbFormatToJavaFormat(thingTransactionsJson, TransIdList.class);
 		if(matrixM == null){
-			return false;
+			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+					"Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
+			
+			return statusCode;
 		}
 		
 		//fuse the matrixM read from the DB
@@ -200,10 +225,6 @@ public class QoSManager implements QoSManagerIF {
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
 																		eqThingInfo, servNameThingsIdList, matrixM, 0.001);
-		//allocation failed
-		if(result == null){
-			return false;
-		}
 		
 		List<ContextRegistration> allocationSchema = null;
 		if(result.isFeas()){
@@ -212,10 +233,20 @@ public class QoSManager implements QoSManagerIF {
 			//store new matrixM if allocation feasible
 			List<Pair<String, JSONObject>> matrixMJson = TransIdList.fromJavaFormatToDbFormat(matrixM, TransIdList.class);
 			if(matrixMJson == null){
-				return false;
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+						"Error conversion fromJavaFormatToDbFormat of matrixM");
+				
+				return statusCode;
 			}
 			else{
-				bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB);
+				if(!bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB)){
+					statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+							QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+							"Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
+					
+					return statusCode;
+				}
 			}
 			
 			//convert the new request in JSON and add thins one to the old
@@ -223,7 +254,13 @@ public class QoSManager implements QoSManagerIF {
 			JSONObject newRequestJson = Request.fromJaxbToJson(request, Request.class);
 			//store new request Result if allocation feasible			
 			requestsJsonList.add(new Pair<String, JSONObject>(transactionId, newRequestJson));
-			bigDataRepository.storeData(requestsJsonList, QoSConsts.REQUESTS_DB);
+			if(!bigDataRepository.storeData(requestsJsonList, QoSConsts.REQUESTS_DB)){
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+						"Error store requestsJsonList in DB "+QoSConsts.REQUESTS_DB);
+				
+				return statusCode;
+			}
 			
 			//store new allocation schemas if allocation is feasible
 			List<Pair<String, JSONObject>> allocationSchemaJson = new ArrayList<Pair<String, JSONObject>>();
@@ -236,12 +273,18 @@ public class QoSManager implements QoSManagerIF {
 				
 				allocationSchemaJson.add(new Pair<String, JSONObject>(transId ,contRegJson));
 			}
-			bigDataRepository.storeData(allocationSchemaJson, QoSConsts.ALLOCATION_DB);
+			if(!bigDataRepository.storeData(allocationSchemaJson, QoSConsts.ALLOCATION_DB)){
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+						"Error store allocationSchemaJson in DB "+QoSConsts.ALLOCATION_DB);
+				
+				return statusCode;
+			}
 			
-			return true;
+			return result.getStatusCode();
 		}
 		else{
-			return false;
+			return result.getStatusCode();
 		}
 		
 
