@@ -55,7 +55,7 @@ public class TestFunctionality {
 			
 			qosCalculator = new QoSCalculator();
 			
-			String csvFile = "/home/lorenzo/Desktop/Tests/inputQoSCalculatorTest.csv";
+			String csvFile = "/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/inputQoSCalculatorTest.csv";
 			
 			readParams(csvFile);
 		}

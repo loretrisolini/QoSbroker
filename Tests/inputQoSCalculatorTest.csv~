@@ -1,0 +1,31 @@
+1,k,Policy,epsilon
+3,MAX_SPLIT,0.001
+
+2,TransactionID, operationType, maxRespTime, maxRateRequest, accuracy, LocationRequirement, ServiceList
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15.0,15.0,null,Circle:43.656998;10.437418;1000.9,degrees,humidity,CO2
+
+3,TransactionID,h/p_j, p_j
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,1,15.0
+
+4,DevId,BatteryLevel,Coords
+sensor_3:environment,99.0,37.0 45.9
+sensor_1:environment,99.0,57.0 45.9
+sensor_2:temperature,80.0,47.0 45.9
+sensor_4:temperature,77.0,57.0 44.9
+
+5,DevId,ServiceName,Latency,EnergyCost,Accuracy
+sensor_3:environment,CO2,0.8,0.7,null
+sensor_3:environment,battery,null,null,null
+sensor_3:environment,degrees,0.4,0.6,null
+sensor_1:environment,humidity,0.54,0.8,null
+sensor_1:environment,battery,null,null,null
+sensor_1:environment,degrees,0.54,0.8,null
+sensor_2:temperature,battery,null,null,null
+sensor_2:temperature,degrees,0.6,0.3,null
+sensor_4:temperature,battery,null,null,null
+sensor_4:temperature,degrees,0.2,0.9,null
+
+6,requiredServiceName,devIdList
+CO2,sensor_3:environment
+humidity,sensor_1:environment
+degrees,sensor_1:environment,sensor_3:environment,sensor_2:temperature,sensor_4:temperature
