@@ -52,7 +52,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	//indicates the policy to follow
 	//to split service to multiple things
 	//max split or min split
-	private enum Policy{
+	public static enum Policy{
 		MAX_SPLIT, MIN_SPLIT
 	}
 	
@@ -120,6 +120,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
 			//HashMap<String, TransIdList> matrixM,
+			Policy policy,
 			double epsilon) {
 		
 		Reserveobj[] res = new Reserveobj[3];
@@ -138,7 +139,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		try{
 			Priority prio = Priority.BATTERY;
-			Policy policy = Policy.MAX_SPLIT;
 			//execution with p_ij=f_ij
 			res[0] = ABGAP(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, matrixM, epsilon, prio, policy);
 			
@@ -289,11 +289,19 @@ public class QoSCalculator implements QoSCalculatorIF {
 			double teta,
 			Priority prio,
 			Policy policy) throws IOException, UnsupportedEncodingException,FileNotFoundException{
+
 		
 		Reserveobj res = new Reserveobj();
 		
 		//Backup of the requests list List<transId, Request>
-		 List<Pair<String, Request>> requestsBck = cloneRequests(requests);
+		List<Pair<String, Request>> requestsBck = cloneRequests(requests);
+		
+		List<Pair<String, Request>> requestsBckLoc = new ArrayList<>();
+		if(prio != Priority.BATTERY){
+			//backup of the requests list List<transId, Request>
+			//for the local optimization
+			requestsBckLoc = cloneRequests(requests);
+		}
 		
 		//create Map<devId, <c_i, z_i>> from the eqThingInfo Map<DevId, Thing>
 		HashMap<String, ThingAssignmentParams> assignmentParamsMap = createAssignmentParamsMap(eqThingInfo);
@@ -311,13 +319,17 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		//List of devId that satisfy the constraints
 		List<String> Fjr;
-
+		
 		//temporary allocation object
 		//<transId, servName, List<DevId>>
 		AllocationObj allocationTemp = new AllocationObj();
 		
 		writer = new PrintWriter("/home/lorenzo/Desktop/GapResult"+prio.name()+".txt", "UTF-8");
 //		fileWriter = new FileWriter("/home/lorenzo/Desktop/GapResult"+prio.name()+".csv");
+		
+		logger.info("PRIORITY: "+prio.name());
+		logger.info("POLICY "+policy.name());
+		System.out.println();
 		
 		//index to identify the position of the ServiceObject 
 		//on which an assignment is executed
@@ -327,12 +339,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 		int i = 0;
 		
 		//iterate over the service requests as List<<transId, Request>>
-		while(res.feasible && !requests.isEmpty()){
+		while(res.feasible && !requestsBck.isEmpty()){
 			
 			ds = -1 * INF;
 
 			//iterate over the list of request identify by transId
-			for(Pair<String, Request> servRequest: requests){
+			for(Pair<String, Request> servRequest: requestsBck){
 				
 				//get the transaId that identify a request with multiple
 				//service requests
@@ -514,7 +526,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 									System.out.println();
 									logger.info("allocationObj<------------------------------");
 									logger.info("transId: "+allocationTemp.transId);
-									logger.info("serviceName: "+allocationTemp.serviceName);
+									logger.info("serviceName: "+allocationTemp.serviceName.toUpperCase());
 									logger.info("f_ij: "+allocationTemp.f_ij);
 									logger.info("u_ij: "+allocationTemp.u_ij);
 									logger.info("split: "+allocationTemp.split);
@@ -608,13 +620,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 				//remove service in the list of the request object
 				//request obj index is requestIndex, service index is serviceIndex
-				requests.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
+				requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
 				
-				if(requests.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
-					requests.remove(requestIndex);
+				if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
+					requestsBck.remove(requestIndex);
 				}
 				
-				allocationTemp.devIdList.clear();
+				allocationTemp = new AllocationObj();
+				
 				i=0;
 				j=0;
 			}
@@ -639,7 +652,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			writer.println("Local Optimization");
 			
 			//iterate over the list of request identify by transId
-			for(Pair<String, Request> servRequest : requestsBck){
+			for(Pair<String, Request> servRequest : requestsBckLoc){
 				
 				//get the transaId that identify a request with multiple
 				//service requests
@@ -663,7 +676,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					
 					System.out.println();
 					logger.info("ServiceRequest Name: "+ reqServiceName.toUpperCase() +
-							"inside request with TransId: "+transId);
+							" inside request with TransId: "+transId);
 					writer.println("ServiceRequest Name: "+ reqServiceName.toUpperCase());
 					
 					//get the list<DevId> for that reqServName
@@ -1731,7 +1744,16 @@ public class QoSCalculator implements QoSCalculatorIF {
 		for(Pair<String, Request> reqEntry: requests){
 			
 			String transId = reqEntry.getLeft();
-			Request req = reqEntry.getRight();
+			Request req = new Request();
+			
+			req.setOpType(reqEntry.getRight().getOpType());
+			req.setLocationRequirement(reqEntry.getRight().getLocationRequirement());
+			req.setQosRequirements(reqEntry.getRight().getQosRequirements());
+			
+			List<String> servList = new ArrayList<>(); 
+			servList.addAll(reqEntry.getRight().getRequiredServicesNameList());
+			
+			req.setRequiredServicesNameList(servList);
 			
 			reqListBck.add(new Pair<String, Request>(transId, req));
 		}

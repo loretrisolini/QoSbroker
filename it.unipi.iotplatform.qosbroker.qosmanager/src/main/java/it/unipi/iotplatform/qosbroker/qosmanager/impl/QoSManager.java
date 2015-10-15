@@ -12,6 +12,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
+import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator.Policy;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 
 import java.io.FileInputStream;
@@ -225,7 +226,7 @@ public class QoSManager implements QoSManagerIF {
 		
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-																		eqThingInfo, servNameThingsIdList/*, matrixM,*/, 0.001);
+																		eqThingInfo, servNameThingsIdList, Policy.MAX_SPLIT, 0.001);
 		
 		List<ContextRegistration> allocationSchema = null;
 		if(result.isFeas()){

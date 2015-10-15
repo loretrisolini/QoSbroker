@@ -29,7 +29,7 @@ public class LocationScopeValue<T> extends DataStructure {
 
 	public void setLocationRequirement(T locationRequirement) {
 		
-		if(locationRequirement.getClass() != Point.class || locationRequirement.getClass() != Circle.class || 
+		if(locationRequirement.getClass() != Point.class && locationRequirement.getClass() != Circle.class &&
 				locationRequirement.getClass() != Polygon.class){
 			throw new RuntimeException("locationRequirements must be Point, Circle or Polygon");
 		}
