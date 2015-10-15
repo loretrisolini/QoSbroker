@@ -12,11 +12,12 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
-import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1076,74 +1077,93 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
+		FileWriter fileWriter = null;
+		
 		try{
-			PrintWriter writer = new PrintWriter("/home/lorenzo/Desktop/ThingsMappings.txt", "UTF-8");
-			writer.println("Request: ");
-			writer.println(Request.fromJaxbToJson(request, Request.class));
+			fileWriter = new FileWriter("/home/lorenzo/Desktop/Things.csv");
 			
-			writer.println();
-			writer.println();
-			writer.println("####################################");
-			writer.println("####################################");
-			writer.println("ThingsInfo Map<DevId, Thing>");
+			fileWriter.append("DevId,BatteryLevel,Coords");
+			fileWriter.append("\n");
+			
+			Map<String, HashMap<String, ServiceFeatures>> mapThingServices = new HashMap<>();
 			
 			for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
-				writer.println("DevId: "+entryThing.getKey());
-				
-				writer.println("batteryLevel:");
-				writer.println(entryThing.getValue().getBatteryLevel()==null ? "battLevel=null" 
+				fileWriter.append(entryThing.getKey());
+				fileWriter.append(",");
+
+				fileWriter.append(entryThing.getValue().getBatteryLevel()==null ? "null" 
 													: entryThing.getValue().getBatteryLevel().toString());
-				writer.println("coords:");
-				writer.println(entryThing.getValue().getCoords()==null ? "coords==null" 
-													: entryThing.getValue().getCoords().getLatitude()+","+
+				fileWriter.append(",");
+				fileWriter.append(entryThing.getValue().getCoords()==null ? "null" 
+													: entryThing.getValue().getCoords().getLatitude()+" "+
 													entryThing.getValue().getCoords().getLongitude());
+				fileWriter.append("\n");
+				mapThingServices.put(entryThing.getKey(), entryThing.getValue().getServicesList());
 				
-				writer.println("Services on Thing with devId "+entryThing.getKey()+": ");
-				HashMap<String, ServiceFeatures> services = entryThing.getValue().getServicesList();
-				for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
-					
-					writer.println("ServiceName: "+service.getKey());
-					
-					writer.println("ServiceFeatures:");
-					writer.println("latency: "+service.getValue().getLatency());
-					writer.println("energyCost: "+service.getValue().getEnergyCost());
-					writer.println("latency: "+service.getValue().getAccuracy()==null ? "accuracy==null"
-													: service.getValue().getAccuracy());
-					writer.println("##############<<<<<<>>>>>>>#################");
-					writer.println();
-				}
-				writer.println("<<--------------------------------->>");
-				writer.println("########################################");
-				writer.println();
-				writer.println();
 			}
-			writer.println("########################################");
 			
-			writer.println("########################################");
-			writer.println("########################################");
-			writer.println();
-			writer.println();
-			writer.println("Service Equivalent ThingsId Pairs");
+			fileWriter.append("\n");
+			
+			if(!mapThingServices.isEmpty()){
+			
+				fileWriter.append("DevId,ServiceName,Latency,EnergyCost,Accuracy");
+				fileWriter.append("\n");
+				
+				for(Map.Entry<String, HashMap<String, ServiceFeatures>> entry: mapThingServices.entrySet()){
+					
+					String devId = entry.getKey();
+					HashMap<String, ServiceFeatures> services = entry.getValue();
+					
+					for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
+						
+						fileWriter.append(devId);
+						fileWriter.append(",");
+						fileWriter.append(service.getKey());
+						fileWriter.append(",");
+						fileWriter.append(service.getValue().getLatency()==null ? "null"
+														: service.getValue().getLatency().toString());
+						fileWriter.append(",");
+						fileWriter.append(service.getValue().getEnergyCost()==null ? "null"
+														: service.getValue().getEnergyCost().toString());
+						fileWriter.append(",");
+						fileWriter.append(service.getValue().getAccuracy()==null ? "null"
+														: service.getValue().getAccuracy().toString());
+						fileWriter.append("\n");
+					}
+				}
+			}
+			
+			fileWriter.append("\n");
+			
+			fileWriter.append("requiredServiceName,devIdList");
+			fileWriter.append("\n");
 			
 			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
 				
-				writer.println("Required Service Name: "+entryEqThings.getKey());
-				writer.println("Equivalent Things Id list for "+entryEqThings.getKey()+": ");
+				fileWriter.append(entryEqThings.getKey());
+				fileWriter.append(",");
+
 				List<String> eqThings = entryEqThings.getValue().getEqThings();
 				for(String thingId: eqThings){
-					writer.println(thingId);
+					fileWriter.append(thingId);
+					fileWriter.append(",");
 				}
-				writer.println("<<--------------------------------->>");
-				writer.println();
+				fileWriter.append("\n");
 			}
-			writer.println();
-			writer.println();
-			writer.println("########################################");
-			writer.println("########################################");
-			writer.close();
+			
 		}
 		catch(Exception e){
+			System.out.println("Error in CsvFileWriter !!!");
 			e.printStackTrace();
+		}
+		finally{
+			try {
+				fileWriter.flush();
+				fileWriter.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+                e.printStackTrace();
+			}
 		}
 	}
 	
