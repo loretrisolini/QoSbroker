@@ -9,16 +9,13 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Statistics;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -891,7 +888,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return statusCode;
 		}
 			
-		printThingsMappings(request, thingsInfo, serviceEquivalentThings);
+		Statistics.printThingsMappings(request, thingsInfo, serviceEquivalentThings);
 		
 		//check the condition for the serviceAgreementRequest
 		//at least one thing for required service
@@ -1072,99 +1069,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		request.setEntityIdList(responseEntIdList);
 		
 		return request;
-	}
-	
-	private void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
-			HashMap<String, ThingsIdList> serviceEquivalentThings) {
-		
-		FileWriter fileWriter = null;
-		
-		try{
-			fileWriter = new FileWriter("/home/lorenzo/Desktop/Things.csv");
-			
-			fileWriter.append("DevId,BatteryLevel,Coords");
-			fileWriter.append("\n");
-			
-			Map<String, HashMap<String, ServiceFeatures>> mapThingServices = new HashMap<>();
-			
-			for(Map.Entry<String, Thing> entryThing: thingsInfo.entrySet()){
-				fileWriter.append(entryThing.getKey());
-				fileWriter.append(",");
-
-				fileWriter.append(entryThing.getValue().getBatteryLevel()==null ? "null" 
-													: entryThing.getValue().getBatteryLevel().toString());
-				fileWriter.append(",");
-				fileWriter.append(entryThing.getValue().getCoords()==null ? "null" 
-													: entryThing.getValue().getCoords().getLatitude()+" "+
-													entryThing.getValue().getCoords().getLongitude());
-				fileWriter.append("\n");
-				mapThingServices.put(entryThing.getKey(), entryThing.getValue().getServicesList());
-				
-			}
-			
-			fileWriter.append("\n");
-			
-			if(!mapThingServices.isEmpty()){
-			
-				fileWriter.append("DevId,ServiceName,Latency,EnergyCost,Accuracy");
-				fileWriter.append("\n");
-				
-				for(Map.Entry<String, HashMap<String, ServiceFeatures>> entry: mapThingServices.entrySet()){
-					
-					String devId = entry.getKey();
-					HashMap<String, ServiceFeatures> services = entry.getValue();
-					
-					for(Map.Entry<String, ServiceFeatures> service: services.entrySet()){
-						
-						fileWriter.append(devId);
-						fileWriter.append(",");
-						fileWriter.append(service.getKey());
-						fileWriter.append(",");
-						fileWriter.append(service.getValue().getLatency()==null ? "null"
-														: service.getValue().getLatency().toString());
-						fileWriter.append(",");
-						fileWriter.append(service.getValue().getEnergyCost()==null ? "null"
-														: service.getValue().getEnergyCost().toString());
-						fileWriter.append(",");
-						fileWriter.append(service.getValue().getAccuracy()==null ? "null"
-														: service.getValue().getAccuracy().toString());
-						fileWriter.append("\n");
-					}
-				}
-			}
-			
-			fileWriter.append("\n");
-			
-			fileWriter.append("requiredServiceName,devIdList");
-			fileWriter.append("\n");
-			
-			for(Map.Entry<String, ThingsIdList> entryEqThings: serviceEquivalentThings.entrySet()){
-				
-				fileWriter.append(entryEqThings.getKey());
-				fileWriter.append(",");
-
-				List<String> eqThings = entryEqThings.getValue().getEqThings();
-				for(String thingId: eqThings){
-					fileWriter.append(thingId);
-					fileWriter.append(",");
-				}
-				fileWriter.append("\n");
-			}
-			
-		}
-		catch(Exception e){
-			System.out.println("Error in CsvFileWriter !!!");
-			e.printStackTrace();
-		}
-		finally{
-			try {
-				fileWriter.flush();
-				fileWriter.close();
-			} catch (IOException e) {
-				System.out.println("Error while flushing/closing fileWriter !!!");
-                e.printStackTrace();
-			}
-		}
 	}
 	
 	public void setNgsi10Requester(Ngsi10Requester ngsi10Requester) {
