@@ -2,8 +2,8 @@
 4,MAX_SPLIT,0.001
 
 2:TransactionID, operationType, maxRespTime, maxRateRequest, accuracy, LocationRequirement, ServiceList
-ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15,4,null,Circle:43.656998;10.437418;1000.9,degrees,humidity,CO2
-ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,queryContext,7,6,null,Circle:43.656998;10.437418;100.9,humidity
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15,4,null,Circle:43.656998;10.437418;1000.9,degrees,humidity
+ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,queryContext,7,6,null,Circle:43.656998;10.437418;100.9,degrees,humidity
 
 3:TransactionID,h/p_j, p_j
 ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,3,4

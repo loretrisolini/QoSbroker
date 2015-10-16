@@ -19,7 +19,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -523,6 +522,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 									Pair<Double, Double> f_u_ij = computeF_U(devId_maxPriority, servPeriodsMap, transId, eqThingInfo, reqServiceName);
 									if(f_u_ij == null){
 										res.feasible = false;
+										operationStatus = "QoSCalculator -- GAP() f_u_ij null for service: "+reqServiceName;
+										
 										return res;
 									}
 									
@@ -773,8 +774,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 							Pair<Double, Double> f_u_ij = computeF_U(devId_star, servPeriodsMap, transId, eqThingInfo, reqServiceName);
 							if(f_u_ij == null){
 								res.feasible = false;
+								operationStatus = "QoSCalculator -- GAP() LocalOptimization f_u_ij null for service: "+reqServiceName;
+								
 								return res;
 							}
+							
 							Double newF_ij = f_u_ij.getLeft();
 							Double newU_ij = f_u_ij.getRight();
 							//add the new thing, with new f_ij, new u_ij
@@ -792,10 +796,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//TODO List<AllocationObj> -> List<tId_tsId>
 							res.allocationSchema.get(transId).put(reqServiceName, allocationTemp);
 							
+							
+							
 							Fjr.clear();
 							writer.println("<------------------------------------------->");
 							writer.println("<------------------------------------------->");
 						}
+						
+						maxResidualBattery = Double.NEGATIVE_INFINITY;
+						
 						writer.println("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 					}
 				}
@@ -1066,7 +1075,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
 			
 			if(f_u_ij == null){
-				continue;
+				throw new RuntimeException("QoSCalculator -- getArgMax() LocalOptimization f_u_ij null for service: "+reqServiceName);
 			}
 			
 			Double f_ij = f_u_ij.getLeft();
@@ -1444,7 +1453,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
 					
 					if(f_u_ij == null){
-						operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstraints";
+						operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null for service: "+reqServiceName;
 						
 						continue;
 					}
@@ -1529,7 +1538,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		HashMap<String, ServicePeriodParams> servPeriodsMap,
 		String transactionId, HashMap<String, Thing> eqThingInfo,
 		String reqServiceName) {
-	
+		
 		//get all the variables to compute
 		//f_ij and u_ij, checking that
 		//they were not null
