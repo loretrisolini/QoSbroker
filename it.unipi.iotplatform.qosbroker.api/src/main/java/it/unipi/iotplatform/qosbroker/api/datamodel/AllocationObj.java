@@ -60,7 +60,7 @@ public class AllocationObj{
 		print += "\nf_ij: "+ Arrays.deepToString(this.getF_ij()) + "\n";
 		print += "u_ij: "+ Arrays.deepToString(this.getU_ij()) + "\n";
 		print += "split: "+ this.getSplit() + "\n";
-		print += "Thing allocated until now: "+ Arrays.deepToString(this.getDevIdList()) + "\n";
+		print += "Things allocated: "+ Arrays.deepToString(this.getDevIdList()) + "\n";
 		
 		return print;
 	}

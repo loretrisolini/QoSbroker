@@ -318,7 +318,7 @@ public class Statistics {
 			
 			for(Map.Entry<String, HashMap<String, AllocationObj>> entry: allocationSchema.entrySet()){
 				writer.println("transId: "+entry.getKey());
-				writer.println("<---------------------------------------->");
+				writer.println("");
 				
 				HashMap<String, AllocationObj> services = entry.getValue();
 				
@@ -328,17 +328,9 @@ public class Statistics {
 					
 					writer.println(entryAllocation.toString());
 					
-					String[] devIdList = entryAllocation.getValue().getDevIdList();
-					
-					writer.println("Things allocated: ");
-					for(String devId: devIdList){
-						writer.println("thing: "+devId);
-						writer.println("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>");
-					}
-					writer.println("<ooooooooooooooooooooooooooooooooooo>");
 				}
-				writer.println("<---------------------------------------->");
-				writer.println("<---------------------------------------->");
+				writer.println("");
+				writer.println("");
 			}
 			
 			writer.println("########################################");

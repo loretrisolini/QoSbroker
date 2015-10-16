@@ -434,6 +434,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 														matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
 														split, ni, teta, null);
 								
+								writer.println("Fjr: "+Fjr);
 								logger.info("Fjr: "+Fjr);
 								
 								//there is no thing that satisfy the
@@ -469,6 +470,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 								//at the same time set maxPriority and secondMaxPriority
 								String devId_maxPriority = getArgMax(Fjr, eqThingInfo, prio, servPeriodsMap, 
 																reqServiceName, transId, split, null, true);
+								if(devId_maxPriority == null){
+									res.feasible = false;
+									
+									writer.println(operationStatus);
+									writer.close();
+									return res;
+								}
 								
 								System.out.println();
 								logger.info("devId with max priority: " + devId_maxPriority+"<----------------------------");
@@ -524,6 +532,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 										res.feasible = false;
 										operationStatus = "QoSCalculator -- GAP() f_u_ij null for service: "+reqServiceName;
 										
+										writer.println(operationStatus);
+										writer.close();
 										return res;
 									}
 									
@@ -545,11 +555,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 									System.out.println();
 									writer.println();
 									writer.println("##########################################################");
+									writer.println("##########################################################");
 									writer.println("allocationObj<----------------------------");
 									writer.println("transId: "+assignmentTransId);
 									writer.println("serviceName: "+assignmentServiceName.toUpperCase());
 									writer.println(allocationTemp.toString());
 									writer.println("new Thing allocated: "+devId_maxPriority);
+									writer.println("##########################################################");
 									writer.println("##########################################################");
 									
 									//store the index of the service for which
@@ -612,18 +624,20 @@ public class QoSCalculator implements QoSCalculatorIF {
 				logger.info(allocation.toString());
 				System.out.println();
 				writer.println();
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+
 				writer.println("alloction of service request with transId="+assignmentTransId+
 								"\nand servName="+assignmentServiceName.toUpperCase()+"<----------------------------");
 				writer.println(allocation.toString());
 
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
-				writer.println("<<---------------------------------------------------->>");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+				writer.println("##########################################################");
+
 				writer.println();
 				
 				//update assignments params c_i+(u_ij/s_p), z_i-(f_ij/s_p)
@@ -731,6 +745,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 						String devId_star = getArgMax(Fjr, eqThingInfo, prio, servPeriodsMap, 
 												reqServiceName, transId, split, assignmentParamsMap, false);
+						if(devId_star == null){
+							res.feasible = false;
+							
+							writer.println(operationStatus);
+							writer.close();
+							return res;
+						}
 						
 						logger.info("thingId* with max residual battery="+devId_star);
 						writer.println("thingId* with max residual battery="+devId_star);
@@ -750,8 +771,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 						//there is a change in the allocation
 						if(maxResidualBattery > residualBatt_substitution){
 							
-							writer.println("<------------------------------------------->");
-							writer.println("<------------------------------------------->");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
 							System.out.println();
 							logger.info("remove allocation of service "+reqServiceName);
 							logger.info("to devId "+devId_substitution);
@@ -759,6 +781,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 							writer.println("remove allocation of service "+reqServiceName);
 							writer.println("to devId "+devId_substitution);
 							writer.println("and assigned to "+devId_star);
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+
 							
 							//update the value of the thing substituted
 							//c_i-(u_ij/split) and z_i+(f_ij/split)
@@ -776,6 +802,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 								res.feasible = false;
 								operationStatus = "QoSCalculator -- GAP() LocalOptimization f_u_ij null for service: "+reqServiceName;
 								
+								writer.println(operationStatus);
+								writer.close();
 								return res;
 							}
 							
@@ -799,16 +827,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 							
 							
 							Fjr.clear();
-							writer.println("<------------------------------------------->");
-							writer.println("<------------------------------------------->");
 						}
 						
 						maxResidualBattery = Double.NEGATIVE_INFINITY;
 						
-						writer.println("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 					}
 				}
-				writer.println("<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 			}
 			writer.println("##########################################################");
 			writer.println("##########################################################");
@@ -1075,7 +1099,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
 			
 			if(f_u_ij == null){
-				throw new RuntimeException("QoSCalculator -- getArgMax() LocalOptimization f_u_ij null for service: "+reqServiceName);
+				operationStatus = "QoSCalculator -- getArgMax() f_u_ij null for service: "+reqServiceName;
+				return null;
 			}
 			
 			Double f_ij = f_u_ij.getLeft();
@@ -1428,8 +1453,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 		List<String> Fjr = new ArrayList<>();
 		
 		writer.println();
-		writer.println("<<<<<<<<<<>>>>>>>>>>>>");
-		writer.println("<<<<<<<<<<>>>>>>>>>>>>");
+		writer.println("##########################################################");
+		writer.println("##########################################################");
+		writer.println("##########################################################");
+
 		writer.println("CHECK CONSTRAINTS FOR SERVICE "+ reqServiceName+"<---------------------------");
 		System.out.println();
 		logger.info("CHECK CONSTRAINTS FOR SERVICE "+ reqServiceName.toUpperCase() +"<---------------------------");
@@ -1517,7 +1544,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 						Fjr.add(devId);
 					}
 					System.out.println();
-					writer.println("<------------------------------------->");
+					writer.println("");
+					writer.println("");
 				}
 			}
 		}
@@ -1526,8 +1554,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		System.out.println();
 		System.out.println();
-		writer.println("<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>");
-		writer.println("<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>");
+		writer.println("##########################################################");
+		writer.println("##########################################################");
+		writer.println("##########################################################");
+
 
 		return Fjr;
 	}
