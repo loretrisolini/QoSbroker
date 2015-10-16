@@ -326,11 +326,9 @@ public class Statistics {
 				for(Map.Entry<String, AllocationObj> entryAllocation: services.entrySet()){
 					writer.println("service Name: "+entryAllocation.getKey());
 					
-					writer.println("split: "+entryAllocation.getValue().getSplit());
-					writer.println("f_ij: "+entryAllocation.getValue().getF_ij());
-					writer.println("u_ij: "+entryAllocation.getValue().getU_ij());
+					writer.println(entryAllocation.toString());
 					
-					List<String> devIdList = entryAllocation.getValue().getDevIdList();
+					String[] devIdList = entryAllocation.getValue().getDevIdList();
 					
 					writer.println("Things allocated: ");
 					for(String devId: devIdList){

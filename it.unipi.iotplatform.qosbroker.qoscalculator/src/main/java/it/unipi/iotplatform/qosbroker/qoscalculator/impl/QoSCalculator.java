@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,12 +83,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 	private String assignmentServiceName;
 	
 	private Double maxPriority = 0.0;
+	private Double maxResidualBattery = 0.0;
 	private Double secondMaxPriority = 0.0;
 	private String operationStatus = new String("");
 	
 	//temporary allocation object
 	//<transId, servName, List<DevId>>
-	private AllocationObj allocationTemp = new AllocationObj();
+	private AllocationObj allocationTemp;
 	private PrintWriter writer;
 	
 	/**
@@ -278,6 +280,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 		
 		Reserveobj res = new Reserveobj();
+		allocationTemp = new AllocationObj(1);
 		
 		//Backup of the requests list List<transId, Request>
 		List<Pair<String, Request>> requestsBck = cloneRequests(requests);
@@ -299,7 +302,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		res.feasible = true;
 		
-		double ds, d;
+		double ds, d, dsMulti = Double.NEGATIVE_INFINITY;
 		
 		double INF = Double.POSITIVE_INFINITY;
 		
@@ -316,8 +319,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//on which an assignment is executed
 		int requestIndex = 0;
 		int serviceIndex = 0;
-		int j = 0;
-		int i = 0;
+//		int j = 0;
+//		int i = 0;
 		
 		//iterate over the service requests as List<<transId, Request>>
 		while(res.feasible && !requestsBck.isEmpty()){
@@ -325,7 +328,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 			ds = -1 * INF;
 
 			//iterate over the list of request identify by transId
-			for(Pair<String, Request> servRequest: requestsBck){
+			for(int req=0; req<requestsBck.size() && res.feasible; req++){
+				
+				Pair<String, Request> servRequest = requestsBck.get(req);
+				
+//				j=0;
 				
 				//get the transaId that identify a request with multiple
 				//service requests
@@ -352,7 +359,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				//iterate over the List of required services in the request
 				//identified by transId
-				for(String reqServiceName: reqServicesList){
+				for(int s=0; s<reqServicesList.size() && res.feasible ; s++){
+					
+					String reqServiceName = reqServicesList.get(s);
 					
 					//get the list<DevId> for that reqServName
 					//this list represents the list of equivalent things
@@ -372,19 +381,18 @@ public class QoSCalculator implements QoSCalculatorIF {
 					
 					//var that a trial to assign one service
 					//to only one thing has been done
-					Boolean oneServiceToOneThingTrial = true;
+//					Boolean oneServiceToOneThingTrial = true;
 //					int splitIndex = 0;
 					
 					//iterate over the list of split factors
 					//of a service on multiple things
-					while(/*!res.feasible ||*/ !Sj.isEmpty()){
-						
+					while(Sj.contains(1) || (!res.feasible && !Sj.isEmpty())){
+
 						Integer split = null;
 						Integer splitBck = null;
 						//split says to how many things assign the service
-						if(oneServiceToOneThingTrial){ 
+						if(Sj.contains(1)){ 
 							split = Sj.get(0);
-							oneServiceToOneThingTrial = false;
 						}
 						else{
 							splitBck = split;
@@ -406,11 +414,17 @@ public class QoSCalculator implements QoSCalculatorIF {
 						//assignment to multiple things
 						int R = split;
 						
+						
+						res.feasible = true;
 						//iterate over the R that indicates the number
 						//of suballocation for the service servId
 						while(res.feasible && R!=0){
 							
-							ds = -1 * INF;
+							if(split > 1){ 
+								//if there is a multi-assignment
+								//i use another d star
+								dsMulti = -1 * INF;
+							}
 							
 							for(int r = 0; r<R; r++){
 	
@@ -418,31 +432,35 @@ public class QoSCalculator implements QoSCalculatorIF {
 								//the constraints about
 								//utilization and residual battery
 								Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
-														matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, split, ni, teta, null);
+														matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
+														split, ni, teta, null);
+								
+								logger.info("Fjr: "+Fjr);
 								
 								//there is no thing that satisfy the
 								//requirements
-								if(Fjr.isEmpty()){
+								if(Fjr.size() < split){
 									
 									System.out.println();
-									logger.info("Fjr is empty<----------------------------");
+									logger.info("Fjr size: "+Fjr.size()+" < of the split: "+split+"<----------------------------");
 									logger.info("ServiceRequest Name: "+reqServiceName.toUpperCase()+
-											" inside request with TransId: "+transId+" NO THING FOUND<-------------------");
+											" inside request with TransId: "+transId
+											+" NO THING FOUND OR THINGS NUMBER < SPLIT<---------------------------");
 									System.out.println();
 									
-									writer.println("Fjr is empty<----------------------------");
-									writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase() +
-											" inside request with TransId: "+transId+" NO THING FOUND<-------------------");
+									writer.println("Fjr size: "+Fjr.size()+" < of the split: "+split+"<----------------------------");
+									writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase()+
+											" inside request with TransId: "+transId
+											+" NO THING FOUND OR THINGS NUMBER < SPLIT<---------------------------");
 									
 									operationStatus = "QoSCalculator -- GAP() ServiceRequest Name: "+reqServiceName+
-											" inside request with TransId: "+transId+" NO THING FOUND, split factor: "+String.valueOf(split);
+											" inside request with TransId: "+transId+" NO THING FOUND OR THINGS NUMBER < SPLIT, split factor: "+String.valueOf(split);
 									
-									if(policy == Policy.MAX_SPLIT)
-										res.feasible = false;
+									res.feasible = false;
 									break;
 								}
 								
-								if(Fjr.size() == R){
+								if(split >1 && Fjr.size() == R){
 									
 									//TODO direct allocation of service reqServName
 									
@@ -450,8 +468,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 								
 								//get the devId of the Thing that have max priority
 								//at the same time set maxPriority and secondMaxPriority
-								String devId_maxPriority = getArgMaxPriority(Fjr, eqThingInfo, prio, servPeriodsMap, 
-																reqServiceName, transId, split);
+								String devId_maxPriority = getArgMax(Fjr, eqThingInfo, prio, servPeriodsMap, 
+																reqServiceName, transId, split, null, true);
 								
 								System.out.println();
 								logger.info("devId with max priority: " + devId_maxPriority+"<----------------------------");
@@ -474,18 +492,30 @@ public class QoSCalculator implements QoSCalculatorIF {
 									writer.println();
 								}
 								
-								if(d > ds){
+								if(split == 1 && d > ds || split > 1 && d > dsMulti){
+									
+									logger.info("split == 1 && d > ds: "+ (split == 1 && d > ds));
+									logger.info("split > 1 && d > dsMulti: "+ (split > 1 && d > dsMulti));
+									
+									dsMulti = d;
 									ds = d;
+									
+									//clear allocation object devIdList, F_ij, U_ij if the transId or the service is changed
+									if(assignmentTransId!=null && !assignmentTransId.contentEquals(transId) || 
+											assignmentServiceName!=null && !assignmentServiceName.contentEquals(reqServiceName)){
+										allocationTemp = new AllocationObj(split);
+
+									}
+
+									//allocate a new AllocationObj if change the split factor
+									if(split > 1 && allocationTemp.getSplit() != split){
+
+										allocationTemp = new AllocationObj(split);
+									}
 									
 									//allocation of the service given by transId, reqServName 
 									//to a thing with a thingService thingId, thingServiceId
 									assignmentTransId = transId;
-									
-									//clear allocation object devIdList if the service is changed
-									if(assignmentServiceName!=null && 
-											!assignmentServiceName.contentEquals(reqServiceName)){
-										allocationTemp.getDevIdList().clear();
-									}
 									
 									assignmentServiceName = reqServiceName;
 									
@@ -496,22 +526,20 @@ public class QoSCalculator implements QoSCalculatorIF {
 										return res;
 									}
 									
-									allocationTemp.setF_ij(f_u_ij.getLeft());
-									allocationTemp.setU_ij(f_u_ij.getRight());
+									allocationTemp.getF_ij()[split-R] = f_u_ij.getLeft();
+									allocationTemp.getU_ij()[split-R] = f_u_ij.getRight();
 									allocationTemp.setSplit(split);
 									
 									//add the devId
-									allocationTemp.getDevIdList().add(devId_maxPriority);
+									allocationTemp.getDevIdList()[split-R] = devId_maxPriority;
 									
 									System.out.println();
 									System.out.println();
 									logger.info("allocationObj<------------------------------");
 									logger.info("transId: "+assignmentTransId);
 									logger.info("serviceName: "+assignmentServiceName.toUpperCase());
-									logger.info("f_ij: "+allocationTemp.getF_ij());
-									logger.info("u_ij: "+allocationTemp.getU_ij());
-									logger.info("split: "+allocationTemp.getSplit());
-									logger.info("devId with max priority, allocated: "+devId_maxPriority);
+									logger.info(allocationTemp.toString());
+									logger.info("new Thing allocated: "+devId_maxPriority);
 									System.out.println();
 									System.out.println();
 									writer.println();
@@ -519,16 +547,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 									writer.println("allocationObj<----------------------------");
 									writer.println("transId: "+assignmentTransId);
 									writer.println("serviceName: "+assignmentServiceName.toUpperCase());
-									writer.println("f_ij: "+allocationTemp.getF_ij());
-									writer.println("u_ij: "+allocationTemp.getU_ij());
-									writer.println("split: "+allocationTemp.getSplit());
-									writer.println("devId with max priority, allocated: "+devId_maxPriority);
+									writer.println(allocationTemp.toString());
+									writer.println("new Thing allocated: "+devId_maxPriority);
 									writer.println("##########################################################");
 									
 									//store the index of the service for which
 									//a list of things has been assigned
-									requestIndex = i;
-									serviceIndex = j;
+									requestIndex = req;
+									serviceIndex = s;
 								}
 								
 								Fjr.clear();
@@ -540,29 +566,27 @@ public class QoSCalculator implements QoSCalculatorIF {
 						}
 						//if a feasible allocation is found
 						//stop the cicle here
-						if(res.feasible) break;
-						
-						allocationTemp.getDevIdList().clear();
+//						if(res.feasible) break;
 						
 						//remove a split factor from the list
 						Sj.remove(split);
 					}
 					
-					if(!res.feasible) break;
+//					if(!res.feasible) break;
 					
 					//index of the Service taken in consideration
-					j++;
+//					j++;
 				}
 				
-				if(!res.feasible) break;
+//				if(!res.feasible) break;
 				
 				//index of the Request with multiple services
-				i++;
+//				i++;
 			}
 				
 			if(res.feasible){
 				
-				AllocationObj allocation = new AllocationObj();
+				AllocationObj allocation = new AllocationObj(allocationTemp.getSplit());
 				
 				//update the allocationSchema with the new allocation for the service servId
 				//Map<transId, Map<servId, List<tId_tsId>>
@@ -570,37 +594,31 @@ public class QoSCalculator implements QoSCalculatorIF {
 					res.allocationSchema.put(assignmentTransId, new HashMap<String, AllocationObj>());
 				}
 				
-				allocation.setF_ij(new Double(allocationTemp.getF_ij()));
-				allocation.setU_ij(new Double(allocationTemp.getU_ij()));
 				allocation.setSplit(new Integer(allocationTemp.getSplit()));
 				
-				List<String> devIdList = allocationTemp.getDevIdList();
-				for(String devId : devIdList){
-					allocation.getDevIdList().add(new String(devId));
+				String[] devIdList = allocationTemp.getDevIdList();
+				for(int i=0; i<devIdList.length; i++){
+					allocation.getDevIdList()[i] = new String(devIdList[i]);
+					allocation.getF_ij()[i] = new Double(allocationTemp.getF_ij()[i]);
+					allocation.getU_ij()[i] = new Double(allocationTemp.getU_ij()[i]);
 				}
 				
 				res.allocationSchema.get(assignmentTransId).put(assignmentServiceName, allocation);
 				
 				System.out.println();
-				logger.info("alloction of service request with transId="+assignmentTransId+
-								"and servName="+assignmentServiceName.toUpperCase()+"<----------------------------");
-				logger.info("allocated with a split factor "+String.valueOf(allocation.getSplit()));
-				logger.info("allocated with a f_ij "+allocation.getF_ij());
-				logger.info("allocated with a u_ij "+allocation.getU_ij());
-				logger.info("devIdList: ");
+				logger.info("alloction of service request with transId="+assignmentTransId);
+				logger.info("and servName="+assignmentServiceName.toUpperCase()+"<----------------------------");
+				logger.info(allocation.toString());
+				System.out.println();
 				writer.println();
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("alloction of service request with transId="+assignmentTransId+
-								"and servName="+assignmentServiceName.toUpperCase()+"<----------------------------");
-				writer.println("allocated with a split factor "+String.valueOf(allocation.getSplit()));
-				writer.println("allocated with a f_ij "+allocation.getF_ij());
-				writer.println("allocated with a f_ij "+allocation.getU_ij());
-				writer.println("devId allocated to the service "+assignmentServiceName+": ");
-				for(String devId: devIdList){ writer.println(devId+", "); logger.info(devId+", ");}
-				System.out.println();
+								"\nand servName="+assignmentServiceName.toUpperCase()+"<----------------------------");
+				writer.println(allocation.toString());
+
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("<<---------------------------------------------------->>");
 				writer.println("<<---------------------------------------------------->>");
@@ -608,11 +626,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 				writer.println();
 				
 				//update assignments params c_i+(u_ij/s_p), z_i-(f_ij/s_p)
-				Double f_ij = allocation.getF_ij();
-				Double u_ij = allocation.getU_ij();
 				int split = allocation.getSplit();
-				updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, devIdList, 1);
-
+				for(int u=0; u<devIdList.length; u++){
+					updateAssignmentsParams(assignmentParamsMap, allocation.getF_ij()[u], allocation.getU_ij()[u], 
+							split, devIdList[u], 1);
+				}
+				writer.println("<--------------------------->");
+				writer.println("<--------------------------->");
+				writer.println();
+				
 				//remove service in the list of the request object
 				//request obj index is requestIndex, service index is serviceIndex
 				requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
@@ -621,8 +643,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 					requestsBck.remove(requestIndex);
 				}
 				
-				i=0;
-				j=0;
+				allocationTemp = new AllocationObj(1);
+//				i=0;
+//				j=0;
 			}
 			else{
 				writer.println();
@@ -688,7 +711,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					
 					for(int s = 0; s<split; s++){
 					
-						String devId_substitution = allocationTemp.getDevIdList().get(s);
+						String devId_substitution = allocationTemp.getDevIdList()[s];
 						
 						System.out.println();
 						logger.info("try to substitute the thing with id= "+devId_substitution);
@@ -696,18 +719,23 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 						//check the constraints excluding the thing with id thingId_sub
 						Fjr = checkConstraints(assignmentParamsMap, eqThingInfo, eqThings, servPeriodsMap, 
-								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, split, ni, teta, devId_substitution);
+								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
+								split, ni, teta, devId_substitution);
+						
+						logger.info("Fjr: "+Fjr);
 						
 						if(Fjr.isEmpty()) continue;
 						
 						//get the id (from Fjr) of the thing with max residualBattery
-						String devId_star = getArgMaxResidualBattery(assignmentParamsMap, Fjr);
+						
+						String devId_star = getArgMax(Fjr, eqThingInfo, prio, servPeriodsMap, 
+												reqServiceName, transId, split, assignmentParamsMap, false);
 						
 						logger.info("thingId* with max residual battery="+devId_star);
 						writer.println("thingId* with max residual battery="+devId_star);
 						
-						//get the max residual battery value
-						Double maxResidualBattery = assignmentParamsMap.get(devId_star).getResidualBattery();
+//						//get the max residual battery value
+//						Double maxResidualBattery = assignmentParamsMap.get(devId_star).getResidualBattery();
 						logger.info("max residual battery value="+String.valueOf(maxResidualBattery));
 						writer.println("max residual battery value="+String.valueOf(maxResidualBattery));
 						
@@ -736,26 +764,29 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//using -split
 							logger.info("c_i-(u_ij/split) and z_i+(f_ij/split) devId_substitution "+devId_substitution);
 							writer.println("c_i-(u_ij/split) and z_i+(f_ij/split) devId_substitution "+devId_substitution);
-							Double f_ij = allocationTemp.getF_ij();
-							Double u_ij = allocationTemp.getU_ij();
+							Double oldF_ij = allocationTemp.getF_ij()[s];
+							Double oldU_ij = allocationTemp.getU_ij()[s];
 							split = allocationTemp.getSplit();
-							List<String> devIdList = new ArrayList<>();
-							devIdList.add(devId_substitution);
-							updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, devIdList, -1);
-
-							//add the new thing
-							allocationTemp.getDevIdList().add(devId_star);
+							updateAssignmentsParams(assignmentParamsMap, oldF_ij, oldU_ij, split, devId_substitution, -1);
 							
-							//remove the old thing substituted
-							allocationTemp.getDevIdList().remove(devId_substitution);
-
+							//compute pair f_ij, u_ij
+							Pair<Double, Double> f_u_ij = computeF_U(devId_star, servPeriodsMap, transId, eqThingInfo, reqServiceName);
+							if(f_u_ij == null){
+								res.feasible = false;
+								return res;
+							}
+							Double newF_ij = f_u_ij.getLeft();
+							Double newU_ij = f_u_ij.getRight();
+							//add the new thing, with new f_ij, new u_ij
+							allocationTemp.getDevIdList()[s] = devId_star;
+							allocationTemp.getF_ij()[s] = newF_ij;
+							allocationTemp.getU_ij()[s] = newU_ij;
+							
 							logger.info("c_i+(u_ij/split) and z_i-(f_ij/split) devId_star "+devId_star);
 							writer.println("c_i+(u_ij/split) and z_i-(f_ij/split) devId_star "+devId_star);
 							//update the value of the new thing allocated
 							//c_i+(u_ij/split) and z_i-(f_ij/split)
-							devIdList.clear();
-							devIdList.add(devId_star);
-							updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, devIdList, 1);
+							updateAssignmentsParams(assignmentParamsMap, f_u_ij.getLeft(), f_u_ij.getRight(), split, devId_star, 1);
 							
 							//update the allocation in reservation object
 							//TODO List<AllocationObj> -> List<tId_tsId>
@@ -791,7 +822,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	private void updateAssignmentsParams(
 			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
 			Double f_ij, Double u_ij, int split, 	
-			List<String> devIdList, int i) {
+			String devId, int i) {
 		
 		writer.println();
 		writer.println("<--------------------------->");
@@ -801,26 +832,28 @@ public class QoSCalculator implements QoSCalculatorIF {
 		logger.info("update <c_i, z_i>");
 		
 //		if(_devId == null){
-		for(String devId: devIdList){
+//		for(String devId: devIdList){
 			
-			writer.println();
-			writer.println("devId: "+devId);
-			logger.info("devId: "+devId);
-			
-			Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
-			assignmentParamsMap.get(devId).setTotalUtilization(c_i + i*(u_ij/split));
-			
-			Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
-			assignmentParamsMap.get(devId).setResidualBattery(z_i - i*(f_ij/split));
-			
-			logger.info("update c_i: "+(c_i + i*(u_ij/split)));
-			logger.info("update z_i: "+(z_i - i*(f_ij/split)));
-			logger.info("split: "+split);
-			System.out.println();
-			writer.println("update c_i: "+(c_i + i*(u_ij/split)));
-			writer.println("update z_i: "+(z_i - i*(f_ij/split)));
-			writer.println("split: "+split);
-		}
+		writer.println();
+		writer.println("devId: "+devId);
+		logger.info("devId: "+devId);
+		
+		Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
+		assignmentParamsMap.get(devId).setTotalUtilization(c_i + i*(u_ij/split));
+		
+		Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
+		assignmentParamsMap.get(devId).setResidualBattery(z_i - i*(f_ij/split));
+		
+		logger.info("c_i: "+(c_i));
+		logger.info("z_i: "+(z_i));
+		logger.info("update c_i: "+(c_i + i*(u_ij/split)));
+		logger.info("update z_i: "+(z_i - i*(f_ij/split)));
+		logger.info("split: "+split);
+		System.out.println();
+		writer.println("update c_i: "+(c_i + i*(u_ij/split)));
+		writer.println("update z_i: "+(z_i - i*(f_ij/split)));
+		writer.println("split: "+split);
+//		}
 //		}
 //		else{
 //			writer.println();
@@ -841,10 +874,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 //			writer.println("update z_i: "+(z_i - i*(f_ij/split)));
 //			writer.println("split: "+split);
 //		}
-		
-		writer.println("<--------------------------->");
-		writer.println("<--------------------------->");
-		writer.println();
+
 	}
 
 
@@ -1019,14 +1049,16 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 	
 	/* function to get the max priority */
-	private String getArgMaxPriority(List<String> Fjr,
+	private String getArgMax(List<String> Fjr,
 			HashMap<String, Thing> eqThingInfo, Priority prio,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
-			String reqServiceName, String transactionId, int split) {
+			String reqServiceName, String transactionId, int split,
+			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
+			boolean getArgMaxPrio) {
 		
 		maxPriority = -1 * Double.POSITIVE_INFINITY;
 		
-		String devId_MaxPriority = null; 
+		String devId_argMax = null; 
 		
 		for(String devId: Fjr){
 			
@@ -1040,34 +1072,45 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Double f_ij = f_u_ij.getLeft();
 			Double u_ij = f_u_ij.getRight();
 			
-			Double p_ij = null;
-			
-			if(prio == Priority.BATTERY){
-				p_ij = f_ij;
-			}
-			else{
-				if(prio == Priority.UTILIZATION){
-					p_ij = u_ij;
+			if(getArgMaxPrio){
+				Double p_ij = null;
+				
+				if(prio == Priority.BATTERY){
+					p_ij = f_ij;
 				}
 				else{
-					p_ij = Math.random();
+					if(prio == Priority.UTILIZATION){
+						p_ij = u_ij;
+					}
+					else{
+						p_ij = Math.random();
+					}
+				}
+				
+				if(p_ij > maxPriority){
+	
+					secondMaxPriority = maxPriority;
+					
+					maxPriority = p_ij;
+					
+					devId_argMax = devId;
+				}
+				else{
+					secondMaxPriority = p_ij;
 				}
 			}
-			
-			if(p_ij > maxPriority){
-
-				secondMaxPriority = maxPriority;
-				
-				maxPriority = p_ij;
-				
-				devId_MaxPriority = devId;
-			}
 			else{
-				secondMaxPriority = p_ij;
+				
+				Double residualBattery = assignmentParamsMap.get(devId).getResidualBattery() - f_ij;
+				if(residualBattery > maxResidualBattery){
+					maxResidualBattery = residualBattery;
+					
+					devId_argMax = devId;
+				}
 			}
 		}
 
-		return devId_MaxPriority;
+		return devId_argMax;
 	}
 
 
@@ -1129,7 +1172,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				List<ContextMetadata> contMetadataAttrList = new ArrayList<>();
 				
-				List<String> allocationDevIdList = entryAllocation.getValue().getDevIdList();
+				String[] allocationDevIdList = entryAllocation.getValue().getDevIdList();
 				
 				for(String devId: allocationDevIdList){
 					
@@ -1158,26 +1201,26 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 
 	
-	/* function to get the thingId to which is associated the max residualBatteryLevel */
-	private String getArgMaxResidualBattery(
-			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
-			List<String> Fjr) {
-		
-		String devId_maxResidualBattery = null;
-		Double maxResidualBattery = Double.NEGATIVE_INFINITY;
-		
-		for(String devId: Fjr){
-			
-			Double residualBattery = assignmentParamsMap.get(devId).getResidualBattery();
-			if(residualBattery > maxResidualBattery){
-				maxResidualBattery = residualBattery;
-				
-				devId_maxResidualBattery = devId;
-			}
-		}
-		
-		return devId_maxResidualBattery;
-	}
+//	/* function to get the thingId to which is associated the max residualBatteryLevel */
+//	private String getArgMaxResidualBattery(
+//			HashMap<String, ThingAssignmentParams> assignmentParamsMap,
+//			List<String> Fjr) {
+//		
+//		String devId_maxResidualBattery = null;
+//		Double maxResidualBattery = Double.NEGATIVE_INFINITY;
+//		
+//		for(String devId: Fjr){
+//
+//			Double residualBattery = assignmentParamsMap.get(devId).getResidualBattery();
+//			if(residualBattery > maxResidualBattery){
+//				maxResidualBattery = residualBattery;
+//				
+//				devId_maxResidualBattery = devId;
+//			}
+//		}
+//		
+//		return devId_maxResidualBattery;
+//	}
 
 //	/* function to update c_i and z_i, given Map<thingId, <c_i, z_i>>,
 //	 * Map<thingId, <thingServiceId, f_ij, u_ij, p[]>>,
@@ -1401,7 +1444,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					Pair<Double, Double> f_u_ij = computeF_U(devId, servPeriodsMap, transactionId, eqThingInfo, reqServiceName);
 					
 					if(f_u_ij == null){
-						operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstarints";
+						operationStatus = "QoSCalculator -- checkConstraints() f_u_ij null in checkConstraints";
 						
 						continue;
 					}
@@ -1409,6 +1452,25 @@ public class QoSCalculator implements QoSCalculatorIF {
 					Double f_ij = f_u_ij.getLeft();
 					Double u_ij = f_u_ij.getRight();
 					
+					//this operation is not done in case
+					//of LOCAL OPTIMIZATION
+					if(devIdExcluded==null){
+						//case in which assign the service
+						//multiple times to the same thing
+						//so i multiple f_ij,u_ij for the iteration
+						//of the assignment procedure
+						int count = 1;
+						for(int d =0; d<allocationTemp.getDevIdList().length; d++){
+							if(allocationTemp.getDevIdList()[d]!=null && 
+									allocationTemp.getDevIdList()[d].contentEquals(devId)){
+								count++;
+							}
+						}
+						logger.info("service: "+reqServiceName+" assigned to the thing: "+devId+" "+(count-1)+" times");
+						f_ij*=count;
+						u_ij*=count;
+					}
+						
 					writer.println("f_ij: "+f_ij);
 					writer.println("u_ij: "+u_ij);
 					logger.info("f_ij: "+f_ij);
@@ -1501,6 +1563,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 		else{
 			return null;
 		}
+		
+//		logger.info("c_ij/b_i: "+(enCost/battery));
+//		logger.info("h/p_j: "+coeff);
 		
 		//compute f_ij and u_ij
 		Double f_ij = coeff * enCost/battery;
