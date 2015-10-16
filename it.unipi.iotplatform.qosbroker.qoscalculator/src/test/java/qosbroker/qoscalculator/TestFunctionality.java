@@ -50,12 +50,21 @@ public class TestFunctionality {
 		//initialize logger
 		private static Logger logger = Logger.getLogger("Unit Tests");
 		
+		private final static int SINGLE_PARAMS = 1;
+		private final static int REQUESTS = 2;
+		private final static int PERIODS_PARAMS = 3;
+		private final static int THINGS = 4;
+		private final static int SERVICES = 5;
+		private final static int SERVICE_EQTHINGS = 6;
+		
 		@Before
 		public void before(){
 			
 			qosCalculator = new QoSCalculator();
 			
-			String csvFile = "/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/inputQoSCalculatorTest.csv";
+			String csvFile = "/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/"
+					+ "it.unipi.iotplatform.qosbroker.qoscalculator"
+					+ "/src/test/resources/inputQoSCalculatorTest.csv";
 			
 			readParams(csvFile);
 		}
@@ -79,8 +88,6 @@ public class TestFunctionality {
 			BufferedReader br = null;
 			String line = "";
 			String cvsSplitBy = ",";
-
-
 			
 			try {
 				String[] header;
@@ -91,11 +98,14 @@ public class TestFunctionality {
 
 					header = line.split(cvsSplitBy);
 					
+					String[] lineKey = null;
 					if(line.trim().isEmpty()) continue;
+					else
+						lineKey = header[0].split(":");
 					
-					switch(Integer.valueOf(header[0])){
+					switch(Integer.valueOf(lineKey[0])){
 					
-						case 1:{
+						case SINGLE_PARAMS:{
 							line = br.readLine();
 							
 							values = line.split(cvsSplitBy);
@@ -109,7 +119,7 @@ public class TestFunctionality {
 							break;
 						}
 					
-						case 2:{
+						case REQUESTS:{
 							
 							while (!(line = br.readLine()).trim().isEmpty()){
 								values = line.split(cvsSplitBy);
@@ -197,7 +207,7 @@ public class TestFunctionality {
 							break;
 						}
 						
-						case 3:{
+						case PERIODS_PARAMS:{
 							while (!(line = br.readLine()).trim().isEmpty()){
 								values = line.split(cvsSplitBy);
 								
@@ -214,7 +224,7 @@ public class TestFunctionality {
 							break;
 						}
 						
-						case 4:{
+						case THINGS:{
 							while (!(line = br.readLine()).trim().isEmpty()){
 								values = line.split(cvsSplitBy);
 								
@@ -237,7 +247,7 @@ public class TestFunctionality {
 							break;
 						}
 						
-						case 5:{
+						case SERVICES:{
 							
 							String devId=null;
 							HashMap<String, ServiceFeatures> services = new HashMap<>();
@@ -263,7 +273,7 @@ public class TestFunctionality {
 							break;
 						}
 						
-						case 6:{
+						case SERVICE_EQTHINGS:{
 							
 							while ((line = br.readLine()) != null){
 								values = line.split(cvsSplitBy);

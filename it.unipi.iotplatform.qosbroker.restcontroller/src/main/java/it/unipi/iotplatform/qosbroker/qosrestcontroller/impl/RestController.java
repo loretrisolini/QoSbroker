@@ -189,13 +189,12 @@ public class RestController {
 		logger.info(" <--- NGSI-10 has received request for Update Context resource ---> \n");
 
 		
-		try{
-
-			validateMessageBody(requester, request, sNgsi10schema);
+		if(validateMessageBody(requester, request, sNgsi10schema)){
 			
 			if(request.getUpdateAction().value() == QoSConsts.NEGOTIATION){
+				//TODO manage update from the application side
 				String requestHttp = request.toString();
-				throw new Exception("Negotiation"); 
+				System.out.println("Negotiation"); 
 			}
 
 			logger.debug("UPDATE QOS BROKER");
@@ -205,14 +204,12 @@ public class RestController {
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);
 		} 
-		catch(Exception e){ 
-
-			logger.debug(e.getMessage());
+		else{ 
 			
 			UpdateContextResponse response = new UpdateContextResponse(
 					new StatusCode(Code.INTERNALERROR_500.getCode(),
 							ReasonPhrase.RECEIVERINTERNALERROR_500.toString(),
-							e.getMessage()), null);
+							"XML syntax Error!"), null);
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);

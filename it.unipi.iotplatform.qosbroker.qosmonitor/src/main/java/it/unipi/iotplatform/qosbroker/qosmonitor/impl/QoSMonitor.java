@@ -22,6 +22,8 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.sun.istack.logging.Logger;
+
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
@@ -46,6 +48,8 @@ import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 
 public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
+//	private static Logger logger = Logger.getLogger(QoSMonitor.class);
+	
 	/**
 	 * A pointer to a Big Data repository. (This functionality is currently
 	 * disabled.)
@@ -153,6 +157,14 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				@Override
 				public void run() {
 
+					List<Pair<String, JSONObject>> sensActAttrData = bigDataRepository.readData(null, QoSConsts.SENS_ACT_ATTR_DB);
+					
+					if(sensActAttrData == null){
+						//error
+						System.out.println("ERROR reading sensor active attributes data");
+						return;
+					}
+					
 					Iterator<ContextElement> iter = contextElementList.iterator();
 					
 					List<Pair<String, JSONObject>> dataList = new ArrayList<Pair<String, JSONObject>>();
@@ -177,10 +189,57 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 							jsonContElem.put("attributes", jsonContElem.getJSONArray("contextAttributeList"));
 							jsonContElem.remove("contextAttributeList");
 						}
+						
+//						String devIdFromDB = null;
+						JSONObject jsonContElemFromDB = null;
+						JSONArray attributesFromDB = null;
+						Boolean attrFromDB = false;
+						//merge data read from DB with data in updateCont body
+						//to avoid to delete data in DB
+						for(Pair<String, JSONObject> pair: sensActAttrData){
 							
+							if(pair.getLeft().contentEquals(key)){
+//								devIdFromDB = pair.getLeft();
+								jsonContElemFromDB = pair.getRight();
+								
+								if(!jsonContElemFromDB.isNull("attributes")){
+									attributesFromDB = jsonContElemFromDB.getJSONArray("attributes");
+									attrFromDB = true && attributesFromDB!=null;
+								}
+								break;
+							}
+						}
+						
+						Double battFromDB = null;
+						Point coordsFromDB = null;
+						if(attrFromDB){
+							for(int i = 0; i < attributesFromDB.length(); i++){
+								
+								JSONObject attr = attributesFromDB.getJSONObject(i);
+								
+								if(!attr.isNull("name")){
+									if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
+										battFromDB = Double.valueOf(attr.getString("contextValue"));
+									}
+													
+									if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
+										
+										coordsFromDB = new Point();
+										String[] coords = attr.getString("contextValue").split(",");
+										
+										coordsFromDB.setLatitude(Float.valueOf(coords[0]));
+										coordsFromDB.setLongitude(Float.valueOf(coords[1]));
+									}
+									
+								}
+							}
+						}
+						
 						//create the pair <DevId, Thing> to put 
 						//in Map<DevId, Thing>
 						Thing t = new Thing();
+						Boolean battFound = false;
+						Boolean coordsFound = false;
 						if(!jsonContElem.isNull("attributes")){
 							
 							JSONArray attributes = jsonContElem.getJSONArray("attributes");
@@ -192,6 +251,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 								if(!attr.isNull("name")){
 									if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
 										t.setBatteryLevel(Double.valueOf(attr.getString("contextValue")));
+										battFound = true;
 									}
 													
 									if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
@@ -203,26 +263,61 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 										p.setLongitude(Float.valueOf(coords[1]));
 										
 										t.setCoords(p);
+										coordsFound = true;
 									}
 									
 								}
+
 							}
 							
-							t.setServicesList(new HashMap<String, ServiceFeatures>());
 							
-							thingsInfo.put(key, t);
-						}
-						
-						Pair<String,JSONObject> dataEntry = new Pair<String, JSONObject>(key, jsonContElem);
+							//nothing to store in the DB sensorActAttr & thingInfo
+							if(battFound || coordsFound){
 
-						dataList.add(dataEntry);
+								if(!battFound && battFromDB!=null){
+									t.setBatteryLevel(battFromDB);
+									
+									JSONObject jsonContAttribute = new JSONObject();
+									
+									jsonContAttribute.put("name", "battery");
+									jsonContAttribute.put("contextValue", String.valueOf(battFromDB));
+									jsonContAttribute.put("type", "double");
+									
+									attributes.put(jsonContAttribute);
+								}
+								
+								if(t.getCoords()==null && coordsFromDB!=null){
+									t.setCoords(coordsFromDB);
+									
+									JSONObject jsonContAttribute = new JSONObject();
+									
+									jsonContAttribute.put("name", "coords");
+									jsonContAttribute.put("contextValue", String.valueOf(coordsFromDB.getLatitude()
+																+" "+coordsFromDB.getLongitude()));
+									jsonContAttribute.put("type", "coords");
+									
+									attributes.put(jsonContAttribute);
+								}
+								
+								t.setServicesList(new HashMap<String, ServiceFeatures>());
+								
+								thingsInfo.put(key, t);
+								
+								Pair<String,JSONObject> dataEntry = new Pair<String, JSONObject>(key, jsonContElem);
+
+								dataList.add(dataEntry);
+							}
+							
+						}
 
 					}
 					
-					bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
+					if(!dataList.isEmpty())
+						bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
 					
-					//update battery and coords in Map<DevId, Thing>
-					updateThingsServicesInfo(thingsInfo, null);
+					if(!thingsInfo.isEmpty())
+						//update battery and coords in Map<DevId, Thing>
+						updateThingsServicesInfo(thingsInfo, null);
 				}
 			}.start();
 		}

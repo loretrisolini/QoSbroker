@@ -963,7 +963,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				
 				//if latency or servAccuracy are not null
 				//they must respect the constraints
-				if((latency == null || latency < maxRespTime) && (servAccuracy == null || servAccuracy >= accuracy)){
+				if((latency == null || latency < maxRespTime) && (accuracy!=null && (servAccuracy == null || servAccuracy >= accuracy))){
 					constraints = true;
 					
 //					TransIdList transIdList = new TransIdList();
@@ -982,7 +982,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			//process
 			if(!constraints){
 				statusCode = new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(), QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), 
-						"checkServiceAllocationConditions() service "+entry.getKey()+
+						"checkServiceAllocationConditions() transId "+transId+" service "+entry.getKey()+
 						" has no equivalent things that respect requirements maxRespTime and/or accuracy");
 				
 				return statusCode;
