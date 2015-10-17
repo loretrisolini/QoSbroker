@@ -4,6 +4,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.NormalizedEnergyCost;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -2114,7 +2115,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			EntityId entId = new EntityId();
 			entId.setId(transId);
 			entId.setIsPattern(false);
-			entId.setType(URI.create("Allocation"));
+			entId.setType(URI.create(QoSConsts.QOS_SERVICE));
 			entityIdList.add(entId);
 			
 			contReg.setListEntityId(entityIdList);

@@ -314,6 +314,27 @@ public class QoSManager implements QoSManagerIF {
 	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
 		this.bigDataRepository = bigDataRepository;
 	}
+
+	@Override
+	public ContextRegistration readAllocationSchema(
+			String transactionId) {
+		
+		System.out.println("QoSManager -- readAllocationSchemas read allocation schemas");
+		List<Pair<String, JSONObject>> allocationSchemasList = bigDataRepository.readData(null, QoSConsts.ALLOCATION_DB);
+		if(allocationSchemasList == null){
+			return null;
+		}
+		
+		ContextRegistration allocationSchema = new ContextRegistration();
+		
+		for(Pair<String, JSONObject> pair: allocationSchemasList){
+			
+			allocationSchema = DataStructure.fromJsonToJaxb(pair.getRight(), new ContextRegistration(), 
+																								ContextRegistration.class);
+		}
+		
+		return allocationSchema;
+	}
 	
 //	public NegotiationInterface getNegotiator() {
 //	return negotiator;

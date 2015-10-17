@@ -26,6 +26,7 @@ import eu.neclab.iotplatform.iotbroker.commons.JsonValidator;
 import eu.neclab.iotplatform.iotbroker.commons.XmlValidator;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
+import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextRequest;
@@ -191,11 +192,11 @@ public class RestController {
 		
 		if(validateMessageBody(requester, request, sNgsi10schema)){
 			
-			if(request.getUpdateAction().value() == QoSConsts.NEGOTIATION){
-				//TODO manage update from the application side
-				String requestHttp = request.toString();
-				System.out.println("Negotiation"); 
-			}
+//			if(request.getUpdateAction().value() == QoSConsts.QOS_SERVICE){
+//				//TODO manage update from the application side
+//				String requestHttp = request.toString();
+//				System.out.println("Negotiation"); 
+//			}
 
 			logger.debug("UPDATE QOS BROKER");
 			
@@ -213,6 +214,50 @@ public class RestController {
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);
+		}
+
+	}
+	
+	/**
+	 * Executes the standard NGSI 10 QueryContext method.
+	 *
+	 * @param requester
+	 *            Represents the request message body and header.
+	 * @param request
+	 *            The request body.
+	 * @return The response body.
+	 *
+	 */
+	@RequestMapping(value = "/queryContext", method = RequestMethod.POST, consumes = {
+			CONTENT_TYPE_XML, CONTENT_TYPE_JSON }, produces = {
+			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
+	public ResponseEntity<QueryContextResponse> query(
+			HttpServletRequest requester,
+			@RequestBody QueryContextRequest request) {
+
+		logger.info(" <--- NGSI-10 has received request for Context query resource ---> \n");
+
+		if (validateMessageBody(requester, request, sNgsi10schema)) {
+
+			QueryContextResponse response = ngsiCore.queryContext(request);
+
+			logger.debug("Entity TYPE = "
+					+ request.getEntityIdList().get(0).getType());
+
+			return new ResponseEntity<QueryContextResponse>(response,
+					HttpStatus.OK);
+		} else {
+
+			QueryContextResponse response = new QueryContextResponse();
+			StatusCode statusCode = new StatusCode(
+					Code.BADREQUEST_400.getCode(),
+					ReasonPhrase.BADREQUEST_400.toString(), "XML syntax Error!");
+
+			response.setErrorCode(statusCode);
+
+			return new ResponseEntity<QueryContextResponse>(response,
+					HttpStatus.BAD_REQUEST);
+
 		}
 
 	}

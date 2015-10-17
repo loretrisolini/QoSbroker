@@ -2,12 +2,12 @@ package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 
-import java.util.HashMap;
+import java.util.List;
 
 import javax.annotation.Resource;
 
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 @Resource
@@ -30,4 +30,5 @@ public interface QoSManagerIF {
 	 */
 	public StatusCode createAgreement(String offer, String transactionId, Request request);//, HashMap<String, TransIdList> thingTransactionsMap);
 	
+	public ContextRegistration readAllocationSchema(String transactionId);
 }

@@ -4,7 +4,7 @@ public class QoSConsts {
 
 	public static final String SCOPE_VALUE = "scopeValue";
 	
-	public static final String NEGOTIATION = "negotiation"; 
+	public static final String QOS_SERVICE = "QoSService"; 
 	
 	public static final String LOCATION = "Location";
 	public static final String SIMPLE_GEO_LOCATION = "SimpleGeoLocation";

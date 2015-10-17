@@ -16,8 +16,6 @@ import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -35,6 +33,8 @@ import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
@@ -94,6 +94,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/** Used to make NGSI 10 requests. */
 	private Ngsi10Requester ngsi10Requester;
 
+	/** Used to make NGSI 10 requests. */
+	private Ngsi10Requester ngsi10IoTBrokerCore;
+	
 //	/**
 //	 * Returns the implementation of the NGSI 9 interface. This interface is
 //	 * used by the core for making NGSI-9 discovery operations.
@@ -152,6 +155,88 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	@Override
 	public QueryContextResponse queryContext(QueryContextRequest request) {
 
+		logger.info("QoSBrokerCore -- queryContext() dispatching phase for SLA established");
+		
+		//read entityId with type "QoSservice"
+		//so get transactionsId
+		List<EntityId> entityIdList = request.getEntityIdList();
+		StatusCode statusCode;
+		
+		QueryContextResponse queryResponse = new QueryContextResponse();
+//		List<String> transIdList = new ArrayList<>();
+//		
+//		logger.info("QoSBrokerCore -- queryContext() lookup for transaction Ids in the request");
+//		for(EntityId entId: entityIdList){
+//			
+//			if(entId.getType().toString().contentEquals(QoSConsts.QOS_SERVICE)){
+//				
+//				transIdList.add(entId.getId());
+//			}
+//		}
+	
+		String transId = entityIdList.get(0).getId();
+		
+		//no transactionId
+		if(transId == null){
+
+			statusCode = new StatusCode(
+					Code.BADREQUEST_400.getCode(),
+					ReasonPhrase.BADREQUEST_400.toString(), "No transactionId found in the request!");
+
+			queryResponse.setErrorCode(statusCode);
+
+			return queryResponse;
+		}
+		
+		/*	
+		<contextRegistrationAttributeList> 
+		<contextRegistrationAttribute> 
+			<name>temperature</name> 
+			<type>degree</type> 
+			<isDomain>false</isDomain> 
+			<metadata> 
+				<contextMetadata> 
+					<name>equivalentEnt_1</name> 
+					<type>string</type> 
+					<value>tempSens_1,temp_1</value> 
+				</contextMetadata> 
+				<contextMetadata> 
+					<name>equivalentEnt_2</name> 
+					<type>string</type> 
+					<value>tempSens_2,temp_2</value> 
+				</contextMetadata> 
+			</metadata> 
+		</contextRegistrationAttribute> 
+	</contextRegistrationAttributeList> 
+	<providingApplication>http://localhost:1024/QoSBroker
+	</providingApplication> */
+		
+		logger.info("QoSBrokerCore -- queryContext() read Allocation Schemas");
+		ContextRegistration allocationSchema = qosManager.readAllocationSchema(transId);
+		
+		if(allocationSchema == null){
+			
+			statusCode = new StatusCode(
+					Code.INTERNALERROR_500.getCode(),
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Error reading allocation schemas");
+
+			queryResponse.setErrorCode(statusCode);
+
+			return queryResponse;
+		}
+		
+		List<ContextRegistrationAttribute> conRegAttrList = allocationSchema.getContextRegistrationAttribute();
+		
+		List<EntityId> entityIdReqList = new ArrayList<>();
+		List<String> attributeList = new ArrayList<>();
+		
+		for(ContextRegistrationAttribute crAttr: conRegAttrList){
+			
+			List<ContextMetadata> contMetadataList = crAttr.getMetaData();
+			
+//			ngsi10IoTBrokerCore
+		}
+		
 		return null;
 //		/*
 //		 * create associations operation scope for discovery
@@ -1109,6 +1194,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 	public void setQosManager(QoSManagerIF qosManager) {
 		this.qosManager = qosManager;
+	}
+
+	public Ngsi10Requester getNgsi10IoTBrokerCore() {
+		return ngsi10IoTBrokerCore;
+	}
+
+	public void setNgsi10IoTBrokerCore(Ngsi10Requester ngsi10IoTBrokerCore) {
+		this.ngsi10IoTBrokerCore = ngsi10IoTBrokerCore;
 	}
 
 
