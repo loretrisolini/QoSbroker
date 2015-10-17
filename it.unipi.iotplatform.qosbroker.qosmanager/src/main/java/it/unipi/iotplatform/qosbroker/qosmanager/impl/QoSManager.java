@@ -160,10 +160,10 @@ public class QoSManager implements QoSManagerIF {
 		
 		//read from DBs the Map<DevId, Thing> and the Map<reqServName, List<DevId>>
 		//Map<DevId, List<transId>>
-		List<Pair<String, JSONObject>> eqThingInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
+		List<Pair<String, JSONObject>> thingsInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
 //		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
-		if(eqThingInfoJson == null || eqThingInfoJson.isEmpty() || 
+		if(thingsInfoJson == null || thingsInfoJson.isEmpty() || 
 				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){// || thingTransactionsJson==null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
@@ -173,7 +173,7 @@ public class QoSManager implements QoSManagerIF {
 			return statusCode;
 		}
 		
-		HashMap<String, Thing> eqThingInfo = Thing.fromDbFormatToJavaFormat(eqThingInfoJson, Thing.class);
+		HashMap<String, Thing> eqThingInfo = Thing.fromDbFormatToJavaFormat(thingsInfoJson, Thing.class);
 		if(eqThingInfo == null){
 			
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 

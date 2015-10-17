@@ -16,6 +16,8 @@ import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -887,7 +889,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			statusCode.setDetails("createThingsMap() "+statusCode.getDetails());
 			return statusCode;
 		}
-			
+		
 		Statistics.printThingsMappings(request, thingsInfo, serviceEquivalentThings);
 		
 		//check the condition for the serviceAgreementRequest

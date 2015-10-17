@@ -17,7 +17,7 @@ public interface QoSCalculatorIF {
 
 	public ReservationResults computeAllocation(int k, List<Pair<String, Request>> requests, 
 												HashMap<String, ServicePeriodParams> servPeriodsMap,
-												HashMap<String, Thing> eqThingInfo,
+												HashMap<String, Thing> thingsInfo,
 												HashMap<String, ThingsIdList> servNameThingsIdList,
 												//HashMap<String, TransIdList> matrixM,
 												Policy policy,
