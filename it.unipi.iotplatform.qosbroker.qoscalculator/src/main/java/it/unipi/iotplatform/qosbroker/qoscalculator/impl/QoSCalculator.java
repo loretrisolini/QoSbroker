@@ -2,6 +2,7 @@ package it.unipi.iotplatform.qosbroker.qoscalculator.impl;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.NormalizedEnergyCost;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
@@ -53,9 +54,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 	//indicates the policy to follow
 	//to split service to multiple things
 	//max split or min split
-	public enum Policy{
-		MAX_SPLIT, MIN_SPLIT
-	}
+//	public enum Policy{
+//		MAX_SPLIT, MIN_SPLIT
+//	}
 	
 	/**
 	 * The Class Reserveobj.
@@ -547,7 +548,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//List of devId that satisfy the constraints
 		List<String> Fjr;
 		
-		File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+		File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+Statistics.r);
 		if(!file.exists()) file.mkdir();
 		writer = new PrintWriter(file.getAbsolutePath()+"/GapResult"+Statistics.count+""+prio.name()+".txt", "UTF-8");
 		
@@ -709,39 +710,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 									System.out.println();
 									System.out.println("##########################################################");
 									logger.info("DIRECT ALLOCATION<------------------------------");
-									
-									//TODO direct allocation of service reqServName
-									//set Allocation object
-//									for(int j=0; j<Fjr.size(); j++){
-//										if(!setAllocationObj(transId, Fjr.get(j), reqServiceName, 
-//												matrixF_ij, matrixU_ij, j, split)){
-//											
-//											res.feasible = false;
-//											writer.println(operationStatus);
-//											writer.close();
-//											return res;
-//										}
-//										R-=(j+1);
-//										
-//										logger.info("allocationObj<------------------------------");
-//										logger.info("transId: "+assignmentTransId);
-//										logger.info("serviceName: "+assignmentServiceName.toUpperCase());
-//										logger.info(allocationTemp.toString());
-//										logger.info("new Thing allocated: "+Fjr.get(j));
-//										System.out.println("##########################################################");
-//										System.out.println();
-//										writer.println();
-//										writer.println("##########################################################");
-//										writer.println("##########################################################");
-//										writer.println("allocationObj<----------------------------");
-//										writer.println("transId: "+assignmentTransId);
-//										writer.println("serviceName: "+assignmentServiceName.toUpperCase());
-//										writer.println(allocationTemp.toString());
-//										writer.println("new Thing allocated: "+Fjr.get(j));
-//										writer.println("##########################################################");
-//										writer.println("##########################################################");
-//									}
-//									break;
+									System.out.println("##########################################################");
 								}
 								
 								//get the devId of the Thing that have max priority
@@ -922,6 +891,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 			}
 			else{
+				System.out.println();
+				System.out.println("##########################################################");
+				logger.info("ALLOCATION FAILED<--------------------------------------");
+				System.out.println("##########################################################");
+				System.out.println();
+				
 				writer.println();
 				writer.println();
 				writer.println("ALLOCATION FAILED<------------------------------------");
@@ -1804,7 +1779,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * by the transactionId (Map<transId, List<DevId>>) */
 	private HashMap<String, List<String>> createMatrixM(
 			List<Pair<String, Request>> requests,
-			HashMap<String, Thing> eqThingInfo,
+			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList) {
 		
 		HashMap<String, List<String>> matrixM = new HashMap<>();
@@ -1857,12 +1832,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				//iterate over the list of equivalent things
 				//for that serviceName
-				for(int i=0; i<eqThings.size(); i++){
+				for(int i=1; i<=eqThings.size(); i++){
 					
-					String devId = eqThings.get(i);
+					String devId = eqThings.get(i-1);
 					
 					//get the thing
-					Thing t = eqThingInfo.get(devId);
+					Thing t = thingsInfo.get(devId);
 					
 					//get the coords of the thing
 					Point coords = t.getCoords();
@@ -1872,20 +1847,23 @@ public class QoSCalculator implements QoSCalculatorIF {
 						if(point != null){
 							if(coords.getLatitude() != point.getLatitude() ||
 									coords.getLongitude() != point.getLongitude()){
-								eqThings.remove(i);
+								eqThings.remove(i-1);
+								i--;
 								continue;
 							}
 						}
 						else{
 							if(circle != null){
 								if(!in_circle(circle, coords)){
-									eqThings.remove(i);
+									eqThings.remove(i-1);
+									i--;
 									continue;
 								}
 							}
 							else{
 								if(!in_polygon(polygon, coords)){
-									eqThings.remove(i);
+									eqThings.remove(i-1);
+									i--;
 									continue;
 								}
 							}
@@ -1906,8 +1884,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 																: servEntry.getValue().getAccuracy();
 							
 							//check latency and accuracy constraints
-							if(latency != null && latency > maxRespTime || servAccuracy != null && servAccuracy != accuracy){
-								eqThings.remove(i);
+							if(maxRespTime!=null && latency != null && latency > maxRespTime || maxRespTime!=null && latency == null
+									|| accuracy!=null && servAccuracy != null && servAccuracy < accuracy || accuracy!=null && servAccuracy == null ){
+								eqThings.remove(i-1);
+								i--;
 								break;
 							}
 							break;

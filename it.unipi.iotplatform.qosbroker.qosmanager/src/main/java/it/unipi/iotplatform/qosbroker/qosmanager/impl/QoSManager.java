@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
@@ -9,10 +10,8 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
-import it.unipi.iotplatform.qosbroker.api.datamodel.TransIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
-import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator.Policy;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 
 import java.io.FileInputStream;
@@ -90,6 +89,7 @@ public class QoSManager implements QoSManagerIF {
 		//counter for the number of service requests
 		int k=0;
 		
+		System.out.println("QoSManager -- createAgreement() read old requests from DB");
 		//read all old requests from requests DB
 		List<Pair<String, JSONObject>> requestsJsonList = bigDataRepository.readData(null, QoSConsts.REQUESTS_DB);
 		if(requestsJsonList == null){
@@ -136,6 +136,7 @@ public class QoSManager implements QoSManagerIF {
 			}
 		}
 		
+		System.out.println("QoSManager -- createAgreement() add the new request");
 		//add the new request object
 		requestsList.add(new Pair<String, Request>(transactionId, request));
 		
@@ -147,6 +148,7 @@ public class QoSManager implements QoSManagerIF {
 		servPeriodParams.setPeriod(p_j);
 		servPeriodParamsMap.put(transactionId, servPeriodParams);
 		
+		System.out.println("QoSManager -- createAgreement() compute hyperperiod");
 		//compute hyperiod h
 		Long h = ServicePeriodParams.getHyperperiod(periodsList);
 		
@@ -158,6 +160,7 @@ public class QoSManager implements QoSManagerIF {
 			entry.getValue().setNj(coeff.intValue());
 		}
 		
+		System.out.println("QoSManager -- createAgreement() read THINGS_INFO_DB and SERV_EQ_THINGS_DB");
 		//read from DBs the Map<DevId, Thing> and the Map<reqServName, List<DevId>>
 		//Map<DevId, List<transId>>
 		List<Pair<String, JSONObject>> thingsInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
@@ -173,8 +176,8 @@ public class QoSManager implements QoSManagerIF {
 			return statusCode;
 		}
 		
-		HashMap<String, Thing> eqThingInfo = Thing.fromDbFormatToJavaFormat(thingsInfoJson, Thing.class);
-		if(eqThingInfo == null){
+		HashMap<String, Thing> thingsInfo = Thing.fromDbFormatToJavaFormat(thingsInfoJson, Thing.class);
+		if(thingsInfo == null){
 			
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
 					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
@@ -223,13 +226,15 @@ public class QoSManager implements QoSManagerIF {
 //			matrixM.putAll(thingTransactionsMap);
 //		}
 		
-		
+		System.out.println("QoSManager -- createAgreement() compute allocation");
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-																		eqThingInfo, servNameThingsIdList, Policy.MAX_SPLIT, 0.001);
+														thingsInfo, servNameThingsIdList, Policy.MAX_SPLIT, 0.001);
 		
 		List<ContextRegistration> allocationSchema = null;
 		if(result.isFeas()){
+			
+			System.out.println("QoSManager -- createAgreement() allocation OK");
 			allocationSchema = result.getAllocationSchema();
 			
 //			//store new matrixM if allocation feasible
@@ -286,6 +291,8 @@ public class QoSManager implements QoSManagerIF {
 			return result.getStatusCode();
 		}
 		else{
+			
+			System.out.println("QoSManager -- createAgreement() allocation FAILED");
 			return result.getStatusCode();
 		}
 		

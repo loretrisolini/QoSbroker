@@ -18,8 +18,8 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 public class Statistics{
 	
 	public static int count = 0;
-	public static Double r = new Random().nextDouble();
-	public static String testFolder = "testFolder" + r.toString();
+	public static int r = 0;
+	public static String testFolder = "testFolder";
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
@@ -28,7 +28,8 @@ public class Statistics{
 		
 		try{
 			count++;
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			r++;
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
 			if(!file.exists()) file.mkdir();
 			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things"+count+".csv");
 			
@@ -131,7 +132,7 @@ public class Statistics{
 		FileWriter fileWriterInputGap=null;
 		
 		try{
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
 			if(!file.exists()) file.mkdir();
 			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputGap"+count+".csv");
 			
@@ -390,7 +391,7 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
 			if(!file.exists()) file.mkdir();
 			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap"+count+".txt", "UTF-8");
 			writer.println("####################################");

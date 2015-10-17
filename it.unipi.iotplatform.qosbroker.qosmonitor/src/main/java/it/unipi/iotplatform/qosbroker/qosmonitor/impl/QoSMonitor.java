@@ -350,6 +350,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 	public StatusCode updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
+		System.out.println("QoSMonitor -- updateThingsServicesInfo()");
+		
 		StatusCode statusCode;
 		
 		List<Pair<String, JSONObject>> thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
@@ -396,6 +398,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					//of old data things so we read the thingsInfoDB
 					//and we update only battery and coords
 					if(serviceEquivalentThings == null){
+						
+						System.out.println("QoSMonitor -- updateThingsServicesInfo() monitoring after updateContext");
+						
 						//update the old thing with battery and coords
 						//MONITORING OPERATION
 						t.setBatteryLevel(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel());
@@ -450,6 +455,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 //			
 //			newThingsData.add(thingPair);
 //		}
+		
+		System.out.println("QoSMonitor -- updateThingsServicesInfo() update THINGS_INFO_DB");
 		
 		//store data
 		if(!bigDataRepository.storeData(newThingsData, QoSConsts.THINGS_INFO_DB)){
@@ -529,6 +536,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 //				
 //				newServEqThingsData.add(servEqThingsPair);
 //			}
+			
+			System.out.println("QoSMonitor -- updateThingsServicesInfo() update SERV_EQ_THINGS_DB");
 			
 			//store data
 			if(!bigDataRepository.storeData(newServEqThingsData, QoSConsts.SERV_EQ_THINGS_DB)){

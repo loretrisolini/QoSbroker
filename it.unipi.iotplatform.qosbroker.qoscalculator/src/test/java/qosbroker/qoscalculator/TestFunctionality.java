@@ -2,6 +2,7 @@ package qosbroker.qoscalculator;
 
 import static org.junit.Assert.assertEquals;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -10,7 +11,6 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
-import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator.Policy;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -142,7 +142,7 @@ public class TestFunctionality {
 									locReqPoint = new LocationScopeValue<Point>();
 									
 									Point p = new Point();
-									values[5] = values[5].replace("Point: ", "");
+									values[5] = values[5].replace("Point:", "");
 									String[] coords = values[5].split(";");
 									
 									p.setLatitude(Float.valueOf(coords[0]));
@@ -172,7 +172,7 @@ public class TestFunctionality {
 										locReqPolygon = new LocationScopeValue<Polygon>();
 										
 										Polygon polygon = new Polygon();
-										values[5] = values[5].replace("Polygon: ", "");
+										values[5] = values[5].replace("Polygon:", "");
 										
 										List<Vertex> vertexList = new ArrayList<>();
 										String[] vertexListString = values[5].split(";");

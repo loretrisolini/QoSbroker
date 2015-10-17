@@ -1,12 +1,12 @@
 package it.unipi.iotplatform.qosbroker.qoscalculator.api;
 
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
-import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator.Policy;
 
 import java.util.HashMap;
 import java.util.List;

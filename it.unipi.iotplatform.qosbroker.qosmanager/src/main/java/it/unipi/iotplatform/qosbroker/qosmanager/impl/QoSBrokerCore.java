@@ -564,6 +564,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		String opType = serviceRequest.getOperationType();
 		
+		logger.info("QoSBrokerCore -- createAgreement() getRestriction");
+		
 		//Create a new restriction with the same attribute expression and
 		//operation scope as in the request.
 		Restriction restriction = getRestriction(serviceRequest);
@@ -588,6 +590,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//so thre are no equal serviceName Temp, Temp is equal to Temp
 		List<String> requiredServicesName = new ArrayList<>(new LinkedHashSet<String>(serviceRequest.getAttributeList()));
 		
+		logger.info("QoSBrokerCore -- createAgreement() setRequest");
 		//object to store the details of the service Request
 		Request request = setRequest(opType, requiredServicesName, restriction.getOperationScope());
 		if(request == null){
@@ -606,6 +609,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 //		DISCOVERY PHASE
 		
+		logger.info("QoSBrokerCore -- createAgreement() discoveryThings");
 		//get list of equivalentThings
 		statusCode = discoverThings(serviceRequest.getEntityIdList(), request, restriction, transactionId);
 		
@@ -620,7 +624,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return response;
 		}		
 		
-		logger.debug("QoSBrokerCore -- createAgreement() " + request.toString());
+		logger.info("QoSBrokerCore -- createAgreement() " + request.toString());
 		
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
@@ -699,7 +703,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
 				entityIdList, request.getRequiredServicesNameList(), restriction);
 		
-		logger.debug("QoSBrokerCore -- discoverThings() DiscoverContextAvailabilityRequest:"
+		logger.info("QoSBrokerCore -- discoverThings() DiscoverContextAvailabilityRequest:"
 				+ discoveryRequest.toString());
 		
 		//Get the NGSI 9 DiscoverContextAvailabilityResponse 
@@ -872,7 +876,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				}
 			}
 			else{
-				logger.debug("createThingsMap() ERROR: devId is not set, Thing can be stored");
+				logger.info("createThingsMap() ERROR: devId is not set, Thing can be stored");
 			}
 			
 		}
@@ -883,6 +887,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//if the update operation of ThingsInfoDB and ServEqThingsDB
 		//is not correct, it is useless continue with
 		//allocation procedure
+		logger.info("QoSBrokerCore -- createThingsMap() updateThingsServicesInfo");
 		statusCode = qosMonitor.updateThingsServicesInfo(thingsInfo, serviceEquivalentThings); 
 		
 		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
@@ -892,6 +897,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		
 		Statistics.printThingsMappings(request, thingsInfo, serviceEquivalentThings);
 		
+		logger.info("QoSBrokerCore -- createThingsMap() checkServiceAllocationConditions");
 		//check the condition for the serviceAgreementRequest
 		//at least one thing for required service
 		//if only one thing for a service the Thing
@@ -929,6 +935,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			List<String> eqThings = entry.getValue().getEqThings();
 			
+			logger.info("QoSBrokerCore -- checkServiceAllocationConditions() check at least one thing for the required service");
 			if(eqThings.isEmpty()){
 				
 				statusCode = new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(), QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), 
@@ -937,6 +944,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				return statusCode;
 			}
 			
+			logger.info("QoSBrokerCore -- checkServiceAllocationConditions() if there is one thing for the required service, the battery mist be set");
 			if(eqThings.size() == 1){
 				
 				String eqThingDevId = eqThings.get(0);
@@ -949,6 +957,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				}
 			}
 			
+			logger.info("QoSBrokerCore -- checkServiceAllocationConditions() check QoS requirements");
 			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
 			Double accuracy = request.getQosRequirements().getAccuracy();
 			String reqServName = entry.getKey();
@@ -965,7 +974,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				
 				//if latency or servAccuracy are not null
 				//they must respect the constraints
-				if((latency == null || latency < maxRespTime) && (accuracy!=null && (servAccuracy == null || servAccuracy >= accuracy))){
+				if(maxRespTime!=null && latency != null && latency < maxRespTime || maxRespTime==null
+						|| accuracy!=null && servAccuracy != null && servAccuracy >= accuracy || accuracy==null){
 					constraints = true;
 					
 //					TransIdList transIdList = new TransIdList();

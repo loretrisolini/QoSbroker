@@ -14,7 +14,7 @@ POST http://localhost:8090/QoSbroker/updateContext
                 {
                     "name": "battery",
                     "type": "integer",
-                    "contextValue": "57"
+                    "contextValue": "88"
                 },
                 {
                     "name": "coords",
@@ -39,7 +39,7 @@ POST http://localhost:8090/QoSbroker/updateContext
                 {
                     "name": "battery",
                     "type": "integer",
-                    "contextValue": "80"
+                    "contextValue": "98"
                 },
                 {
                     "name": "coords",
@@ -89,7 +89,7 @@ POST http://localhost:8090/QoSbroker/updateContext
                 {
                     "name": "battery",
                     "type": "integer",
-                    "contextValue": "77"
+                    "contextValue": "89"
                 },
                 {
                     "name": "coords",

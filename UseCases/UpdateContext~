@@ -1,0 +1,103 @@
+UPDATECONTEXT <------------------------------------
+
+POST http://localhost:8090/QoSbroker/updateContext
+
+{
+    "contextElements": [
+        {
+            "entityId": {
+                "type": "environment",
+                "isPattern": "false",
+                "id": "sensor_1:environment"
+            },
+            "attributes": [
+                {
+                    "name": "battery",
+                    "type": "integer",
+                    "contextValue": "57"
+                },
+                {
+                    "name": "coords",
+                    "type": "coords",
+                    "contextValue": "57.0,45.9"
+                }
+            ]
+        }
+    ],
+    "updateAction": "APPEND"
+}
+
+{
+    "contextElements": [
+        {
+            "entityId": {
+                "type": "temperature",
+                "isPattern": "false",
+                "id": "sensor_2:temperature"
+            },
+            "attributes": [
+                {
+                    "name": "battery",
+                    "type": "integer",
+                    "contextValue": "80"
+                },
+                {
+                    "name": "coords",
+                    "type": "coords",
+                    "contextValue": "47.0,45.9"
+                }
+            ]
+        }
+    ],
+    "updateAction": "APPEND"
+}
+
+{
+    "contextElements": [
+        {
+            "entityId": {
+                "type": "environment",
+                "isPattern": "false",
+                "id": "sensor_3:environment"
+            },
+            "attributes": [
+                {
+                    "name": "battery",
+                    "type": "integer",
+                    "contextValue": "99"
+                },
+                {
+                    "name": "coords",
+                    "type": "coords",
+                    "contextValue": "37.0,45.9"
+                }
+            ]
+        }
+    ],
+    "updateAction": "APPEND"
+}
+
+{
+    "contextElements": [
+        {
+            "entityId": {
+                "type": "temperature",
+                "isPattern": "false",
+                "id": "sensor_4:temperature"
+            },
+            "attributes": [
+                {
+                    "name": "battery",
+                    "type": "integer",
+                    "contextValue": "77"
+                },
+                {
+                    "name": "coords",
+                    "type": "coords",
+                    "contextValue": "57.0,44.9"
+                }
+            ]
+        }
+    ],
+    "updateAction": "APPEND"
+}

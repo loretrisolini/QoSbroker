@@ -2,8 +2,8 @@
 4,MAX_SPLIT,0.001
 
 2:TransactionID, operationType, maxRespTime, maxRateRequest, accuracy, LocationRequirement, ServiceList
-ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15,4,null,Circle:43.656998;10.437418;1000.9,degrees,humidity
-ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,queryContext,7,6,null,Circle:43.656998;10.437418;100.9,degrees,humidity
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15,4,0.4,Circle:43.656998;10.437418;1000.9,degrees,humidity
+ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,queryContext,7,6,null,Polygon:0 10.437418;10.9 8.0;9 4.7;2 5.2,degrees
 
 3:TransactionID,h/p_j, p_j
 ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,3,4
@@ -12,7 +12,7 @@ ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,2,6
 4:DevId,BatteryLevel,Coords
 sensor_3:environment,99,37.0 45.9
 sensor_1:environment,99,57.0 45.9
-sensor_2:temperature,90,47.0 45.9
+sensor_2:temperature,90,0.0 11.9
 sensor_4:temperature,90,57.0 44.9
 
 5:DevId,ServiceName,Latency,EnergyCost,Accuracy
@@ -24,10 +24,10 @@ sensor_1:environment,battery,null,null,null
 sensor_1:environment,degrees,0.11,0.34,null
 sensor_1:environment,CO2,0.3,0.2,null
 sensor_2:temperature,battery,null,null,null
-sensor_2:temperature,degrees,0.23,0.25,null
+sensor_2:temperature,degrees,0.23,0.25,0.4
 sensor_2:temperature,humidity,0.3,0.11,null
 sensor_4:temperature,battery,null,null,null
-sensor_4:temperature,degrees,0.2,0.55,null
+sensor_4:temperature,degrees,0.2,0.55,0.4
 sensor_4:temperature,humidity,0.22,0.11,null
 
 6:requiredServiceName,devIdList
