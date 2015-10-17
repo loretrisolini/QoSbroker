@@ -6,6 +6,9 @@ public class Utilization {
 	
 	private Double u_ij;
 
+	private Double t_ij;
+	private Double p_j;
+	
 	public String getService() {
 		return service;
 	}
@@ -20,5 +23,21 @@ public class Utilization {
 
 	public void setU_ij(Double u_ij) {
 		this.u_ij = u_ij;
+	}
+
+	public Double getT_ij() {
+		return t_ij;
+	}
+
+	public void setT_ij(Double t_ij) {
+		this.t_ij = t_ij;
+	}
+
+	public Double getP_j() {
+		return p_j;
+	}
+
+	public void setP_j(Double p_j) {
+		this.p_j = p_j;
 	}
 }

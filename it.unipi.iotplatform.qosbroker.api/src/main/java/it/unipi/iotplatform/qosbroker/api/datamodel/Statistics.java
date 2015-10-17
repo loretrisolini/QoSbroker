@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,8 +28,9 @@ public class Statistics{
 		
 		try{
 			count++;
-			
-			fileWriterThingsMappings = new FileWriter("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/Things"+count+".csv");
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			if(!file.exists()) file.mkdir();
+			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things"+count+".csv");
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
 			fileWriterThingsMappings.append("\n");
@@ -129,7 +131,9 @@ public class Statistics{
 		FileWriter fileWriterInputGap=null;
 		
 		try{
-			fileWriterInputGap = new FileWriter("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/InputGap"+count+".csv");
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			if(!file.exists()) file.mkdir();
+			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputGap"+count+".csv");
 			
 			fileWriterInputGap.append("k,Teta,Priority,Policy");
 			fileWriterInputGap.append("\n");
@@ -198,7 +202,7 @@ public class Statistics{
 			}
 			
 			fileWriterInputGap.append("\n");
-			fileWriterInputGap.append("devId, transId, service, f_ij");
+			fileWriterInputGap.append("devId, transId, service, f_ij, h/p_j, c_ij/b_i");
 			fileWriterInputGap.append("\n");
 			for(Map.Entry<String,HashMap<String,List<NormalizedEnergyCost>>> entryF_ij: matrixF_ij.entrySet()){
 				
@@ -221,12 +225,16 @@ public class Statistics{
 						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(neC.getF_ij()));
 						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(String.valueOf(neC.getH_p_j()));
+						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(String.valueOf(neC.getCij_b_i()));
+						fileWriterInputGap.append("\n");
 					}
 				}
 			}
 			
 			fileWriterInputGap.append("\n");
-			fileWriterInputGap.append("devId, transId, service, u_ij");
+			fileWriterInputGap.append("devId, transId, service, u_ij, t_ij, p_j");
 			fileWriterInputGap.append("\n");
 			for(Map.Entry<String,HashMap<String,List<Utilization>>> entryU_ij: matrixU_ij.entrySet()){
 				
@@ -248,6 +256,10 @@ public class Statistics{
 						fileWriterInputGap.append(u.getService());
 						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(u.getU_ij()));
+						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(String.valueOf(u.getT_ij()));
+						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(String.valueOf(u.getP_j()));
 						fileWriterInputGap.append("\n");
 					}
 				}
@@ -378,7 +390,9 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			writer = new PrintWriter("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/ResultGap"+count+".txt", "UTF-8");
+			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder);
+			if(!file.exists()) file.mkdir();
+			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap"+count+".txt", "UTF-8");
 			writer.println("####################################");
 			writer.println("####################################");
 			
