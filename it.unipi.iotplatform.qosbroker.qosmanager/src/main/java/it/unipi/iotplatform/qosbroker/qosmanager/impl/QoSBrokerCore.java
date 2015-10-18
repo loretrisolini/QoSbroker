@@ -12,10 +12,13 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Statistics;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -29,7 +32,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.w3c.dom.Node;
 
+import eu.neclab.iotplatform.couchdb.http.HttpRequester;
 import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
+import eu.neclab.iotplatform.iotbroker.commons.FullHttpResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
@@ -45,6 +51,8 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextAvailabilityRespons
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.OperationScope;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
@@ -74,6 +82,9 @@ import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
+	private final String IOTBROKER_URL = "http://localhost:8090/ngsi10";
+	/** String representing xml content type. */
+	private final String CONTENT_TYPE_XML = "application/xml";
 	
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
@@ -87,6 +98,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private QoSMonitorIF qosMonitor;
 	private Ngsi10Interface qosMonitorNgsi;
 	
+	private QoSBigDataRepository bigDataRepository;
+	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
 	private Ngsi9Interface ngsi9Impl;
@@ -94,8 +107,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/** Used to make NGSI 10 requests. */
 	private Ngsi10Requester ngsi10Requester;
 
-	/** Used to make NGSI 10 requests. */
-	private Ngsi10Requester ngsi10IoTBrokerCore;
+//	/** Used to make NGSI 10 requests. */
+//	private Ngsi10Requester ngsi10IoTBrokerCore;
 	
 //	/**
 //	 * Returns the implementation of the NGSI 9 interface. This interface is
@@ -163,21 +176,19 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		StatusCode statusCode;
 		
 		QueryContextResponse queryResponse = new QueryContextResponse();
-//		List<String> transIdList = new ArrayList<>();
-//		
-//		logger.info("QoSBrokerCore -- queryContext() lookup for transaction Ids in the request");
-//		for(EntityId entId: entityIdList){
-//			
-//			if(entId.getType().toString().contentEquals(QoSConsts.QOS_SERVICE)){
-//				
-//				transIdList.add(entId.getId());
-//			}
-//		}
-	
-		String transId = entityIdList.get(0).getId();
+		List<String> transIdList = new ArrayList<>();
+		
+		logger.info("QoSBrokerCore -- queryContext() lookup for transaction Ids in the request");
+		for(EntityId entId: entityIdList){
+			
+			if(entId.getType().toString().contentEquals(QoSConsts.QOS_SERVICE)){
+				
+				transIdList.add(entId.getId());
+			}
+		}
 		
 		//no transactionId
-		if(transId == null){
+		if(transIdList.isEmpty()){
 
 			statusCode = new StatusCode(
 					Code.BADREQUEST_400.getCode(),
@@ -196,6 +207,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			<isDomain>false</isDomain> 
 			<metadata> 
 				<contextMetadata> 
+					<name>policy</name> 
+					<type>integer</type> 
+					<value>1</value> 
+				</contextMetadata> 
+				<contextMetadata> 
 					<name>equivalentEnt_1</name> 
 					<type>string</type> 
 					<value>tempSens_1,temp_1</value> 
@@ -212,7 +228,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	</providingApplication> */
 		
 		logger.info("QoSBrokerCore -- queryContext() read Allocation Schemas");
-		ContextRegistration allocationSchema = qosManager.readAllocationSchema(transId);
+		List<ContextRegistration> allocationSchema = qosManager.readAllocationSchema(transIdList);
 		
 		if(allocationSchema == null){
 			
@@ -224,17 +240,35 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 			return queryResponse;
 		}
-		
-		List<ContextRegistrationAttribute> conRegAttrList = allocationSchema.getContextRegistrationAttribute();
+
+		//TODO check operationType
 		
 		List<EntityId> entityIdReqList = new ArrayList<>();
 		List<String> attributeList = new ArrayList<>();
 		
-		for(ContextRegistrationAttribute crAttr: conRegAttrList){
-			
-			List<ContextMetadata> contMetadataList = crAttr.getMetaData();
-			
-//			ngsi10IoTBrokerCore
+//		for(ContextRegistrationAttribute crAttr: conRegAttrList){
+//			
+//			List<ContextMetadata> contMetadataList = crAttr.getMetaData();
+//			
+////			contMetadataList.get(0)
+//			
+//
+//		}
+		
+		QueryContextRequest qosQuery = new QueryContextRequest();
+		qosQuery.setEntityIdList(entityIdReqList);
+		qosQuery.setAttributeList(attributeList);
+		
+		//REST CALL QUERY TO IoTBROKER
+		try{
+			URL url = new URL(IOTBROKER_URL+"/queryContext");
+			FullHttpResponse resp = HttpRequester.sendPost(url, qosQuery.toString(), CONTENT_TYPE_XML);
+		} catch (MalformedURLException e) {
+			logger.error("Error: ", e);
+			return null;
+		} catch (Exception e) {
+			logger.error("Error: ", e);
+			return null;
 		}
 		
 		return null;
@@ -726,7 +760,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		else{
 			response = new ServiceAgreementResponse();
 			
-			response.setServiceID("transactionId");
+			response.setServiceID(transactionId);
 			
 			response.setErrorCode(statusCode);
 		}
@@ -747,7 +781,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		boolean qosReqFound = false;
 		
 		QoSscopeValue qosScopeValue = new QoSscopeValue();
-		LocationScopeValue locationScopeValue = new LocationScopeValue();
+		LocationScopeValue<Point> locationScopeValuePoint = new LocationScopeValue<Point>();
+		LocationScopeValue<Circle> locationScopeValueCircle = new LocationScopeValue<Circle>();
+		LocationScopeValue<Polygon> locationScopeValuePolygon = new LocationScopeValue<Polygon>();
 		
 		for(OperationScope opScope : operationScope){
 			
@@ -758,10 +794,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				qosReqFound = true;
 				
 			}
-			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION)){
+			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_POINT)){
 				
-				locationScopeValue = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValue, LocationScopeValue.class);
-				
+				locationScopeValuePoint = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), new LocationScopeValue<Point>(), LocationScopeValue.class);
+				request.setLocationRequirementPoint(locationScopeValuePoint);
+			}
+			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_CIRCLE)){
+				locationScopeValueCircle = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValueCircle, LocationScopeValue.class);
+				request.setLocationRequirementCircle(locationScopeValueCircle);
+			}
+			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_POLYGON)){
+				locationScopeValuePolygon = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValuePolygon, LocationScopeValue.class);
+				request.setLocationRequirementPolygon(locationScopeValuePolygon);
 			}
 		}
 
@@ -772,7 +816,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		request.setOpType(opType);
 		request.setRequiredServicesNameList(requiredServicesName);
 		request.setQosRequirements(qosScopeValue);
-		request.setLocationRequirement(locationScopeValue);
+
 		return request;
 		
 	}
@@ -1196,13 +1240,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		this.qosManager = qosManager;
 	}
 
-	public Ngsi10Requester getNgsi10IoTBrokerCore() {
-		return ngsi10IoTBrokerCore;
-	}
-
-	public void setNgsi10IoTBrokerCore(Ngsi10Requester ngsi10IoTBrokerCore) {
-		this.ngsi10IoTBrokerCore = ngsi10IoTBrokerCore;
-	}
+//	public Ngsi10Requester getNgsi10IoTBrokerCore() {
+//		return ngsi10IoTBrokerCore;
+//	}
+//
+//	public void setNgsi10IoTBrokerCore(Ngsi10Requester ngsi10IoTBrokerCore) {
+//		this.ngsi10IoTBrokerCore = ngsi10IoTBrokerCore;
+//	}
 
 
 

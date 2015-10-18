@@ -150,7 +150,7 @@ public class TestFunctionality {
 									
 									locReqPoint.setLocationRequirement(p);
 									
-									req.setLocationRequirement(locReqPoint);
+									req.setLocationRequirementPoint(locReqPoint);
 								}
 								else{
 									if(values[5].contains("Circle")){
@@ -166,7 +166,7 @@ public class TestFunctionality {
 										
 										locReqCircle.setLocationRequirement(c);
 										
-										req.setLocationRequirement(locReqCircle);
+										req.setLocationRequirementCircle(locReqCircle);
 									}
 									else{
 										locReqPolygon = new LocationScopeValue<Polygon>();
@@ -190,7 +190,7 @@ public class TestFunctionality {
 										
 										locReqPolygon.setLocationRequirement(polygon);
 										
-										req.setLocationRequirement(locReqPolygon);
+										req.setLocationRequirementPolygon(locReqPolygon);
 									}
 								}
 								

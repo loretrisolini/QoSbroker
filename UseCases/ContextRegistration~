@@ -36,7 +36,7 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.8"
+                            "value": "0.12"
                         },
                         {
                             "name": "accuracy",
@@ -58,7 +58,7 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.8"
+                            "value": "0.33"
                         },
                         {
                             "name": "accuracy",
@@ -74,7 +74,7 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_ZHW0xSFCVE"
 }
 
 
@@ -109,12 +109,12 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "latency",
                             "type": "float",
-                            "value": "0.6"
+                            "value": "0.44"
                         },
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.3"
+                            "value": "0.66"
                         },
                         {
                             "name": "accuracy",
@@ -130,7 +130,7 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_s3Cs9s3s6L"
 }
 
 POST http://localhost:8090/ngsi9/registerContext
@@ -164,17 +164,17 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "latency",
                             "type": "float",
-                            "value": "0.4"
+                            "value": "0.6"
                         },
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.6"
+                            "value": "0.23"
                         },
                         {
                             "name": "accuracy",
                             "type": "float",
-                            "value": "0.3"
+                            "value": "0.11"
                         }
                     ]
                 },
@@ -186,12 +186,12 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "latency",
                             "type": "float",
-                            "value": "0.8"
+                            "value": "0.22"
                         },
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.7"
+                            "value": "0.33"
                         },
                         {
                             "name": "accuracy",
@@ -246,12 +246,12 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.9"
+                            "value": "0.3"
                         },
                         {
                             "name": "accuracy",
                             "type": "float",
-                            "value": "0.3"
+                            "value": "0.2"
                         }
                     ]
                 }
@@ -262,5 +262,5 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_ZECpMMe7wy"
 }

@@ -7,17 +7,20 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
+import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,11 +32,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
+import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class QoSManager implements QoSManagerIF {
@@ -124,7 +130,7 @@ public class QoSManager implements QoSManagerIF {
 				
 				//take the period p_j equal to maxRateRequest
 				//in QoSrequirements of the request identified by transId
-				p_j = request.getQosRequirements().getMaxRateRequest();
+				p_j = req.getQosRequirements().getMaxRateRequest();
 				periodsList.add(p_j);
 				
 				//set p_j in servPeriodParamsMap
@@ -316,24 +322,28 @@ public class QoSManager implements QoSManagerIF {
 	}
 
 	@Override
-	public ContextRegistration readAllocationSchema(
-			String transactionId) {
+	public List<ContextRegistration> readAllocationSchema(
+			List<String> transactionId) {
 		
 		System.out.println("QoSManager -- readAllocationSchemas read allocation schemas");
-		List<Pair<String, JSONObject>> allocationSchemasList = bigDataRepository.readData(null, QoSConsts.ALLOCATION_DB);
+		List<Pair<String, JSONObject>> allocationSchemasList = bigDataRepository.readData(transactionId, QoSConsts.ALLOCATION_DB);
 		if(allocationSchemasList == null){
 			return null;
 		}
 		
-		ContextRegistration allocationSchema = new ContextRegistration();
+		List<ContextRegistration> allocation = new ArrayList<>();
 		
 		for(Pair<String, JSONObject> pair: allocationSchemasList){
 			
-			allocationSchema = DataStructure.fromJsonToJaxb(pair.getRight(), new ContextRegistration(), 
+			ContextRegistration allocationSchema = DataStructure.fromJsonToJaxb(pair.getRight(), new ContextRegistration(), 
 																								ContextRegistration.class);
+			allocation.add(allocationSchema);
+			
+			
+			//TODO UPDATE POLICY+1
 		}
 		
-		return allocationSchema;
+		return allocation;
 	}
 	
 //	public NegotiationInterface getNegotiator() {

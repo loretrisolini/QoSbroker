@@ -36,7 +36,7 @@ POST http://localhost:8090/ngsi9/registerContext
                         {
                             "name": "energy_cost",
                             "type": "float",
-                            "value": "0.75"
+                            "value": "0.12"
                         },
                         {
                             "name": "accuracy",
@@ -74,7 +74,7 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_ZHW0xSFCVE"
 }
 
 
@@ -130,7 +130,7 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_s3Cs9s3s6L"
 }
 
 POST http://localhost:8090/ngsi9/registerContext
@@ -207,7 +207,7 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_bUv3UWSwsV"
 }
 
 POST http://localhost:8090/ngsi9/registerContext
@@ -262,5 +262,5 @@ POST http://localhost:8090/ngsi9/registerContext
         }
     ],
     "duration": "P1M",
-    "registrationId": "a"
+    "registrationId": "UniS_ZECpMMe7wy"
 }

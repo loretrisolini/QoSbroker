@@ -35,6 +35,7 @@
 						<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
 						<Import-Package>
 							it.unipi.iotplatform.qosbroker.couchdb.api;version="${pom.version}",
+							eu.neclab.iotplatform.couchdb.http;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.qoscalculator.api;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.qosmonitor.api;version="${pom.version}",

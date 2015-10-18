@@ -15,11 +15,11 @@
 	<osgi:service id="qosConsumerNgsi9core" ref="QoSBrokerCore"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" /> 
     
-  	<osgi:reference id="QoSNgsi9Interface"
+   	<osgi:reference id="QoSNgsi9Interface"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface" bean-name="connector"></osgi:reference>
 
 	<osgi:reference id="QoSNgsi10Requester"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester" bean-name="connector"></osgi:reference>
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester" bean-name="connector"></osgi:reference> 
 
  	<osgi:reference id="QoSMonitorServiceNgsi"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" bean-name="QoSMonitor"></osgi:reference>  
@@ -33,8 +33,8 @@
  	<osgi:reference id="QoSBigDataRepositoryInterface"
 		interface="it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository" cardinality="0..1"></osgi:reference> 
 	
-	<osgi:reference id="Ngsi10Interface"
-		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" bean-name="brokercore"></osgi:reference>
+<!-- 	<osgi:reference id="Ngsi10Interface"
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" bean-name="brokercore"></osgi:reference> -->
 	
 <!-- 	<osgi:reference id="negotiationServiceOSGI"
 		interface="eu.betaas.taas.qosmanager.negotiation.NegotiationInterface"

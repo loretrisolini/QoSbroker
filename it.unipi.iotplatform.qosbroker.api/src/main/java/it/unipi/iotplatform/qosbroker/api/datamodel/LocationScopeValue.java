@@ -17,7 +17,7 @@ public class LocationScopeValue<T> extends DataStructure {
 	
     @XmlElements({
         @XmlElement(name="circle", type=Circle.class),
-        @XmlElement(name="segment", type=Segment.class),
+        @XmlElement(name="polygon", type=Polygon.class),
         @XmlElement(name="point", type=Point.class)
     })
     //can be Point, Segment, Circle

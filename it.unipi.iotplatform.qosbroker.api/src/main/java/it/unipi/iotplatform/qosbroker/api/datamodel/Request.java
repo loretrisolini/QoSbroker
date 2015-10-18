@@ -33,9 +33,17 @@ public class Request extends DataStructure{
 	@JsonProperty("requiredServicesName")
 	private List<String> requiredServicesNameList;
 
-	@XmlElement(name = "locationRequirement")
-	@JsonProperty("locationRequirement")
-	protected LocationScopeValue locationRequirement;
+	@XmlElement(name = "locationRequirementPoint")
+	@JsonProperty("locationRequirementPoint")
+	private LocationScopeValue<Point> locationRequirementPoint;
+	
+	@XmlElement(name = "locationRequirementCircle")
+	@JsonProperty("locationRequirementCircle")
+	private LocationScopeValue<Circle> locationRequirementCircle;
+	
+	@XmlElement(name = "locationRequirementPolygon")
+	@JsonProperty("locationRequirementPolygon")
+	private LocationScopeValue<Polygon> locationRequirementPolygon;
 	
 	public String getOpType() {
 		return opType;
@@ -56,11 +64,27 @@ public class Request extends DataStructure{
 	public void setQosRequirements(QoSscopeValue qosRequirements) {
 		this.qosRequirements = qosRequirements;
 	}
-	public LocationScopeValue getLocationRequirement() {
-		return locationRequirement;
+
+	public LocationScopeValue<Point> getLocationRequirementPoint() {
+		return locationRequirementPoint;
 	}
-	public void setLocationRequirement(LocationScopeValue locationRequirement) {
-		this.locationRequirement = locationRequirement;
+	public void setLocationRequirementPoint(
+			LocationScopeValue<Point> locationRequirementPoint) {
+		this.locationRequirementPoint = locationRequirementPoint;
+	}
+	public LocationScopeValue<Circle> getLocationRequirementCircle() {
+		return locationRequirementCircle;
+	}
+	public void setLocationRequirementCircle(
+			LocationScopeValue<Circle> locationRequirementCircle) {
+		this.locationRequirementCircle = locationRequirementCircle;
+	}
+	public LocationScopeValue<Polygon> getLocationRequirementPolygon() {
+		return locationRequirementPolygon;
+	}
+	public void setLocationRequirementPolygon(
+			LocationScopeValue<Polygon> locationRequirementPolygon) {
+		this.locationRequirementPolygon = locationRequirementPolygon;
 	}
 
 }

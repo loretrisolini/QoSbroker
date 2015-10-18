@@ -30,5 +30,6 @@ public interface QoSManagerIF {
 	 */
 	public StatusCode createAgreement(String offer, String transactionId, Request request);//, HashMap<String, TransIdList> thingTransactionsMap);
 	
-	public ContextRegistration readAllocationSchema(String transactionId);
+	public List<ContextRegistration> readAllocationSchema(List<String> transIdList);
+
 }

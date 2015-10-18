@@ -6,7 +6,9 @@ public class QoSConsts {
 	
 	public static final String QOS_SERVICE = "QoSService"; 
 	
-	public static final String LOCATION = "Location";
+	public static final String LOCATION_POINT = "LocationPoint";
+	public static final String LOCATION_CIRCLE = "LocationCircle";
+	public static final String LOCATION_POLYGON = "LocationPolygon";
 	public static final String SIMPLE_GEO_LOCATION = "SimpleGeoLocation";
 	public static final String QOS = "QoS";
 	public static final String MAX_RESPONSE_TIME = "maxResponseTime";

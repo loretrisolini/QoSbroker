@@ -25,8 +25,8 @@
 		<property name="ngsi10Requestor" ref="QoSNgsi10Requester"></property>
   		<property name="qosMonitorNgsi" ref="QoSMonitorServiceNgsi"></property>
 		<property name="qosMonitor" ref="QoSMonitorService"></property>
-		<property name="qosManager" ref="QoSManager"></property>
-		<property name="ngsiIoTBrokerCore" ref="Ngsi10Interface"></property>           
+		<property name="qosManager" ref="QoSManager"></property>    
+   		<!-- <property name="bigDataRepository" ref="QoSBigDataRepositoryInterface"></property>   -->
 <!-- 		<property name="negotiator" ref="negotiationServiceOSGI"></property>  -->
 	</bean>
 

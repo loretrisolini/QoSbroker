@@ -20,6 +20,7 @@ public class Statistics{
 	public static int count = 0;
 	public static int r = 0;
 	public static String testFolder = "testFolder";
+	public static File file;
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
@@ -27,10 +28,9 @@ public class Statistics{
 		FileWriter fileWriterThingsMappings = null;
 		
 		try{
-			count++;
-			r++;
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
-			if(!file.exists()) file.mkdir();
+			
+			setTestDir();
+				
 			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things"+count+".csv");
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
@@ -119,6 +119,26 @@ public class Statistics{
 	}
 	
 	
+	public static void setTestDir() {
+		
+		if(file == null){
+			while(count<100){
+				count++; 
+				r++;
+				file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
+				if(!file.exists() || count==100){ 
+					file.mkdir();
+					break;
+				}
+				
+				if(count==100)
+					System.out.println("LIMIT OF NUMBER OF TEST FOLDER<------------------------------------");
+			}
+		}
+		
+	}
+
+
 	/* function to print the input values of the GAP algorithm */
 	public static void printInputGap(int k, List<Pair<String, Request>> requests,
 			HashMap<String,HashMap<String,List<NormalizedEnergyCost>>> matrixF_ij,
@@ -132,8 +152,8 @@ public class Statistics{
 		FileWriter fileWriterInputGap=null;
 		
 		try{
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
-			if(!file.exists()) file.mkdir();
+			if(file==null) setTestDir();
+			
 			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputGap"+count+".csv");
 			
 			fileWriterInputGap.append("k,Teta,Priority,Policy");
@@ -167,32 +187,29 @@ public class Statistics{
 				Point point = null;
 				Circle circle = null;
 				Polygon polygon = null;
-				
-				if(req.getLocationRequirement() != null){
-					//take the location requirement from the LocationRequirement object in the request object
-					Class<?> locRequirementsType = req.getLocationRequirement().getLocationRequirement().getClass();
-					
-					if(locRequirementsType == Point.class){
-						point = (Point)req.getLocationRequirement().getLocationRequirement();
-						fileWriterInputGap.append("Point: "+String.valueOf(point.getLatitude())+" "+String.valueOf(point.getLongitude()));
+
+
+				if(req.getLocationRequirementPoint()!=null){
+					point = req.getLocationRequirementPoint().getLocationRequirement();
+					fileWriterInputGap.append("Point: "+String.valueOf(point.getLatitude())+" "+String.valueOf(point.getLongitude()));
+				}
+				else{
+					if(req.getLocationRequirementCircle()!=null){
+						circle = req.getLocationRequirementCircle().getLocationRequirement();
+						fileWriterInputGap.append("Circle: cLat: "+String.valueOf(circle.getCenterLatitude())+" | cLon: "+String.valueOf(circle.getCenterLongitude())
+											+" | rad: "+String.valueOf(circle.getRadius()));
 					}
 					else{
-						if(locRequirementsType == Circle.class){
-							circle = (Circle)req.getLocationRequirement().getLocationRequirement();
-							fileWriterInputGap.append("Circle: cLat: "+String.valueOf(circle.getCenterLatitude())+" | cLon: "+String.valueOf(circle.getCenterLongitude())
-												+" | rad: "+String.valueOf(circle.getRadius()));
-						}
-						else{
-							polygon = (Polygon)req.getLocationRequirement().getLocationRequirement();
-							
-							List<Vertex> vertexList = polygon.getVertexList();
-							fileWriterInputGap.append("Polygon: ");
-							for(Vertex v: vertexList){
-								fileWriterInputGap.append("vLat: "+String.valueOf(v.getLatitude())+" vLon: "+String.valueOf(v.getLongitude())+" | ");
-							}
+						polygon = req.getLocationRequirementPolygon().getLocationRequirement();
+						
+						List<Vertex> vertexList = polygon.getVertexList();
+						fileWriterInputGap.append("Polygon: ");
+						for(Vertex v: vertexList){
+							fileWriterInputGap.append("vLat: "+String.valueOf(v.getLatitude())+" vLon: "+String.valueOf(v.getLongitude())+" | ");
 						}
 					}
 				}
+				
 				fileWriterInputGap.append(",");
 				
 				for(String serv: req.getRequiredServicesNameList()){
@@ -225,9 +242,9 @@ public class Statistics{
 						fileWriterInputGap.append(neC.getService());
 						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(neC.getF_ij()));
-						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(neC.getH_p_j()));
-						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(neC.getCij_b_i()));
 						fileWriterInputGap.append("\n");
 					}
@@ -257,9 +274,9 @@ public class Statistics{
 						fileWriterInputGap.append(u.getService());
 						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(u.getU_ij()));
-						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(u.getT_ij()));
-						fileWriterInputGap.append("\n");
+						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(String.valueOf(u.getP_j()));
 						fileWriterInputGap.append("\n");
 					}
@@ -391,8 +408,8 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
-			if(!file.exists()) file.mkdir();
+			if(file==null) setTestDir();
+			
 			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap"+count+".txt", "UTF-8");
 			writer.println("####################################");
 			writer.println("####################################");
