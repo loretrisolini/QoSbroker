@@ -1,50 +1,53 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /* allocation class to store a single service
  * allocation transId,ServId -> tId, tsId */
 public class AllocationObj{
-	//List<DevId> assigned to a service request
-	private String[] devIdList;
-	
-	private Double[] u_ij;
-	private Double[] f_ij;
-	private int split;
-	
-	public AllocationObj(int dim){
-		devIdList = new String[dim];
+
+	public class AllocationInfo{
+		public String devId;
 		
-		u_ij = new Double[dim];
-		f_ij = new Double[dim];
-		split = dim;
+		//how many times calls
+		//this thing to
+		//satisfies this service
+		public Integer c_ij_split;
+		
+		Double u_ij;
+		Double f_ij;
+		
+		public AllocationInfo(String devId, Integer c_ij_split, Double u_ij, Double f_ij){
+			this.devId = devId;
+			this.c_ij_split = c_ij_split;
+			this.u_ij = u_ij;
+			this.f_ij = f_ij;
+		}
+	}
+	
+	//pair thingId and how many times this thing is taken
+	private List<AllocationInfo> deviceList;
+	private int split;
+
+	public void addDevice(String devId, Integer c_ij_split, Double u_ij, Double f_ij){
+		deviceList.add(new AllocationInfo(devId, c_ij_split, u_ij, f_ij));
 	}
 
-	public String[] getDevIdList() {
-		return devIdList;
+	public List<String> getDeviceIdList(){
+		List<String> devices = new ArrayList<>();
+		
+		for(AllocationInfo assObj: deviceList){
+			devices.add(assObj.devId);
+		}
+		return devices;
 	}
-
-	public void setDevIdList(String[] devIdList) {
-		this.devIdList = devIdList;
+	
+	public List<AllocationInfo> getDeviceAllocaInfoList(){
+		return deviceList;
 	}
-
-	public Double[] getU_ij() {
-		return u_ij;
-	}
-
-	public void setU_ij(Double[] u_ij) {
-		this.u_ij = u_ij;
-	}
-
-	public Double[] getF_ij() {
-		return f_ij;
-	}
-
-	public void setF_ij(Double[] f_ij) {
-		this.f_ij = f_ij;
-	}
-
+	
 	public int getSplit() {
 		return split;
 	}
@@ -53,15 +56,12 @@ public class AllocationObj{
 		this.split = split;
 	}
 
-	@Override
-	public String toString(){
-		
-		String print = new String();
-		print += "\nf_ij: "+ Arrays.deepToString(this.getF_ij()) + "\n";
-		print += "u_ij: "+ Arrays.deepToString(this.getU_ij()) + "\n";
-		print += "split: "+ this.getSplit() + "\n";
-		print += "Things allocated: "+ Arrays.deepToString(this.getDevIdList()) + "\n";
-		
-		return print;
+	public List<AllocationInfo> getDeviceList() {
+		return deviceList;
 	}
+
+	public void setDeviceList(List<AllocationInfo> deviceList) {
+		this.deviceList = deviceList;
+	}
+
 }

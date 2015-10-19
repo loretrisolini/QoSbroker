@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.qosbroker.qoscalculator.datamodel;
+package it.unipi.iotplatform.qosbroker.api.datamodel;
 
 public class ThingAssignmentParams {
 

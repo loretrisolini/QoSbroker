@@ -1,27 +1,20 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
-import java.util.List;
-
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
+/* class that represents the input and the result of the execution of the QoSCalculator
+ * heuristic */
 public class ReservationResults {
-
-	private List<ContextRegistration> allocationSchema;
+	
+	private Reserveobj[] res;
 	
 	private boolean isFeas;
 	
+	//say which Reserveobj
+	//is a feasible allocation
 	private int which;
 	
 	private StatusCode statusCode;
-	
-	public List<ContextRegistration> getAllocationSchema() {
-		return allocationSchema;
-	}
-
-	public void setAllocationSchema(List<ContextRegistration> allocationSchema) {
-		this.allocationSchema = allocationSchema;
-	}
 
 	public boolean isFeas() {
 		return isFeas;
@@ -46,4 +39,13 @@ public class ReservationResults {
 	public void setStatusCode(StatusCode statusCode) {
 		this.statusCode = statusCode;
 	}
+
+	public Reserveobj[] getRes() {
+		return res;
+	}
+
+	public void setRes(Reserveobj[] res) {
+		this.res = res;
+	}
+
 }

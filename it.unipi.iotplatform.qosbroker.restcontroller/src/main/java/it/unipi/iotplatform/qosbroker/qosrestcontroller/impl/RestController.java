@@ -231,7 +231,7 @@ public class RestController {
 	@RequestMapping(value = "/queryContext", method = RequestMethod.POST, consumes = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON }, produces = {
 			CONTENT_TYPE_XML, CONTENT_TYPE_JSON })
-	public ResponseEntity<QueryContextResponse> query(
+	public ResponseEntity<QueryContextResponse> qosQuery(
 			HttpServletRequest requester,
 			@RequestBody QueryContextRequest request) {
 

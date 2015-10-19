@@ -1,11 +1,14 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj.AllocationInfo;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
@@ -18,6 +21,7 @@ import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,8 +43,6 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
@@ -176,19 +178,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		StatusCode statusCode;
 		
 		QueryContextResponse queryResponse = new QueryContextResponse();
-		List<String> transIdList = new ArrayList<>();
 		
-		logger.info("QoSBrokerCore -- queryContext() lookup for transaction Ids in the request");
-		for(EntityId entId: entityIdList){
-			
-			if(entId.getType().toString().contentEquals(QoSConsts.QOS_SERVICE)){
-				
-				transIdList.add(entId.getId());
-			}
-		}
-		
+		logger.info("QoSBrokerCore -- queryContext() lookup for transaction Id in the request");
+		String transId = entityIdList.get(0)==null ? null : entityIdList.get(0).getId();
+
 		//no transactionId
-		if(transIdList.isEmpty()){
+		if(transId == null){
 
 			statusCode = new StatusCode(
 					Code.BADREQUEST_400.getCode(),
@@ -207,11 +202,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			<isDomain>false</isDomain> 
 			<metadata> 
 				<contextMetadata> 
-					<name>policy</name> 
-					<type>integer</type> 
-					<value>1</value> 
-				</contextMetadata> 
-				<contextMetadata> 
 					<name>equivalentEnt_1</name> 
 					<type>string</type> 
 					<value>tempSens_1,temp_1</value> 
@@ -228,41 +218,92 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	</providingApplication> */
 		
 		logger.info("QoSBrokerCore -- queryContext() read Allocation Schemas");
-		List<ContextRegistration> allocationSchema = qosManager.readAllocationSchema(transIdList);
+		ReservationResults reservationResults = qosManager.getReservationResults();
 		
-		if(allocationSchema == null){
+		if(reservationResults == null){
 			
 			statusCode = new StatusCode(
 					Code.INTERNALERROR_500.getCode(),
-					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "Error reading allocation schemas");
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error reading allocation schemas");
 
 			queryResponse.setErrorCode(statusCode);
 
 			return queryResponse;
 		}
 
-		//TODO check operationType
+		//Map<reqServName, List<devId>>
+		HashMap<String, AllocationObj> allocationResult = 
+				reservationResults.getRes()[reservationResults.getWhich()].getAllocationSchema().get(transId);
 		
-		List<EntityId> entityIdReqList = new ArrayList<>();
-		List<String> attributeList = new ArrayList<>();
+		//Map<transId, operationType>
+		String opType = reservationResults.getRes()[reservationResults.getWhich()].getTransId_opType().get(transId);
 		
-//		for(ContextRegistrationAttribute crAttr: conRegAttrList){
-//			
-//			List<ContextMetadata> contMetadataList = crAttr.getMetaData();
-//			
-////			contMetadataList.get(0)
-//			
-//
-//		}
+		if(allocationResult == null || opType == null){
+			
+			statusCode = new StatusCode(
+					Code.INTERNALERROR_500.getCode(),
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error reading allocation schemas");
+
+			queryResponse.setErrorCode(statusCode);
+
+			return queryResponse;
+		}
 		
 		QueryContextRequest qosQuery = new QueryContextRequest();
-		qosQuery.setEntityIdList(entityIdReqList);
+		
+		List<EntityId> entityIdAllocList = new ArrayList<>();
+		List<String> attributeList = new ArrayList<>();
+		
+		for(Map.Entry<String, AllocationObj> entryAlloc: allocationResult.entrySet()){
+
+			if(!opType.contentEquals(transId)){
+				statusCode = new StatusCode(
+						Code.BADREQUEST_400.getCode(),
+						ReasonPhrase.BADREQUEST_400.toString(), "QoSBrokerCore -- queryContext() Error Allocation opType doesn't match");
+
+				queryResponse.setErrorCode(statusCode);
+
+				return queryResponse;
+			}
+			
+			String service = entryAlloc.getKey();
+			attributeList.add(service);
+			
+			List<String> devIdList = entryAlloc.getValue().getDeviceIdList();
+			String devId = qosManager.computeNextDevId(transId, service);
+			
+			if(devId == null || !devIdList.contains(devId)){
+				statusCode = new StatusCode(
+						Code.INTERNALERROR_500.getCode(),
+						ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error Policy compute next DevId");
+
+				queryResponse.setErrorCode(statusCode);
+
+				return queryResponse;
+			}
+			
+			EntityId entId = new EntityId();
+			entId.setIsPattern(false);
+			entId.setType(URI.create(""));
+			entId.setId(devId);
+			
+			entityIdAllocList.add(entId);
+		}
+		
+		qosQuery.setEntityIdList(entityIdAllocList);
 		qosQuery.setAttributeList(attributeList);
 		
 		//REST CALL QUERY TO IoTBROKER
 		try{
 			URL url = new URL(IOTBROKER_URL+"/queryContext");
 			FullHttpResponse resp = HttpRequester.sendPost(url, qosQuery.toString(), CONTENT_TYPE_XML);
+			
+			String body = resp.getBody();
+			
+			queryResponse = (QueryContextResponse)QueryContextResponse.convertStringToXml(body, QueryContextResponse.class);
+			
+			return queryResponse;
+			
 		} catch (MalformedURLException e) {
 			logger.error("Error: ", e);
 			return null;
@@ -271,7 +312,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return null;
 		}
 		
-		return null;
 //		/*
 //		 * create associations operation scope for discovery
 //		 */
@@ -916,6 +956,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private StatusCode createThingsMap(
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
 			List<ContextElementResponse> qosMonitorResponse, Request request, String transId) {
+		
+		Statistics.printNgsiResults(contextRegistrationResponseList, qosMonitorResponse);
 		
 		StatusCode statusCode;
 		

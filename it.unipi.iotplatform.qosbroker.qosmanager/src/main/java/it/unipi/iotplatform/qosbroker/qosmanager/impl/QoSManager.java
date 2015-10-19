@@ -1,26 +1,25 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
-import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,14 +31,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
+import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class QoSManager implements QoSManagerIF {
@@ -50,7 +49,6 @@ public class QoSManager implements QoSManagerIF {
 	private QoSCalculatorIF qosCalculator;
 	
 	private QoSBigDataRepository bigDataRepository;
-	
 	
 	@Override
 	public String getTemplate() {
@@ -201,66 +199,24 @@ public class QoSManager implements QoSManagerIF {
 			
 			return statusCode;
 		}
-
-//		HashMap<String, TransIdList> matrixM = 
-//				TransIdList.fromDbFormatToJavaFormat(thingTransactionsJson, TransIdList.class);
-//		if(matrixM == null){
-//			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-//					QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-//					"QoSManager -- createAgreement() Error conversion fromDbFormatToJavaFormat of thingTransactionsJson");
-//			
-//			return statusCode;
-//		}
-		
-//		//fuse the matrixM read from the DB
-//		//and new one computed with the ServiceAgreement operation
-//		if(!matrixM.isEmpty()){
-//			for(Map.Entry<String, TransIdList> entry: thingTransactionsMap.entrySet()){
-//				String devId = entry.getKey();
-//				
-//				if(matrixM.get(devId) != null){
-//					matrixM.get(devId).getTransIdList().addAll(entry.getValue().getTransIdList());
-//				}
-//				else{
-//					matrixM.put(devId, entry.getValue());
-//				}
-//			}
-//		}
-//		else{
-//			//case in which matrixM is empty
-//			//so add directly all the elements
-//			matrixM.putAll(thingTransactionsMap);
-//		}
 		
 		System.out.println("QoSManager -- createAgreement() compute allocation");
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-														thingsInfo, servNameThingsIdList, Policy.MAX_SPLIT, 0.001);
+														thingsInfo, servNameThingsIdList, 0.001);
 		
-		List<ContextRegistration> allocationSchema = null;
+		//Map<transId, Map<reqServName, List<devId>>>
+		HashMap<String, HashMap<String, AllocationObj>> allocationResult = null;
 		if(result.isFeas()){
 			
 			System.out.println("QoSManager -- createAgreement() allocation OK");
-			allocationSchema = result.getAllocationSchema();
 			
-//			//store new matrixM if allocation feasible
-//			List<Pair<String, JSONObject>> matrixMJson = TransIdList.fromJavaFormatToDbFormat(matrixM, TransIdList.class);
-//			if(matrixMJson == null){
-//				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-//						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-//						"QoSManager -- createAgreement() Error conversion fromJavaFormatToDbFormat of matrixM");
-//				
-//				return statusCode;
-//			}
-//			else{
-//				if(!bigDataRepository.storeData(matrixMJson, QoSConsts.REQUIREMENTS_DB)){
-//					statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
-//							QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-//							"QoSManager -- createAgreement() Error store matrixMJson in DB "+QoSConsts.REQUIREMENTS_DB);
-//					
-//					return statusCode;
-//				}
-//			}
+			Reserveobj res = result.getRes()[result.getWhich()];
+			
+			System.out.println("Best allocation with policy "+ res.getSplitPolicy().name() +" and priority taken as "+
+								res.getPriority());
+			
+			allocationResult = result.getRes()[result.getWhich()].getAllocationSchema();
 			
 			//convert the new request in JSON and add thins one to the old
 			//list of request read from the DB
@@ -275,10 +231,20 @@ public class QoSManager implements QoSManagerIF {
 				return statusCode;
 			}
 			
+			
+			List<ContextRegistration> allocationNgsiSchema = createNgsiAllocationSchema(allocationResult, res.getTransId_opType());
+			if(allocationNgsiSchema == null){
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 
+						QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
+						"QoSManager -- createAgreement() Error conversion allocationResult in allocationNgsiSchema as List<ContextRegistration>");//+", "+QoSConsts.REQUIREMENTS_DB);
+				
+				return statusCode;
+			}
+			
 			//store new allocation schemas if allocation is feasible
 			List<Pair<String, JSONObject>> allocationSchemaJson = new ArrayList<Pair<String, JSONObject>>();
 			
-			for(ContextRegistration contReg: allocationSchema){
+			for(ContextRegistration contReg: allocationNgsiSchema){
 				JSONObject contRegJson = DataStructure.fromJaxbToJson(contReg, ContextRegistration.class);
 				
 				//there is only one id, the one relative to transactionId
@@ -338,13 +304,100 @@ public class QoSManager implements QoSManagerIF {
 			ContextRegistration allocationSchema = DataStructure.fromJsonToJaxb(pair.getRight(), new ContextRegistration(), 
 																								ContextRegistration.class);
 			allocation.add(allocationSchema);
-			
-			
-			//TODO UPDATE POLICY+1
 		}
 		
 		return allocation;
 	}
+	
+	
+	/* function to create the ngsi allocation schema from the Reserveobj object */
+	private List<ContextRegistration> createNgsiAllocationSchema(
+			HashMap<String, HashMap<String, AllocationObj>> allocationResult, HashMap<String, String> transId_opType) {
+		
+		List<ContextRegistration> contRegList = new ArrayList<>();
+		
+		//for each transId
+		for(Map.Entry<String, HashMap<String, AllocationObj>> entry : allocationResult.entrySet()){
+			
+			String transId = entry.getKey();
+			
+			String opType = transId_opType.get(transId);
+			
+			ContextRegistration contReg = new ContextRegistration();
+			
+			List<EntityId> entityIdList = new ArrayList<>();
+			EntityId entId = new EntityId();
+			entId.setId(transId);
+			entId.setIsPattern(false);
+			entId.setType(URI.create(QoSConsts.QOS_SERVICE));
+			entityIdList.add(entId);
+			
+			contReg.setListEntityId(entityIdList);
+			
+			List<ContextMetadata> contMetadataList = new ArrayList<>();
+			ContextMetadata contMetadata = new ContextMetadata();
+			contMetadata.setName("operationType");
+			contMetadata.setType(URI.create("operation"));
+			contMetadata.setValue(opType);
+			contMetadataList.add(contMetadata);
+			contReg.setListContextMetadata(contMetadataList);
+			
+			HashMap<String, AllocationObj> servicesAllocation = entry.getValue();
+			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
+			
+			//for each servName in a request identify by transId
+			for(Map.Entry<String, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
+
+				ContextRegistrationAttribute contRegAttr = new ContextRegistrationAttribute();
+				
+				String serviceName = entryAllocation.getKey();
+				
+				contRegAttr.setName(serviceName);
+				contRegAttr.setType(URI.create("service"));
+				
+				List<ContextMetadata> contMetadataAttrList = new ArrayList<>();
+				
+				List<String> allocationDevIdList = entryAllocation.getValue().getDeviceIdList();
+				
+				for(String devId: allocationDevIdList){
+					
+					ContextMetadata contMetadataAttr = new ContextMetadata();
+					
+					String contextEntityId = devId;
+					String attrName = serviceName;
+					
+					contMetadataAttr.setName(serviceName);
+					contMetadataAttr.setType(URI.create("string"));
+					contMetadataAttr.setValue(contextEntityId+"::"+attrName);
+					
+					contMetadataAttrList.add(contMetadataAttr);
+				}
+				
+				contRegAttr.setMetaData(contMetadataAttrList);
+				contRegAttrList.add(contRegAttr);
+			}
+			
+
+			contReg.setListContextRegistrationAttribute(contRegAttrList);
+			contRegList.add(contReg);
+		}
+		
+		return contRegList;
+	}
+
+	@Override
+	public ReservationResults getReservationResults() {
+		
+		return qosCalculator.readReservation();
+	}
+
+	@Override
+	public String computeNextDevId(String transId, String service) {
+		
+		return qosCalculator.getNextDevId(transId, service);
+	}
+	
+	
 	
 //	public NegotiationInterface getNegotiator() {
 //	return negotiator;

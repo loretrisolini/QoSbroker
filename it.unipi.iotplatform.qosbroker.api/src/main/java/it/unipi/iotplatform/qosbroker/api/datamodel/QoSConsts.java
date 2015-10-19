@@ -31,4 +31,6 @@ public class QoSConsts {
 	public static final String COUCHDB_ALLDOCS = "_all_docs";
 	public static final String COUCHDB_TOTROWS = "total_rows";
 	public static final String COUCHDB_ROWS = "rows";
+	
+	public static final String QUERY_CONTEXT_OP = "queryContext";
 }

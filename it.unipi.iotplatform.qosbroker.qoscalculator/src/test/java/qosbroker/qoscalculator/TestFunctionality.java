@@ -2,7 +2,6 @@ package qosbroker.qoscalculator;
 
 import static org.junit.Assert.assertEquals;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Policy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -31,6 +30,7 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 
+
 public class TestFunctionality {
 
 		//The components that are tested:
@@ -38,7 +38,6 @@ public class TestFunctionality {
 		FileWriter fileWriter;
 		
 		int k = 0;
-		Policy policy = null;
 		Double epsilon = null;
 		List<Pair<String, Request>> requests = new ArrayList<Pair<String, Request>>();
 		HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
@@ -75,7 +74,7 @@ public class TestFunctionality {
 			logger.info("Now testing it.unipi.iotplatform.qosbroker.qoscalculator");
 			
 			//execute the test
-			ReservationResults result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, policy, epsilon);
+			ReservationResults result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, eqThingInfo, servNameThingsIdList, epsilon);
 			
 			assertEquals(result,resultNotNull);
 			
@@ -112,9 +111,9 @@ public class TestFunctionality {
 							
 							k = Integer.valueOf(values[0]);
 							
-							policy = Policy.valueOf(values[1]);
+//							policy = Policy.valueOf(values[1]);
 							
-							epsilon = Double.valueOf(values[2]);
+							epsilon = Double.valueOf(values[1]);
 							
 							break;
 						}
@@ -316,3 +315,39 @@ public class TestFunctionality {
 			}
 		}
 }
+
+/*
+1:k,epsilon
+4,0.001
+
+2:TransactionID, operationType, maxRespTime, maxRateRequest, accuracy, LocationRequirement, ServiceList
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,queryContext,15,3,null,Circle:43.656998;10.437418;1000.9,degrees,humidity,CO2
+ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,queryContext,7,5,null,Circle:43.656998;10.437418;100.9,humidity
+
+3:TransactionID,h/p_j, p_j
+ad7fc40d-e23e-4557-9fbb-d89f63b3c6f3,5,3.0
+ad7fc40d-e23e-4557-9fbb-eeeeefffffffffdd,3,5.0
+
+4:DevId,BatteryLevel,Coords
+sensor_3:environment,99,37.0 45.9
+sensor_1:environment,99,57.0 45.9
+sensor_2:temperature,90,47.0 45.9
+sensor_4:temperature,77,57.0 44.9
+
+5:DevId,ServiceName,Latency,EnergyCost,Accuracy
+sensor_3:environment,CO2,0.3,0.2,null
+sensor_3:environment,battery,null,null,null
+sensor_3:environment,degrees,0.4,0.4,null
+sensor_1:environment,humidity,0.54,0.3,null
+sensor_1:environment,battery,null,null,null
+sensor_1:environment,degrees,0.54,0.4,null
+sensor_2:temperature,battery,null,null,null
+sensor_2:temperature,degrees,0.6,0.3,null
+sensor_2:temperature,humidity,0.3,0.11,null
+sensor_4:temperature,battery,null,null,null
+sensor_4:temperature,degrees,0.2,0.4,null
+
+6:requiredServiceName,devIdList
+CO2,sensor_3:environment
+humidity,sensor_1:environment,sensor_2:temperature
+degrees,sensor_1:environment,sensor_3:environment,sensor_2:temperature,sensor_4:temperature*/

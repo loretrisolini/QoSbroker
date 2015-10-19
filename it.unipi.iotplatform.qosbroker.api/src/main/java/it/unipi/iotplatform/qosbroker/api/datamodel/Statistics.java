@@ -7,10 +7,11 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
@@ -122,51 +123,46 @@ public class Statistics{
 	public static void setTestDir() {
 		
 		if(file == null){
-			while(count<100){
 				count++; 
 				r++;
 				file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
-				if(!file.exists() || count==100){ 
+				if(!file.exists()){ 
 					file.mkdir();
-					break;
 				}
-				
-				if(count==100)
-					System.out.println("LIMIT OF NUMBER OF TEST FOLDER<------------------------------------");
-			}
+
 		}
 		
 	}
 
 
 	/* function to print the input values of the GAP algorithm */
-	public static void printInputGap(int k, List<Pair<String, Request>> requests,
+	public static void printInputsABGAP(int k, List<Pair<String, Request>> requests,
 			HashMap<String,HashMap<String,List<NormalizedEnergyCost>>> matrixF_ij,
 			HashMap<String,HashMap<String,List<Utilization>>> matrixU_ij,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, List<String>> matrixM, double teta, String prio,
-			String policy) {
+			HashMap<String, List<String>> matrixM, String prio,
+			String splitPolicy,
+			String allocPolicy) {
 		
 		FileWriter fileWriterInputGap=null;
 		
 		try{
 			if(file==null) setTestDir();
 			
-			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputGap"+count+".csv");
+			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP"+count+".csv");
 			
-			fileWriterInputGap.append("k,Teta,Priority,Policy");
+			fileWriterInputGap.append("k,Priority,SplitPolicy,AllocationPolicy");
 			fileWriterInputGap.append("\n");
 			
 			fileWriterInputGap.append(String.valueOf(k));
 			fileWriterInputGap.append(",");
-			fileWriterInputGap.append(String.valueOf(teta));
-			fileWriterInputGap.append(",");
 			fileWriterInputGap.append(prio);
 			fileWriterInputGap.append(",");
-			fileWriterInputGap.append(policy);
-			fileWriterInputGap.append("\n");
+			fileWriterInputGap.append(splitPolicy);
+			fileWriterInputGap.append(",");
+			fileWriterInputGap.append(allocPolicy);
 			fileWriterInputGap.append("\n");
 			
 			fileWriterInputGap.append("TransactionID, operationType, maxRespTime, maxRateRequest, LocationRequirement, ServiceList");
@@ -430,6 +426,35 @@ public class Statistics{
 				writer.println("");
 				writer.println("");
 			}
+			
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void printNgsiResults(List<ContextRegistrationResponse> contRegList, List<ContextElementResponse> contElemList){
+		
+		PrintWriter writer=null;
+		
+		try{
+			if(file==null) setTestDir();
+			
+			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults"+count+".txt", "UTF-8");
+			writer.println("####################################");
+			writer.println("####################################");
+			
+			writer.println("Context Registration List");
+			
+			writer.println(contRegList.toString());
+			
+			writer.println("Context Element List");
+			
+			writer.println(contElemList.toString());
 			
 			writer.println("########################################");
 			writer.println("########################################");
