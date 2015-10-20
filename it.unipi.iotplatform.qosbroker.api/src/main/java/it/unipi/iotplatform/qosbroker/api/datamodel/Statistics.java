@@ -137,8 +137,8 @@ public class Statistics{
 
 	/* function to print the input values of the GAP algorithm */
 	public static void printInputsABGAP(int k, List<Pair<String, Request>> requests,
-			HashMap<String,HashMap<String,List<NormalizedEnergyCost>>> matrixF_ij,
-			HashMap<String,HashMap<String,List<Utilization>>> matrixU_ij,
+			HashMap<String,HashMap<String, Double>> matrixF_ij,
+			HashMap<String,HashMap<String, Double>> matrixU_ij,
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
@@ -210,66 +210,56 @@ public class Statistics{
 			}
 			
 			fileWriterInputGap.append("\n");
-			fileWriterInputGap.append("devId, transId, service, f_ij, h/p_j, c_ij/b_i");
+			fileWriterInputGap.append("devId, transId, service, f_ij");
 			fileWriterInputGap.append("\n");
-			for(Map.Entry<String,HashMap<String,List<NormalizedEnergyCost>>> entryF_ij: matrixF_ij.entrySet()){
+			for(Map.Entry<String,HashMap<String,Double>> entryF_ij: matrixF_ij.entrySet()){
 				
 				String devId = entryF_ij.getKey();
 				
-				HashMap<String,List<NormalizedEnergyCost>> transIdServ = entryF_ij.getValue();
+				HashMap<String, Double> transIdServ = entryF_ij.getValue();
 				
-				for(Map.Entry<String,List<NormalizedEnergyCost>> entryNeC: transIdServ.entrySet()){
+				for(Map.Entry<String, Double> entryNeC: transIdServ.entrySet()){
 					
-					String transId = entryNeC.getKey();
+					String[] transId_service = entryNeC.getKey().split("::");
 					
-					List<NormalizedEnergyCost> normEnCost = entryNeC.getValue();
+					String transId = transId_service[0];
+					String service = transId_service[1];
 					
-					for(NormalizedEnergyCost neC: normEnCost){
-						fileWriterInputGap.append(devId);
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(transId);
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(neC.getService());
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(neC.getF_ij()));
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(neC.getH_p_j()));
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(neC.getCij_b_i()));
-						fileWriterInputGap.append("\n");
-					}
+					fileWriterInputGap.append(devId);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(transId);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(service);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(String.valueOf(entryNeC.getValue()));
+					fileWriterInputGap.append("\n");
 				}
 			}
 			
 			fileWriterInputGap.append("\n");
-			fileWriterInputGap.append("devId, transId, service, u_ij, t_ij, p_j");
+			fileWriterInputGap.append("devId, transId, service, u_ij");
 			fileWriterInputGap.append("\n");
-			for(Map.Entry<String,HashMap<String,List<Utilization>>> entryU_ij: matrixU_ij.entrySet()){
+			for(Map.Entry<String,HashMap<String,Double>> entryU_ij: matrixU_ij.entrySet()){
 				
 				String devId = entryU_ij.getKey();
 				
-				HashMap<String,List<Utilization>> transIdServ = entryU_ij.getValue();
+				HashMap<String,Double> transIdServ = entryU_ij.getValue();
 				
-				for(Map.Entry<String,List<Utilization>> entryUt: transIdServ.entrySet()){
+				for(Map.Entry<String,Double> entryUt: transIdServ.entrySet()){
 					
-					String transId = entryUt.getKey();
+					String[] transId_service = entryUt.getKey().split("::");
 					
-					List<Utilization> utList = entryUt.getValue();
-					
-					for(Utilization u: utList){
-						fileWriterInputGap.append(devId);
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(transId);
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(u.getService());
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(u.getU_ij()));
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(u.getT_ij()));
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(String.valueOf(u.getP_j()));
-						fileWriterInputGap.append("\n");
-					}
+					String transId = transId_service[0];
+					String service = transId_service[1];
+
+					fileWriterInputGap.append(devId);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(transId);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(service);
+					fileWriterInputGap.append(",");
+					fileWriterInputGap.append(String.valueOf(entryUt.getValue()));
+					fileWriterInputGap.append("\n");
 				}
 			}
 			
@@ -393,7 +383,7 @@ public class Statistics{
 	
 	
 	public static void printAllocationSchema(
-			HashMap<String, HashMap<String, AllocationObj>> allocationSchema) {
+			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema) {
 		
 		PrintWriter writer=null;
 		
@@ -404,14 +394,14 @@ public class Statistics{
 			writer.println("####################################");
 			writer.println("####################################");
 			
-			for(Map.Entry<String, HashMap<String, AllocationObj>> entry: allocationSchema.entrySet()){
+			for(Map.Entry<String, HashMap<String, AllocationInfo>> entry: allocationSchema.entrySet()){
 				writer.println("transId: "+entry.getKey());
 				writer.println("");
 				
-				HashMap<String, AllocationObj> services = entry.getValue();
+				HashMap<String, AllocationInfo> services = entry.getValue();
 				
 				writer.println("services allocated:");
-				for(Map.Entry<String, AllocationObj> entryAllocation: services.entrySet()){
+				for(Map.Entry<String, AllocationInfo> entryAllocation: services.entrySet()){
 					writer.println("service Name: "+entryAllocation.getKey());
 					
 					writer.println(entryAllocation.toString());

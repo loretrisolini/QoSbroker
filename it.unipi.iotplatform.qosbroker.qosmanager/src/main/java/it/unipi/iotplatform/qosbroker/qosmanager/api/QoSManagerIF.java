@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 
@@ -35,5 +36,5 @@ public interface QoSManagerIF {
 
 	public ReservationResults getReservationResults();
 	
-	public String computeNextDevId(String transId, String service);
+	public String computeNextDevId(String transId, String service, AllocationPolicy allocPolicy);
 }

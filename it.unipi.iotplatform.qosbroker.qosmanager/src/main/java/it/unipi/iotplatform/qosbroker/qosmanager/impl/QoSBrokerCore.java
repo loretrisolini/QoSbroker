@@ -1,7 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
-import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj.AllocationInfo;
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
@@ -231,8 +231,11 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return queryResponse;
 		}
 
+		//Allocation Policy
+		AllocationPolicy allocPolicy = reservationResults.getRes()[reservationResults.getWhich()].getAllocPolicy();
+		
 		//Map<reqServName, List<devId>>
-		HashMap<String, AllocationObj> allocationResult = 
+		HashMap<String, AllocationInfo> allocationResult = 
 				reservationResults.getRes()[reservationResults.getWhich()].getAllocationSchema().get(transId);
 		
 		//Map<transId, operationType>
@@ -254,7 +257,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		List<EntityId> entityIdAllocList = new ArrayList<>();
 		List<String> attributeList = new ArrayList<>();
 		
-		for(Map.Entry<String, AllocationObj> entryAlloc: allocationResult.entrySet()){
+		for(Map.Entry<String, AllocationInfo> entryAlloc: allocationResult.entrySet()){
 
 			if(!opType.contentEquals(transId)){
 				statusCode = new StatusCode(
@@ -270,7 +273,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			attributeList.add(service);
 			
 			List<String> devIdList = entryAlloc.getValue().getDeviceIdList();
-			String devId = qosManager.computeNextDevId(transId, service);
+			String devId = qosManager.computeNextDevId(transId, service, allocPolicy);
 			
 			if(devId == null || !devIdList.contains(devId)){
 				statusCode = new StatusCode(

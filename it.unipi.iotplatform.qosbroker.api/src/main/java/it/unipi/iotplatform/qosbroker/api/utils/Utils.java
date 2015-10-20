@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.api.utils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,5 +71,21 @@ public class Utils {
 		
 		Double dist = Math.sqrt(x2 + y2);
 	    return dist <= circle.getRadius();
+	}
+	
+	/* function to compute the factorization of a number */
+	public static List<Integer> factorization(Integer number) {
+		
+		int n = number;
+	    List<Integer> factors = new ArrayList<Integer>();
+	    factors.add(1);
+	    for (int i = 2; i <= n; i++) {
+	      while (n % i == 0) {
+	    	if(!factors.contains(i))
+	    		factors.add(i);
+	        n /= i;
+	      }
+	    }
+	    return factors;
 	}
 }

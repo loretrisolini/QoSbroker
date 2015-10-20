@@ -1,6 +1,7 @@
 package it.unipi.iotplatform.qosbroker.qosmanager.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj;
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
@@ -206,14 +207,14 @@ public class QoSManager implements QoSManagerIF {
 														thingsInfo, servNameThingsIdList, 0.001);
 		
 		//Map<transId, Map<reqServName, List<devId>>>
-		HashMap<String, HashMap<String, AllocationObj>> allocationResult = null;
+		HashMap<String, HashMap<String, AllocationInfo>> allocationResult = null;
 		if(result.isFeas()){
 			
 			System.out.println("QoSManager -- createAgreement() allocation OK");
 			
 			Reserveobj res = result.getRes()[result.getWhich()];
 			
-			System.out.println("Best allocation with policy "+ res.getSplitPolicy().name() +" and priority taken as "+
+			System.out.println("Best allocation with priority taken as "+
 								res.getPriority());
 			
 			allocationResult = result.getRes()[result.getWhich()].getAllocationSchema();
@@ -312,12 +313,12 @@ public class QoSManager implements QoSManagerIF {
 	
 	/* function to create the ngsi allocation schema from the Reserveobj object */
 	private List<ContextRegistration> createNgsiAllocationSchema(
-			HashMap<String, HashMap<String, AllocationObj>> allocationResult, HashMap<String, String> transId_opType) {
+			HashMap<String, HashMap<String, AllocationInfo>> allocationResult, HashMap<String, String> transId_opType) {
 		
 		List<ContextRegistration> contRegList = new ArrayList<>();
 		
 		//for each transId
-		for(Map.Entry<String, HashMap<String, AllocationObj>> entry : allocationResult.entrySet()){
+		for(Map.Entry<String, HashMap<String, AllocationInfo>> entry : allocationResult.entrySet()){
 			
 			String transId = entry.getKey();
 			
@@ -342,11 +343,11 @@ public class QoSManager implements QoSManagerIF {
 			contMetadataList.add(contMetadata);
 			contReg.setListContextMetadata(contMetadataList);
 			
-			HashMap<String, AllocationObj> servicesAllocation = entry.getValue();
+			HashMap<String, AllocationInfo> servicesAllocation = entry.getValue();
 			List<ContextRegistrationAttribute> contRegAttrList = new ArrayList<>();
 			
 			//for each servName in a request identify by transId
-			for(Map.Entry<String, AllocationObj> entryAllocation : servicesAllocation.entrySet()){
+			for(Map.Entry<String, AllocationInfo> entryAllocation : servicesAllocation.entrySet()){
 
 				ContextRegistrationAttribute contRegAttr = new ContextRegistrationAttribute();
 				
@@ -392,9 +393,9 @@ public class QoSManager implements QoSManagerIF {
 	}
 
 	@Override
-	public String computeNextDevId(String transId, String service) {
+	public String computeNextDevId(String transId, String service, AllocationPolicy allocPolicy) {
 		
-		return qosCalculator.getNextDevId(transId, service);
+		return qosCalculator.getNextDevId(transId, service, allocPolicy);
 	}
 	
 	

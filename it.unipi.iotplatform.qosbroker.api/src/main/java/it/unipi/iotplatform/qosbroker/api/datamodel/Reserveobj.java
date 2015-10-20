@@ -5,8 +5,8 @@ import java.util.HashMap;
 /* class that represents the inputs and the result of a single iteration of ABGAP algorithm */
 public class Reserveobj {
 	
-	//Map<transId, Map<servName, AllocationObj>>>
-	private HashMap<String, HashMap<String, AllocationObj>> allocationSchema;
+	//Map<transId, Map<servName, AllocationInfo>>>
+	private HashMap<String, HashMap<String, AllocationInfo>> allocationSchema;
 	
 	//Map<transId, operationType>
 	private HashMap<String, String> transId_opType;
@@ -27,7 +27,7 @@ public class Reserveobj {
 	private HashMap<String, ThingAssignmentParams> assignmentsParamsMap;
 	
 	public Reserveobj(){
-		allocationSchema = new HashMap<String, HashMap<String, AllocationObj>>();
+		allocationSchema = new HashMap<String, HashMap<String, AllocationInfo>>();
 		
 		transId_opType = new HashMap<String, String>();
 	}
@@ -79,12 +79,12 @@ public class Reserveobj {
 		this.allocPolicy = allocPolicy;
 	}
 
-	public HashMap<String, HashMap<String, AllocationObj>> getAllocationSchema() {
+	public HashMap<String, HashMap<String, AllocationInfo>> getAllocationSchema() {
 		return allocationSchema;
 	}
 
 	public void setAllocationSchema(
-			HashMap<String, HashMap<String, AllocationObj>> allocationSchema) {
+			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema) {
 		this.allocationSchema = allocationSchema;
 	}
 

@@ -1,10 +1,12 @@
 package it.unipi.iotplatform.qosbroker.qoscalculator.impl;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationObj.AllocationInfo;
+
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.Policy;
 
 import java.util.HashMap;
 import java.util.List;
+
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
 public class WRRPolicy extends Policy{
 
@@ -17,7 +19,7 @@ public class WRRPolicy extends Policy{
 		howMany = new HashMap<String, HashMap<String, Integer>>();
 	}
 	
-	public String getDevId(String transId, String service, List<AllocationInfo> devIdList){
+	public String getDevId(String transId, String service, List<Pair<String, Integer>> devIdList){
 		
 		if(policyMap.get(transId) == null){
 			
@@ -25,20 +27,20 @@ public class WRRPolicy extends Policy{
 			
 			howMany.put(transId, new HashMap<String, Integer>());
 			
-			policyMap.get(transId).put(service, devIdList.get(0).devId);
+			policyMap.get(transId).put(service, devIdList.get(0).getLeft());
 			
 			howMany.get(transId).put(service, 1);
 			
-			return devIdList.get(0).devId;
+			return devIdList.get(0).getLeft();
 		}
 		
 		if(policyMap.get(transId).get(service)==null){
 			
-			policyMap.get(transId).put(service, devIdList.get(0).devId);
+			policyMap.get(transId).put(service, devIdList.get(0).getLeft());
 			
 			howMany.get(transId).put(service, 1);
 			
-			return devIdList.get(0).devId;
+			return devIdList.get(0).getLeft();
 		}
 		
 		
@@ -48,7 +50,7 @@ public class WRRPolicy extends Policy{
 			
 			int counter = howMany.get(transId).get(service);
 			
-			if(devIdList.get(i).devId.contentEquals(lastDevId) && counter < devIdList.get(i).c_ij_split){
+			if(devIdList.get(i).getLeft().contentEquals(lastDevId) && counter < devIdList.get(i).getRight()){
 				
 				howMany.get(transId).put(service, new Integer(counter+1));
 				
@@ -56,11 +58,11 @@ public class WRRPolicy extends Policy{
 			}
 			else{
 				
-				policyMap.get(transId).put(service, devIdList.get((i+1%devIdList.size())).devId);
+				policyMap.get(transId).put(service, devIdList.get((i+1%devIdList.size())).getLeft());
 				
 				howMany.get(transId).put(service, 1);
 				
-				lastDevId = devIdList.get((i+1%devIdList.size())).devId;
+				lastDevId = devIdList.get((i+1%devIdList.size())).getLeft();
 				
 				break;
 			}
