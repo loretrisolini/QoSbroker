@@ -142,9 +142,7 @@ public class Statistics{
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, List<String>> matrixM, String prio,
-			String splitPolicy,
-			String allocPolicy) {
+			HashMap<String, List<String>> matrixM, String prio) {
 		
 		FileWriter fileWriterInputGap=null;
 		
@@ -159,10 +157,6 @@ public class Statistics{
 			fileWriterInputGap.append(String.valueOf(k));
 			fileWriterInputGap.append(",");
 			fileWriterInputGap.append(prio);
-			fileWriterInputGap.append(",");
-			fileWriterInputGap.append(splitPolicy);
-			fileWriterInputGap.append(",");
-			fileWriterInputGap.append(allocPolicy);
 			fileWriterInputGap.append("\n");
 			
 			fileWriterInputGap.append("TransactionID, operationType, maxRespTime, maxRateRequest, LocationRequirement, ServiceList");

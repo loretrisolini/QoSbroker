@@ -64,4 +64,21 @@ public class AllocationObj{
 		this.deviceList = deviceList;
 	}
 
+	@Override
+	public String toString(){
+		
+		String print = "Split Factor: "+String.valueOf(this.split)+"\n";
+		
+		for(AllocationInfo allocInfo: deviceList){
+			print+="devId: "+allocInfo.devId+"\n";
+			print+="c_ij_split: "+allocInfo.c_ij_split+"\n";
+			print+="u_ij: "+allocInfo.u_ij+"\n";
+			print+="f_ij: "+allocInfo.f_ij+"\n";
+			print+="\n";
+		}
+		
+		print+="\n";
+		
+		return print;
+	}
 }

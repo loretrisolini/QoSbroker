@@ -20,7 +20,6 @@ public class Reserveobj {
 	private String operationStatus;
 	
 	private Priority priority;
-	private SplitPolicy splitPolicy;
 	private AllocationPolicy allocPolicy; 
 
 	//Map<devId, <c_i, z_i>>
@@ -70,15 +69,6 @@ public class Reserveobj {
 
 	public void setOperationStatus(String operationStatus) {
 		this.operationStatus = operationStatus;
-	}
-
-
-	public SplitPolicy getSplitPolicy() {
-		return splitPolicy;
-	}
-
-	public void setSplitPolicy(SplitPolicy splitPolicy) {
-		this.splitPolicy = splitPolicy;
 	}
 
 	public AllocationPolicy getAllocPolicy() {
