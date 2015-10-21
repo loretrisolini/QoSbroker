@@ -139,7 +139,7 @@ public class Statistics{
 	public static void printInputsABGAP(int k, List<Pair<String, Request>> requests,
 			HashMap<String,HashMap<String, Double>> matrixF_ij,
 			HashMap<String,HashMap<String, Double>> matrixU_ij,
-			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Integer> hyperperiodPeriodMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
 			HashMap<String, List<String>> matrixM, String prio) {
@@ -264,14 +264,12 @@ public class Statistics{
 			}
 			
 			fileWriterInputGap.append("\n");
-			fileWriterInputGap.append("TransactionID, h/p_j,p_j");
+			fileWriterInputGap.append("TransactionID, h/p_j");
 			fileWriterInputGap.append("\n");
-			for(Map.Entry<String, ServicePeriodParams> entryPeriod: servPeriodsMap.entrySet()){
+			for(Map.Entry<String, Integer> entryPeriod: hyperperiodPeriodMap.entrySet()){
 				fileWriterInputGap.append(entryPeriod.getKey());
 				fileWriterInputGap.append(",");
-				fileWriterInputGap.append(String.valueOf(entryPeriod.getValue().getNj()));
-				fileWriterInputGap.append(",");
-				fileWriterInputGap.append(String.valueOf(entryPeriod.getValue().getPeriod()));
+				fileWriterInputGap.append(String.valueOf(entryPeriod.getValue()));
 				fileWriterInputGap.append("\n");
 			}
 			
