@@ -758,7 +758,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		if(request == null){
 			
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), 
-					"QoSBrokerCore -- createAgreement() error in creation of the request object");
+					"QoSBrokerCore -- createAgreement() error in creation of the request object -- no QoSRequirements founded");
 			
 			response = new ServiceAgreementResponse();
 			
@@ -833,8 +833,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			if(opScope.getScopeType().contentEquals(QoSConsts.QOS)){
 
 				qosScopeValue = QoSscopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), qosScopeValue, QoSscopeValue.class);
+				
+				if(qosScopeValue.getMaxResponseTime()!=null && qosScopeValue.getMaxRateRequest()!=null){
+					//check correct conversion of the object
+					qosReqFound = true;
+				}
 
-				qosReqFound = true;
 				
 			}
 			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_POINT)){
@@ -898,7 +902,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			QueryContextResponse qosMonitorResponse = qosMonitorNgsi.queryContext(queryRequest);
 			
 			if(qosMonitorResponse.getErrorCode() != null &&
-					qosMonitorResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()){
+					qosMonitorResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()
+					//if the QoSMonitor doesn't give me the any values, there will be a trial
+					//to read theese values from the thingsInfoDB
+					&& qosMonitorResponse.getErrorCode().getCode() != QoSCode.CONTEXTELEMENTNOTFOUND_404.getCode()){
 				
 				statusCode = qosMonitorResponse.getErrorCode();
 				
@@ -1044,6 +1051,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				//using the serviceName on the created thing
 				for(String reqServName: serviceEquivalentThings.keySet()){
 					
+					//check about required service on the thing
 					if(t.getServicesList().get(reqServName) != null){
 						serviceEquivalentThings.get(reqServName).addEqThing(devId);
 					}
@@ -1133,7 +1141,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			logger.info("QoSBrokerCore -- checkServiceAllocationConditions() check QoS requirements");
 			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-			Double accuracy = request.getQosRequirements().getAccuracy();
 			String reqServName = entry.getKey();
 			
 			//var to check if filtering the eqThings
@@ -1144,19 +1151,12 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			for(String eqThingDevId: eqThings){
 				
 				Double latency = thingsInfo.get(eqThingDevId).getServicesList().get(reqServName).getLatency();
-				Double servAccuracy = thingsInfo.get(eqThingDevId).getServicesList().get(reqServName).getAccuracy();
 				
 				//if latency or servAccuracy are not null
 				//they must respect the constraints
-				if(maxRespTime!=null && latency != null && latency < maxRespTime || maxRespTime==null
-						|| accuracy!=null && servAccuracy != null && servAccuracy >= accuracy || accuracy==null){
+				if(maxRespTime!=null && latency != null && latency < maxRespTime || maxRespTime==null){
 					constraints = true;
 					
-//					TransIdList transIdList = new TransIdList();
-//					transIdList.getTransIdList().add(transId);
-					
-					//put an entry <devId, transId> in the Map<devId,transId>
-//					thingTransactionsMap.put(eqThingDevId, transIdList);
 					break;
 				}
 

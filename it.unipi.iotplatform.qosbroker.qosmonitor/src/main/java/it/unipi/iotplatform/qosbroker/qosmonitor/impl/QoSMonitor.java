@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -402,11 +403,6 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			return statusCode;
 		}
 		
-		
-		//list of devId to check if the list of devId in serviceEquivalentThings
-		//point to things that are still alive, otherwise you remove the devId
-		List<String> devIdCheckList = new ArrayList<>();
-		
 		//conversion of data read from the DB 
 		if(!thingsData.isEmpty()){
 
@@ -422,11 +418,6 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				//SECOND case, create Map<DevId, Thing> after ServAgreement and
 				//if batt or coords are null try to read this from thingsInfoDB
 				if(thingsInfo.get(entryOldThing.getLeft()) != null){
-
-					//add the devId of the thing stored in the DB
-					//to update servThingsIds
-					//Map<service, List<devId>>
-					devIdCheckList.add(entryOldThing.getLeft());
 					
 					//convert json to Thing (Old)
 					Thing t = Thing.fromJsonToJaxb(entryOldThing.getRight(), new Thing(), Thing.class);
@@ -522,6 +513,41 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				return statusCode;
 			}
 			
+			//read all things to do Monitoring about the list of equivalent things
+			//because if some thing in the equivalent list is no more alive
+			//must be deleted from the list
+			thingsData = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
+			
+			if(thingsData == null){
+				//error
+				
+				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "
+											+ "reading thingsData from DB "+QoSConsts.THINGS_INFO_DB);
+				return statusCode;
+			}
+			
+			HashMap<String, Thing> thingsMonitoring = Thing.fromDbFormatToJavaFormat(thingsData, Thing.class);
+			
+			//backup of serviceEquivalentThings to avoid problems in QoSBroker
+			//when check the conditions for service allocation
+			HashMap<String, ThingsIdList> serviceEquivalentThingsBck = new HashMap<>();
+			
+			for(Map.Entry<String, ThingsIdList> entryServ: serviceEquivalentThings.entrySet()){
+				List<String> devIdList = entryServ.getValue().getEqThings();
+				String service = entryServ.getKey();
+				
+				List<String> devIdListBck = new ArrayList<>();
+				
+				for(String devId: devIdList){
+					devIdListBck.add(devId);
+				}
+				
+				ThingsIdList thingsIdList = new ThingsIdList();
+				thingsIdList.setEqThings(devIdListBck);
+				
+				serviceEquivalentThingsBck.put(service, thingsIdList);
+			}
+			
 			//conversion of data read from the DB 
 			//if the result from db is not empty
 			//serviceEquivalentThings must be updated
@@ -548,10 +574,14 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 								//check if the devId point to a thing that is 
 								//no more alive
 								//MONITORING OPERATION
-								if(oldEqThingsList.get(i).contentEquals(newDevId) || 
-										!devIdCheckList.contains(oldEqThingsList.get(i))){
+								if(oldEqThingsList.get(i).contentEquals(newDevId)){
 									oldEqThingsList.remove(i);
 								}
+								if(oldEqThingsList.isEmpty()){ break; }
+							}
+							if(!oldEqThingsList.isEmpty() && 
+									thingsMonitoring.get(oldEqThingsList.get(i)) == null){
+								oldEqThingsList.remove(i);
 								if(oldEqThingsList.isEmpty()){ break; }
 							}
 						}
@@ -559,14 +589,14 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						if(!oldEqThingsList.isEmpty())
 							//add all remains elements in oldEqThingsList in newEqThingsList in serviceEquivalentThings
 							//to avoid to delete old values already stored
-							serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
+							serviceEquivalentThingsBck.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
 					}
 				}
 			}
 			
 			//store new Map<reServName, List<DevId>> in ServiceEquivalentThingsDB
 			List<Pair<String, JSONObject>> newServEqThingsData = new ArrayList<>();
-			newServEqThingsData = ThingsIdList.fromJavaFormatToDbFormat(serviceEquivalentThings, ThingsIdList.class);
+			newServEqThingsData = ThingsIdList.fromJavaFormatToDbFormat(serviceEquivalentThingsBck, ThingsIdList.class);
 			
 			if(newServEqThingsData == null){
 				statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), QoSReasonPhrase.RECEIVERINTERNALERROR_500.name(), "QoSMonitor -- ERROR in updateThingsServicesInfo() "

@@ -122,14 +122,11 @@ public class Statistics{
 	
 	public static void setTestDir() {
 		
-		if(file == null){
-				count++; 
-				r++;
-				file = new File("/home/lorenzo/Desktop/Tests/"+Statistics.testFolder+r);
-				if(!file.exists()){ 
-					file.mkdir();
-				}
-
+		count++; 
+		r++;
+		file = new File("/home/lorenzo/Desktop/Tests/"+Statistics.testFolder+r);
+		if(!file.exists()){ 
+			file.mkdir();
 		}
 		
 	}

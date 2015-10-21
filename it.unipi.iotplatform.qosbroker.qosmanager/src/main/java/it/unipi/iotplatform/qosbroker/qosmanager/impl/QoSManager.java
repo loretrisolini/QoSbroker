@@ -170,7 +170,7 @@ public class QoSManager implements QoSManagerIF {
 		//Map<DevId, List<transId>>
 		List<Pair<String, JSONObject>> thingsInfoJson = bigDataRepository.readData(null, QoSConsts.THINGS_INFO_DB);
 		List<Pair<String, JSONObject>> servNameThingsIdListJson = bigDataRepository.readData(null, QoSConsts.SERV_EQ_THINGS_DB);
-//		List<Pair<String, JSONObject>> thingTransactionsJson = bigDataRepository.readData(null, QoSConsts.REQUIREMENTS_DB);
+
 		if(thingsInfoJson == null || thingsInfoJson.isEmpty() || 
 				servNameThingsIdListJson == null || servNameThingsIdListJson.isEmpty()){// || thingTransactionsJson==null){
 			statusCode = new StatusCode(QoSCode.INTERNALERROR_500.getCode(), 

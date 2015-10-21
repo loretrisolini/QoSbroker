@@ -32,9 +32,6 @@ public class QoSscopeValue extends DataStructure {
 	
 	@XmlElement(name = "maxRateRequest", required = true)
 	private Double maxRateRequest;
-	
-	@XmlElement(name = "accuracy", required = false)
-	private Double accuracy;
 
 	public static Logger getLogger() {
 		return logger;
@@ -60,11 +57,4 @@ public class QoSscopeValue extends DataStructure {
 		this.maxRateRequest = maxRateRequest;
 	}
 
-	public Double getAccuracy() {
-		return accuracy;
-	}
-
-	public void setAccuracy(Double accuracy) {
-		this.accuracy = accuracy;
-	}
 }

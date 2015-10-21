@@ -244,6 +244,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					
 					if(entryServ.getValue() != null){
 						
+						//check if the latency is null
 						if(entryServ.getValue().getLatency()!=null){
 							Double t_ij = entryServ.getValue().getLatency();
 
@@ -279,10 +280,17 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Thing t = entryThing.getValue();
 			
 			Double b_i = 0.0;
+			//check if the batt is null
 			if(t.getBatteryLevel()!=null){
 				b_i=t.getBatteryLevel()/100;
 			}
 			else{
+				
+				//remove the thing because
+				//without batt is usefull
+				//this thing object
+				thingsInfo.remove(devId);
+				
 				//continue on the next thing
 				continue;
 			}
@@ -306,6 +314,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					
 					if(entryServ.getValue() != null){
 						
+						//check if the energy cost is null
 						if(entryServ.getValue().getEnergyCost()!=null){
 							Double c_ij = entryServ.getValue().getEnergyCost();
 							
@@ -1329,9 +1338,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			
 			//take the maxRespTime and accuracy from QoSrequirements of the request object
 			Double maxRespTime = request.getQosRequirements().getMaxResponseTime();
-			Double accuracy = request.getQosRequirements().getAccuracy();
 			
-			logger.info("maxRespTime: "+maxRespTime+" accuracy: "+ accuracy==null ? "null": accuracy);
+			logger.info("maxRespTime: "+maxRespTime);
 			
 			Point point = null;
 			Circle circle = null;
@@ -1373,7 +1381,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 					Point coords = t.getCoords();
 					
 					//check location requirement
+					//coords of the thing is not null
 					if(coords != null){
+						//if some location requirements
+						//is set must be respected
 						if(point != null){
 							if(coords.getLatitude() != point.getLatitude() ||
 									coords.getLongitude() != point.getLongitude()){
@@ -1390,13 +1401,23 @@ public class QoSCalculator implements QoSCalculatorIF {
 									continue;
 								}
 							}
-							else{
+							if(polygon!=null){
 								if(!Utils.in_polygon(polygon, coords)){
 									eqThings.remove(i-1);
 									i--;
 									continue;
 								}
 							}
+						}
+					}
+					else{
+						//coords info of the thing is null
+						//if the location requirements is not
+						//null the thing is removed
+						if(point != null || circle != null || polygon!=null){
+							eqThings.remove(i-1);
+							i--;
+							continue;
 						}
 					}
 					
@@ -1410,12 +1431,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 						if(servEntry.getKey().contentEquals(reqServName)){
 							Double latency = servEntry.getValue().getLatency();
 							
-							Double servAccuracy = servEntry.getValue().getAccuracy()==null ? null 
-																: servEntry.getValue().getAccuracy();
-							
 							//check latency and accuracy constraints
-							if(maxRespTime!=null && latency != null && latency > maxRespTime || maxRespTime!=null && latency == null
-									|| accuracy!=null && servAccuracy != null && servAccuracy < accuracy || accuracy!=null && servAccuracy == null ){
+							if(maxRespTime!=null && latency != null && latency > maxRespTime || maxRespTime!=null && latency == null){
 								eqThings.remove(i-1);
 								i--;
 								break;

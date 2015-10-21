@@ -130,7 +130,6 @@ public class TestFunctionality {
 								QoSscopeValue qosReq = new QoSscopeValue();
 								qosReq.setMaxResponseTime(Double.valueOf(values[2]));
 								qosReq.setMaxRateRequest(Double.valueOf(values[3]));
-								qosReq.setAccuracy(values[4].contentEquals("null") ? null : Double.valueOf(values[4]));
 								req.setQosRequirements(qosReq);
 								
 								LocationScopeValue<Point> locReqPoint = null;
