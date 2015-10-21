@@ -34,6 +34,10 @@ public class AllocationInfo{
 	
 	private int split;
 
+	public AllocationInfo(){
+		allocatedThings = new ArrayList<>();
+	}
+	
 	public List<String> getDeviceIdList(){
 		List<String> devices = new ArrayList<>();
 		
@@ -51,6 +55,11 @@ public class AllocationInfo{
 		this.split = split;
 	}
 
+	public void addThing(String devId, Integer wij_sp){
+		
+		this.allocatedThings.add(new Pair<String, Integer>(devId, wij_sp));
+	}
+	
 	@Override
 	public String toString(){
 		

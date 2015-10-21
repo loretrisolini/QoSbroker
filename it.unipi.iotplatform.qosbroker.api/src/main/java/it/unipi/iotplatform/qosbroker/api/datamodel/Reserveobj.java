@@ -32,6 +32,19 @@ public class Reserveobj {
 		transId_opType = new HashMap<String, String>();
 	}
 	
+	public void addTransactionIdOperationType(String transId, String opType){
+		this.transId_opType.put(transId, opType);
+	}
+	
+	public void addAllocation(String transId, String serviceName, AllocationInfo allocation){
+		
+		if(transId!=null && this.allocationSchema.get(transId) == null){
+			this.allocationSchema.put(transId, new HashMap<String, AllocationInfo>());
+		}
+		
+		this.allocationSchema.get(transId).put(serviceName, allocation);
+	}
+	
 	public Priority getPriority() {
 		return priority;
 	}
