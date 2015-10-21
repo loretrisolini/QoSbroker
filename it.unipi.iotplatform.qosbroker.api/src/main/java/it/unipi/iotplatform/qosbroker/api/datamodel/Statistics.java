@@ -125,7 +125,7 @@ public class Statistics{
 		if(file == null){
 				count++; 
 				r++;
-				file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+r);
+				file = new File("/home/lorenzo/Desktop/Tests/"+Statistics.testFolder+r);
 				if(!file.exists()){ 
 					file.mkdir();
 				}

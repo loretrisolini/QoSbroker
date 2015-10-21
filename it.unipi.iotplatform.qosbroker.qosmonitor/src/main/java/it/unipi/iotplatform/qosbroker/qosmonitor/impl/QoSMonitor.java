@@ -154,168 +154,208 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 			new Thread() {
 				@Override
 				public void run() {
-
-					List<Pair<String, JSONObject>> sensActAttrData = bigDataRepository.readData(null, QoSConsts.SENS_ACT_ATTR_DB);
 					
-					if(sensActAttrData == null){
-						//error
-						System.out.println("ERROR reading sensor active attributes data");
-						return;
+					try{
+						//read previous context elements from SENS_ACT_ATTR_DB
+						List<Pair<String, JSONObject>> sensActAttrData = bigDataRepository.readData(null, QoSConsts.SENS_ACT_ATTR_DB);
+						
+						if(sensActAttrData == null){
+							//error
+							System.out.println("ERROR reading sensor active attributes data");
+							return;
+						}
+						
+						Iterator<ContextElement> iter = contextElementList.iterator();
+						
+						List<Pair<String, JSONObject>> dataList = new ArrayList<Pair<String, JSONObject>>();
+						
+						//Map<DevId, Thing> used to update battery and coords
+						//in the ThingsInfoDB
+						HashMap<String, Thing> thingsInfo = new HashMap<>();
+						
+						//iterate over the list 
+						//of contextElements received
+						while (iter.hasNext()) {
+	
+							ContextElement contElem = iter.next();
+							
+							//get id of the entityId of the ContElem as DevId
+							String key = contElem.getEntityId().getId();
+							
+							//problem of conversion of ContElem from
+							//jaxb xml to json
+							//JSONObject jsonContElem = DataStructure.fromContextElementToJson(contElem);
+							JSONObject jsonContElem = DataStructure.fromJaxbToJson(contElem, ContextElement.class);
+							
+							if(!jsonContElem.isNull("contextAttributeList")){
+								jsonContElem.put("attributes", jsonContElem.getJSONArray("contextAttributeList"));
+								jsonContElem.remove("contextAttributeList");
+							}
+							
+							
+							JSONObject jsonContElemFromDB = null;
+							JSONArray attributesFromDB = null;
+							Boolean attrFromDB = false;
+							//get attributes of the contextElements taken from DB
+							//but only for those with the same devId
+							//of the contextElement of the one that i received
+							for(Pair<String, JSONObject> pair: sensActAttrData){
+								
+								if(pair.getLeft().contentEquals(key)){
+	
+									jsonContElemFromDB = pair.getRight();
+									
+									if(!jsonContElemFromDB.isNull("attributes")){
+										
+										//find out contextElement with same devId
+										attributesFromDB = jsonContElemFromDB.getJSONArray("attributes");
+										attrFromDB = true && attributesFromDB!=null;
+									}
+									break;
+								}
+							}
+							
+							//check if from the DB it was
+							//read a contextElement with battery and/or coords as attributes
+							Double battFromDB = null;
+							Point coordsFromDB = null;
+							if(attrFromDB){
+								for(int i = 0; i < attributesFromDB.length(); i++){
+									
+									JSONObject attr = attributesFromDB.getJSONObject(i);
+									
+									if(!attr.isNull("name")){
+										if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
+											battFromDB = Double.valueOf(attr.getString("contextValue"));
+										}
+														
+										if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
+											
+											coordsFromDB = new Point();
+											String[] coords = attr.getString("contextValue").split(",");
+											
+											coordsFromDB.setLatitude(Float.valueOf(coords[0]));
+											coordsFromDB.setLongitude(Float.valueOf(coords[1]));
+										}
+										
+									}
+								}
+							}
+							
+							//create the pair <DevId, Thing> to put
+							//but Thing has only battery and/or coords
+							//in Map<DevId, Thing>
+							Thing t = new Thing();
+							Boolean battFound = false;
+							Boolean coordsFound = false;
+							if(!jsonContElem.isNull("attributes")){
+								
+								//read attributes of the contextElement that i received
+								//check if i received an update of battery or/and coords
+								//and set the thing values of battery and/or coords
+								//if they are in attributes
+								JSONArray attributes = jsonContElem.getJSONArray("attributes");
+								
+								for(int i = 0; i < attributes.length(); i++){
+									
+									JSONObject attr = attributes.getJSONObject(i);
+									
+									if(!attr.isNull("name")){
+										if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
+											t.setBatteryLevel(Double.valueOf(attr.getString("contextValue")));
+											battFound = true;
+										}
+														
+										if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
+											
+											Point p = new Point();
+											String[] coords = attr.getString("contextValue").split(",");
+											
+											p.setLatitude(Float.valueOf(coords[0]));
+											p.setLongitude(Float.valueOf(coords[1]));
+											
+											t.setCoords(p);
+											coordsFound = true;
+										}
+										
+									}
+	
+								}
+								
+								
+								//if in the attributes of the contextElement that i received
+								//there aren't battery and coords
+								//it wasn't nothing to store in DB
+								if(battFound || coordsFound){
+									
+									//check if battery it isn't found
+									//in the ContextElement that i receive
+									//so set battery value of the thing to the one
+									//read from the DB, the same it is done
+									//for the contextElement that it will be 
+									//written in DB sensorActAttributes
+									if(!battFound && battFromDB!=null){
+										t.setBatteryLevel(battFromDB);
+										
+										JSONObject jsonContAttribute = new JSONObject();
+										
+										jsonContAttribute.put("name", "battery");
+										jsonContAttribute.put("contextValue", String.valueOf(battFromDB));
+										jsonContAttribute.put("type", "double");
+										
+										attributes.put(jsonContAttribute);
+									}
+									
+									//the same of the previous case
+									if(t.getCoords()==null && coordsFromDB!=null){
+										t.setCoords(coordsFromDB);
+										
+										JSONObject jsonContAttribute = new JSONObject();
+										
+										jsonContAttribute.put("name", "coords");
+										jsonContAttribute.put("contextValue", String.valueOf(coordsFromDB.getLatitude()
+																	+","+coordsFromDB.getLongitude()));
+										jsonContAttribute.put("type", "coords");
+										
+										attributes.put(jsonContAttribute);
+									}
+									
+									t.setServicesList(new HashMap<String, ServiceFeatures>());
+									
+									thingsInfo.put(key, t);
+									
+									//in the contextElement that will be stored in DB
+									//there is the merge of the attributes of the contextElement
+									//read from the DB and the ones received from
+									//the IoTBroker
+									Pair<String,JSONObject> dataEntry = new Pair<String, JSONObject>(key, jsonContElem);
+	
+									dataList.add(dataEntry);
+								}
+								
+							}
+	
+						}
+						
+						//store contextElments
+						if(!dataList.isEmpty())
+							bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
+						
+						//update thingsInfo DB
+						if(!thingsInfo.isEmpty())
+							//update battery and coords in Map<DevId, Thing>
+							updateThingsServicesInfo(thingsInfo, null);
+						
+					}
+					//manage format exceptions error
+					//for the format of battery and/or coords
+					//received from IoTBroker
+					catch(Exception e){
+						System.out.println("ERROR updateContext QoSMonitor");
+						e.printStackTrace();
 					}
 					
-					Iterator<ContextElement> iter = contextElementList.iterator();
-					
-					List<Pair<String, JSONObject>> dataList = new ArrayList<Pair<String, JSONObject>>();
-					
-					//Map<DevId, Thing> used to update battery and coords
-					//in the ThingsInfoDB
-					HashMap<String, Thing> thingsInfo = new HashMap<>();
-					
-					while (iter.hasNext()) {
 
-						ContextElement contElem = iter.next();
-						
-						//get id of the entityId of the ContElem as DevId
-						String key = contElem.getEntityId().getId();
-						
-						//problem of conversion of ContElem from
-						//jaxb xml to json
-						//JSONObject jsonContElem = DataStructure.fromContextElementToJson(contElem);
-						JSONObject jsonContElem = DataStructure.fromJaxbToJson(contElem, ContextElement.class);
-						
-						if(!jsonContElem.isNull("contextAttributeList")){
-							jsonContElem.put("attributes", jsonContElem.getJSONArray("contextAttributeList"));
-							jsonContElem.remove("contextAttributeList");
-						}
-						
-//						String devIdFromDB = null;
-						JSONObject jsonContElemFromDB = null;
-						JSONArray attributesFromDB = null;
-						Boolean attrFromDB = false;
-						//merge data read from DB with data in updateCont body
-						//to avoid to delete data in DB
-						for(Pair<String, JSONObject> pair: sensActAttrData){
-							
-							if(pair.getLeft().contentEquals(key)){
-//								devIdFromDB = pair.getLeft();
-								jsonContElemFromDB = pair.getRight();
-								
-								if(!jsonContElemFromDB.isNull("attributes")){
-									attributesFromDB = jsonContElemFromDB.getJSONArray("attributes");
-									attrFromDB = true && attributesFromDB!=null;
-								}
-								break;
-							}
-						}
-						
-						Double battFromDB = null;
-						Point coordsFromDB = null;
-						if(attrFromDB){
-							for(int i = 0; i < attributesFromDB.length(); i++){
-								
-								JSONObject attr = attributesFromDB.getJSONObject(i);
-								
-								if(!attr.isNull("name")){
-									if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
-										battFromDB = Double.valueOf(attr.getString("contextValue"));
-									}
-													
-									if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
-										
-										coordsFromDB = new Point();
-										String[] coords = attr.getString("contextValue").split(",");
-										
-										coordsFromDB.setLatitude(Float.valueOf(coords[0]));
-										coordsFromDB.setLongitude(Float.valueOf(coords[1]));
-									}
-									
-								}
-							}
-						}
-						
-						//create the pair <DevId, Thing> to put 
-						//in Map<DevId, Thing>
-						Thing t = new Thing();
-						Boolean battFound = false;
-						Boolean coordsFound = false;
-						if(!jsonContElem.isNull("attributes")){
-							
-							JSONArray attributes = jsonContElem.getJSONArray("attributes");
-							
-							for(int i = 0; i < attributes.length(); i++){
-								
-								JSONObject attr = attributes.getJSONObject(i);
-								
-								if(!attr.isNull("name")){
-									if(attr.getString("name").contentEquals(QoSConsts.BATTERY)){
-										t.setBatteryLevel(Double.valueOf(attr.getString("contextValue")));
-										battFound = true;
-									}
-													
-									if(attr.getString("name").contentEquals(QoSConsts.COORDS)){
-										
-										Point p = new Point();
-										String[] coords = attr.getString("contextValue").split(",");
-										
-										p.setLatitude(Float.valueOf(coords[0]));
-										p.setLongitude(Float.valueOf(coords[1]));
-										
-										t.setCoords(p);
-										coordsFound = true;
-									}
-									
-								}
-
-							}
-							
-							
-							//nothing to store in the DB sensorActAttr & thingInfo
-							if(battFound || coordsFound){
-
-								if(!battFound && battFromDB!=null){
-									t.setBatteryLevel(battFromDB);
-									
-									JSONObject jsonContAttribute = new JSONObject();
-									
-									jsonContAttribute.put("name", "battery");
-									jsonContAttribute.put("contextValue", String.valueOf(battFromDB));
-									jsonContAttribute.put("type", "double");
-									
-									attributes.put(jsonContAttribute);
-								}
-								
-								if(t.getCoords()==null && coordsFromDB!=null){
-									t.setCoords(coordsFromDB);
-									
-									JSONObject jsonContAttribute = new JSONObject();
-									
-									jsonContAttribute.put("name", "coords");
-									jsonContAttribute.put("contextValue", String.valueOf(coordsFromDB.getLatitude()
-																+" "+coordsFromDB.getLongitude()));
-									jsonContAttribute.put("type", "coords");
-									
-									attributes.put(jsonContAttribute);
-								}
-								
-								t.setServicesList(new HashMap<String, ServiceFeatures>());
-								
-								thingsInfo.put(key, t);
-								
-								Pair<String,JSONObject> dataEntry = new Pair<String, JSONObject>(key, jsonContElem);
-
-								dataList.add(dataEntry);
-							}
-							
-						}
-
-					}
-					
-					if(!dataList.isEmpty())
-						bigDataRepository.storeData(dataList, QoSConsts.SENS_ACT_ATTR_DB);
-					
-					if(!thingsInfo.isEmpty())
-						//update battery and coords in Map<DevId, Thing>
-						updateThingsServicesInfo(thingsInfo, null);
 				}
 			}.start();
 		}
@@ -384,6 +424,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				if(thingsInfo.get(entryOldThing.getLeft()) != null){
 
 					//add the devId of the thing stored in the DB
+					//to update servThingsIds
+					//Map<service, List<devId>>
 					devIdCheckList.add(entryOldThing.getLeft());
 					
 					//convert json to Thing (Old)
@@ -394,7 +436,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					//after the updateContext
 					//in this case must be avoided the deleting
 					//of old data things so we read the thingsInfoDB
-					//and we update only battery and coords
+					//and we update only battery and/or coords
 					if(serviceEquivalentThings == null){
 						
 						System.out.println("QoSMonitor -- updateThingsServicesInfo() monitoring after updateContext");
@@ -414,6 +456,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 					else{
 						//if a thing on new Map<DevId, Thing> (created in the ServAgreement operation) 
 						//has battery or coords null
+						//it is happen because the contextElement relative to the contextRegistration
+						//it is not found in QoSBrokerCore -- createThingsMappings, so
+						//the batt and/or coords are null
 						//there is a trial to read this values from the things read in the DB
 						//(check if values are not null in the thing read from DB)
 						if(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel() == null ||
@@ -496,7 +541,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						List<String> newEqThingsList = serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings();
 
 						//merge operation of the old eqThingsList and the new One
-						//avoiding duplicates
+						//avoiding duplicates, if a devId in oldEqThingsList
+						//it is present in newEqThingsList, it is removed
 						for(int i=0; i<oldEqThingsList.size(); i++){
 							for(String newDevId : newEqThingsList){
 								//check if the devId point to a thing that is 
@@ -511,6 +557,8 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						}
 						
 						if(!oldEqThingsList.isEmpty())
+							//add all remains elements in oldEqThingsList in newEqThingsList in serviceEquivalentThings
+							//to avoid to delete old values already stored
 							serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings().addAll(oldEqThingsList);
 					}
 				}
