@@ -145,13 +145,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 			AllocationPolicy allocPolicy = AllocationPolicy.WRoundRobin;
 			Priority prio = Priority.BATTERY;
-			res[0].setAllocPolicy(allocPolicy);
-			res[0].setPriority(prio);
+
 			
 			//Map<DevId, Map<transId::ServName ,p_ij>>>
 			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
 			//execution with p_ij=f_ij
 			res[0] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio);
+			res[0].setAllocPolicy(allocPolicy);
+			res[0].setPriority(prio);
 			res[0].setOperationStatus(operationStatus);
 			
 			prio = Priority.UTILIZATION;
@@ -160,6 +161,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			matrixP = matrixF;
 			//execution with p_ij=u_ij
 			res[1] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio);
+			res[1].setAllocPolicy(allocPolicy);
+			res[1].setPriority(prio);
 			res[1].setOperationStatus(operationStatus);
 			
 			prio = Priority.RANDOM;
@@ -262,6 +265,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			}
 		}
 		
+		if(U.isEmpty()) return null;
+		else
 		return U;
 	}
 
@@ -285,13 +290,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 				b_i=t.getBatteryLevel()/100;
 			}
 			else{
-				
-				//remove the thing because
-				//without batt is usefull
-				//this thing object
-				thingsInfo.remove(devId);
-				
-				//continue on the next thing
 				continue;
 			}
 			
@@ -332,6 +330,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			}
 		}
 		
+		if(F.isEmpty()) return null;
+		else
 		return F;
 	}
 
@@ -1343,7 +1343,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 			
 			Point point = null;
 			Circle circle = null;
-			Polygon polygon = null;
 			
 			if(request.getLocationRequirementPoint()!=null){
 				point = request.getLocationRequirementPoint().getLocationRequirement();
@@ -1352,10 +1351,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 			else{
 				if(request.getLocationRequirementCircle()!=null){
 					circle = request.getLocationRequirementCircle().getLocationRequirement();
-					
-				}
-				if(request.getLocationRequirementPolygon()!=null){
-					polygon = request.getLocationRequirementPolygon().getLocationRequirement();
 					
 				}
 			}
@@ -1401,20 +1396,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 									continue;
 								}
 							}
-							if(polygon!=null){
-								if(!Utils.in_polygon(polygon, coords)){
-									eqThings.remove(i-1);
-									i--;
-									continue;
-								}
-							}
 						}
 					}
 					else{
 						//coords info of the thing is null
 						//if the location requirements is not
 						//null the thing is removed
-						if(point != null || circle != null || polygon!=null){
+						if(point != null || circle != null){
 							eqThings.remove(i-1);
 							i--;
 							continue;

@@ -48,14 +48,24 @@ public class Utils {
 		
 		List<Vertex> vertexList = polygon.getVertexList();
 		
+//	      for (i = 0, j = points.length - 1; i < points.length; j = i++) {
+//	          if ((points[i].y > test.y) != (points[j].y > test.y) &&
+//	              (test.x < (points[j].x - points[i].x) * (test.y - points[i].y) / (points[j].y-points[i].y) + points[i].x)) {
+//	            result = !result;
+//	           }
+//	        }
+		
 		boolean result = false;
 		for (i = 0, j = vertexList.size() - 1; i < vertexList.size(); j = i++) {
+			
 			if ((vertexList.get(i).getLongitude() > coords.getLongitude()) != 
-					(vertexList.get(j).getLatitude() > coords.getLatitude())
+					(vertexList.get(j).getLongitude() > coords.getLongitude())
+					
 					&& (coords.getLatitude() < (vertexList.get(j).getLatitude() - vertexList.get(i).getLatitude())
 							* (coords.getLongitude() - vertexList.get(i).getLongitude())
 							/ (vertexList.get(j).getLongitude() - vertexList.get(i).getLongitude()) 
 							+ vertexList.get(i).getLatitude())) {
+				
 				result = !result;
 			}
 		}

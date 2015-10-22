@@ -1,7 +1,0 @@
-create /7399/0
-set /7399/0 1 90 #battery
-set /7399/0 2 24 #degrees
-set /7399/0 3 24.6 #CO2
-set /7399/0 4 "37.0,45.9" #coords
-set /7399/0 5 "On"
-connect localhost 60001 sensor_3 /

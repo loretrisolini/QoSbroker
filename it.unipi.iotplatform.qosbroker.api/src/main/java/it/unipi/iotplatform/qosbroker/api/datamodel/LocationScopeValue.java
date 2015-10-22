@@ -17,7 +17,6 @@ public class LocationScopeValue<T> extends DataStructure {
 	
     @XmlElements({
         @XmlElement(name="circle", type=Circle.class),
-        @XmlElement(name="polygon", type=Polygon.class),
         @XmlElement(name="point", type=Point.class)
     })
     //can be Point, Segment, Circle
@@ -29,8 +28,7 @@ public class LocationScopeValue<T> extends DataStructure {
 
 	public void setLocationRequirement(T locationRequirement) {
 		
-		if(locationRequirement.getClass() != Point.class && locationRequirement.getClass() != Circle.class &&
-				locationRequirement.getClass() != Polygon.class){
+		if(locationRequirement.getClass() != Point.class && locationRequirement.getClass() != Circle.class){
 			throw new RuntimeException("locationRequirements must be Point, Circle or Polygon");
 		}
 		

@@ -1,6 +1,0 @@
-create /7396/0
-set /7396/0 1 90 #batt
-set /7396/0 2 24 #degrees
-set /7396/0 3 "57.0,44.9" #coords
-set /7396/0 4 "On"
-connect localhost 60001 sensor_4 /

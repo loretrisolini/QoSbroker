@@ -828,7 +828,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		QoSscopeValue qosScopeValue = new QoSscopeValue();
 		LocationScopeValue<Point> locationScopeValuePoint = new LocationScopeValue<Point>();
 		LocationScopeValue<Circle> locationScopeValueCircle = new LocationScopeValue<Circle>();
-		LocationScopeValue<Polygon> locationScopeValuePolygon = new LocationScopeValue<Polygon>();
 		
 		for(OperationScope opScope : operationScope){
 			
@@ -851,10 +850,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_CIRCLE)){
 				locationScopeValueCircle = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValueCircle, LocationScopeValue.class);
 				request.setLocationRequirementCircle(locationScopeValueCircle);
-			}
-			if(opScope.getScopeType().contentEquals(QoSConsts.LOCATION_POLYGON)){
-				locationScopeValuePolygon = LocationScopeValue.convertObjectToJaxbObject((Node)opScope.getScopeValue(), locationScopeValuePolygon, LocationScopeValue.class);
-				request.setLocationRequirementPolygon(locationScopeValuePolygon);
 			}
 		}
 
@@ -1153,7 +1148,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				
 				//if latency or servAccuracy are not null
 				//they must respect the constraints
-				if(maxRespTime!=null && latency != null && latency < maxRespTime || maxRespTime==null){
+				if(maxRespTime!=null && latency != null && latency <= maxRespTime || maxRespTime==null){
 					constraints = true;
 					
 					break;

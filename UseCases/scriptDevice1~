@@ -1,9 +1,0 @@
-create /7392/0
-set /7392/0 1 90
-set /7392/0 2 24
-set /7392/0 3 44
-set /7392/0 4 63
-set /7392/0 5 44
-set /7392/0 6 2
-set /7392/0 7 "On"
-connect localhost 60001 sensor_1 /
