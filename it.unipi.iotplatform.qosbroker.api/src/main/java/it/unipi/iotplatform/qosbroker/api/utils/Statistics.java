@@ -1,4 +1,11 @@
-package it.unipi.iotplatform.qosbroker.api.datamodel;
+package it.unipi.iotplatform.qosbroker.api.utils;
+
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +32,7 @@ public class Statistics{
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
-		
+			
 		FileWriter fileWriterThingsMappings = null;
 		
 		try{
@@ -122,11 +129,10 @@ public class Statistics{
 	
 	public static void setTestDir() {
 		
-		count++; 
-		r++;
 		file = new File("/home/lorenzo/Desktop/Tests/"+Statistics.testFolder+r);
 		if(!file.exists()){ 
 			file.mkdir();
+
 		}
 		
 	}
@@ -144,7 +150,7 @@ public class Statistics{
 		FileWriter fileWriterInputGap=null;
 		
 		try{
-			if(file==null) setTestDir();
+			setTestDir();
 			
 			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP"+count+".csv");
 			
@@ -383,7 +389,7 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			if(file==null) setTestDir();
+			setTestDir();
 			
 			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap"+count+".txt", "UTF-8");
 			writer.println("####################################");
@@ -421,7 +427,7 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			if(file==null) setTestDir();
+			setTestDir();
 			
 			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults"+count+".txt", "UTF-8");
 			writer.println("####################################");
@@ -434,6 +440,34 @@ public class Statistics{
 			writer.println("Context Element List");
 			
 			writer.println(contElemList.toString());
+			
+			writer.println("########################################");
+			writer.println("########################################");
+			writer.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void printServiceAgreementReq(ServiceDefinition serviceRequest){
+		
+		r++;
+		count++; 
+		PrintWriter writer=null;
+		
+		try{
+			setTestDir();
+			
+			writer = new PrintWriter(file.getAbsolutePath()+"/ServiceAgreementReq"+count+".txt", "UTF-8");
+			writer.println("####################################");
+			writer.println("####################################");
+			
+			writer.println("ServiceAgreementRequest");
+			
+			writer.println(serviceRequest.toString());
+			
 			
 			writer.println("########################################");
 			writer.println("########################################");

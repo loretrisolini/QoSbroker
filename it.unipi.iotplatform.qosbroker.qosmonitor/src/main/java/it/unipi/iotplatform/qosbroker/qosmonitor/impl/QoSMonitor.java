@@ -92,8 +92,9 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 		}
 		
 		//check if for all keys, the response
-		//was element not found
-		if(dataList.isEmpty()){
+		//was element not found, of the number of elements found is less 
+		//than the number of elements requested
+		if(dataList.isEmpty() || dataList.size() < entityIdList.size()){
 
 			queryResponse.setErrorCode(new StatusCode(
 					Code.CONTEXTELEMENTNOTFOUND_404.getCode(),
@@ -444,25 +445,25 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						//only batt and coords old thing data are deleted
 						thingsInfo.put(entryOldThing.getLeft(), t);
 					}
-					else{
-						//if a thing on new Map<DevId, Thing> (created in the ServAgreement operation) 
-						//has battery or coords null
-						//it is happen because the contextElement relative to the contextRegistration
-						//it is not found in QoSBrokerCore -- createThingsMappings, so
-						//the batt and/or coords are null
-						//there is a trial to read this values from the things read in the DB
-						//(check if values are not null in the thing read from DB)
-						if(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel() == null ||
-								thingsInfo.get(entryOldThing.getLeft()).getCoords() == null){
-							if(t.getBatteryLevel() != null){
-								thingsInfo.get(entryOldThing.getLeft()).setBatteryLevel(t.getBatteryLevel());
-							}
-							
-							if(t.getCoords() != null){
-								thingsInfo.get(entryOldThing.getLeft()).setCoords(t.getCoords());
-							}
-						}
-					}
+//					else{
+//						//if a thing on new Map<DevId, Thing> (created in the ServAgreement operation) 
+//						//has battery or coords null
+//						//it is happen because the contextElement relative to the contextRegistration
+//						//it is not found in QoSBrokerCore -- createThingsMappings, so
+//						//the batt and/or coords are null
+//						//there is a trial to read this values from the things read in the DB
+//						//(check if values are not null in the thing read from DB)
+//						if(thingsInfo.get(entryOldThing.getLeft()).getBatteryLevel() == null ||
+//								thingsInfo.get(entryOldThing.getLeft()).getCoords() == null){
+//							if(t.getBatteryLevel() != null){
+//								thingsInfo.get(entryOldThing.getLeft()).setBatteryLevel(t.getBatteryLevel());
+//							}
+//							
+//							if(t.getCoords() != null){
+//								thingsInfo.get(entryOldThing.getLeft()).setCoords(t.getCoords());
+//							}
+//						}
+//					}
 
 
 				}

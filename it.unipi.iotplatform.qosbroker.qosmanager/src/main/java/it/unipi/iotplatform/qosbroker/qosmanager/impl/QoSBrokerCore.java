@@ -12,9 +12,9 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Statistics;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
@@ -724,6 +724,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//TODO manage serviceAgreementRequest as List of serviceDefinition
 		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
 		
+		Statistics.printServiceAgreementReq(serviceRequest);
+		
 		String opType = serviceRequest.getOperationType();
 		
 		logger.info("QoSBrokerCore -- createAgreement() getRestriction");
@@ -902,10 +904,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			QueryContextResponse qosMonitorResponse = qosMonitorNgsi.queryContext(queryRequest);
 			
 			if(qosMonitorResponse.getErrorCode() != null &&
-					qosMonitorResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()
-					//if the QoSMonitor doesn't give me the any values, there will be a trial
-					//to read theese values from the thingsInfoDB
-					&& qosMonitorResponse.getErrorCode().getCode() != QoSCode.CONTEXTELEMENTNOTFOUND_404.getCode()){
+					qosMonitorResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()){
 				
 				statusCode = qosMonitorResponse.getErrorCode();
 				

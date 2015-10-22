@@ -34,6 +34,7 @@
 					<Private-Package>it.unipi.iotplatform.qosbroker.qoscalculator.*</Private-Package>
 					<Import-Package>
 							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
+							it.unipi.iotplatform.qosbroker.api.utils;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.ngsi.api.ngsi10;version="${pom.version}",
