@@ -196,12 +196,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 		}
 		catch(UnsupportedEncodingException e){
 			e.printStackTrace();
+			operationStatus = " exception UnsupportedEncodingException opening statistics file";
 		}
 		catch(FileNotFoundException fe){
 			fe.printStackTrace();
+			operationStatus = " exception FileNotFoundException opening statistics file";
 		}
 		catch(IOException ioe){
 			ioe.printStackTrace();
+			operationStatus = " exception IOException opening statistics file";
 		}
 		
 		StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
@@ -476,9 +479,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		List<Pair<String, Integer>> Fj_sp;
 		
 		//file for debugging
-		File file = new File("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/Tests/"+Statistics.testFolder+Statistics.r);
-		if(!file.exists()) file.mkdir();
-		writer = new PrintWriter(file.getAbsolutePath()+"/GapResult"+Statistics.count+""+prio.name()+".txt", "UTF-8");
+		Statistics.setTestDir();
+		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+Statistics.count+""+prio.name()+".txt", "UTF-8");
 		
 		System.out.println();
 		System.out.println("##########################################################");
@@ -796,12 +798,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 							
 							ds = d;
 							
-							if(allocationTemp != null)
+							if(allocationTemp == null)
 								allocationTemp = new AllocationInfo();
-							else
-								//clear the list <i, c_ij_sp> because it is was set
-								//in a previous iteration
-								allocationTemp.getAllocatedThings().clear();
+							else{
+								
+								if(allocationTemp.getAllocatedThings().size() > 0)
+									//clear the list <i, c_ij_sp> because it is was set
+									//in a previous iteration
+									allocationTemp.getAllocatedThings().clear();
+							}
 							
 							//set transId, service, operationType
 							//relative to the chosen service
@@ -834,7 +839,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 							writer.println();
 							writer.println("##########################################################");
 							writer.println("##########################################################");
-							writer.println("TEMP allocationObj<----------------------------");
+							writer.println("TEMPORARY CHOSEN SERVICE");
 							writer.println("transId: "+allocationTransId);
 							writer.println("serviceName: "+allocationServiceName.toUpperCase());
 							writer.println(allocationTemp.toString()+" TETA: "+teta);
@@ -865,7 +870,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 				if(ds == INF) break;
 			}//iteration on the transIds in the list <transId, Request>
 				
+			//check if res is feasible and ds != INF
+			//because if ds == INF, it has been already done
+			//the allocation in one shoot 
 			if(res.isFeasible()){
+				
+				//TODO
+				if(ds == INF) continue;
 				
 				System.out.println();
 				System.out.println("##########################################################");
@@ -1173,7 +1184,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		int wij_counter = 0;
 		
 		//p_ij*w_ij
-		int pij_wijMul = 0;
+		double pij_wijMul = 0.0;
 		
 		int max_max2Index = 0;
 		
@@ -1195,7 +1206,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			for(Pair<String, Integer> pair: listThingWij_sp){
 				int wij_sp = pair.getRight();
 				
-				pij_wijMul += this.priorityList.get(indexPriority)*wij_sp;
+				pij_wijMul = pij_wijMul + priorityList.get(indexPriority)*(double)wij_sp;
 				
 				indexPriority++;
 				wij_counter += wij_sp;
@@ -1205,6 +1216,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Double weightedPriority = (double)(pij_wijMul/wij_counter);
 			
 			max_max2[max_max2Index] = weightedPriority;
+			
+			pij_wijMul = 0.0;
+			wij_counter = 0;
 			
 			//remove element with max priority
 			//so the first element
@@ -1305,12 +1319,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 		logger.info("c_i: "+(c_i));
 		logger.info("z_i: "+(z_i));
 		logger.info("update c_i: "+(c_i + i*(u_ij/split)*w_ij_sp));
-		logger.info("update z_i: "+(z_i - i*(u_ij/split)*w_ij_sp));
+		logger.info("update z_i: "+(z_i - i*(f_ij/split)*w_ij_sp));
 		logger.info("SPLIT: "+split);
 		logger.info("wij_sp: "+w_ij_sp);
 		System.out.println();
 		writer.println("update c_i: "+(c_i + i*(u_ij/split)*w_ij_sp));
-		writer.println("update z_i: "+(z_i - i*(u_ij/split)*w_ij_sp));
+		writer.println("update z_i: "+(z_i - i*(f_ij/split)*w_ij_sp));
 		writer.println("SPLIT: "+split);
 		writer.println("wij_sp: "+w_ij_sp);
 

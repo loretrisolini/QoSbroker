@@ -572,20 +572,27 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 						//it is present in newEqThingsList, it is removed
 						for(int i=0; i<oldEqThingsList.size(); i++){
 							for(String newDevId : newEqThingsList){
-								//check if the devId point to a thing that is 
-								//no more alive
-								//MONITORING OPERATION
+								//remove duplicates from oldEqThingsList
+								//because it will be merge with
+								//newEqThingsList
 								if(oldEqThingsList.get(i).contentEquals(newDevId)){
 									oldEqThingsList.remove(i);
 								}
 								if(oldEqThingsList.isEmpty()){ break; }
 							}
+						}
+						
+						for(int i=0; i<oldEqThingsList.size(); i++){
+							//check if the devId point to a thing that is 
+							//no more alive
+							//MONITORING OPERATION
 							if(!oldEqThingsList.isEmpty() && 
 									thingsMonitoring.get(oldEqThingsList.get(i)) == null){
 								oldEqThingsList.remove(i);
 								if(oldEqThingsList.isEmpty()){ break; }
 							}
 						}
+						
 						
 						if(!oldEqThingsList.isEmpty())
 							//add all remains elements in oldEqThingsList in newEqThingsList in serviceEquivalentThings
