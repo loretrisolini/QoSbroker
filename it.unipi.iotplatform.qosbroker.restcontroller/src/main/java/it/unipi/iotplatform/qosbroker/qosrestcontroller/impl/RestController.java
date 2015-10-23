@@ -1,5 +1,6 @@
 package it.unipi.iotplatform.qosbroker.qosrestcontroller.impl;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
@@ -7,6 +8,8 @@ import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosrestcontroller.sanitycheck.SanityCheck;
 
 import java.io.BufferedReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import eu.neclab.iotplatform.couchdb.http.HttpRequester;
+import eu.neclab.iotplatform.iotbroker.commons.FullHttpResponse;
 import eu.neclab.iotplatform.iotbroker.commons.JsonValidator;
 import eu.neclab.iotplatform.iotbroker.commons.XmlValidator;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
@@ -57,6 +62,9 @@ public class RestController {
 	@Autowired
 	private Ngsi9Interface ngsi9Core;
 
+	/** The component for receiving NGSI 10 requests. */
+	private Ngsi10Interface qosNgsiCore;
+	
 	/** The component for receiving NGSI 10 requests. */
 	private Ngsi10Interface ngsiCore;
 //
@@ -239,8 +247,15 @@ public class RestController {
 
 		if (validateMessageBody(requester, request, sNgsi10schema)) {
 
-			QueryContextResponse response = ngsiCore.queryContext(request);
-
+			QueryContextResponse response = null;
+			
+			if(request.getEntityIdList().size() > 0 && request.getEntityIdList().get(0).getId().startsWith("QoS_")){
+				response = qosNgsiCore.queryContext(request);
+			}
+			else{
+				response = ngsiCore.queryContext(request);
+			}
+			
 			logger.debug("Entity TYPE = "
 					+ request.getEntityIdList().get(0).getType());
 
@@ -350,7 +365,12 @@ public class RestController {
 	public void setQosCore(QoSBrokerIF qosCore) {
 		this.qosCore = qosCore;
 	}
-
+	public Ngsi10Interface getQosNgsiCore() {
+		return qosNgsiCore;
+	}
+	public void setQosNgsiCore(Ngsi10Interface qosNgsiCore) {
+		this.qosNgsiCore = qosNgsiCore;
+	}
 
 
 }

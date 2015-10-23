@@ -30,7 +30,10 @@
 		</mvc:message-converters>
 	</mvc:annotation-driven>
 	
- 	<osgi:reference id="Ngsi10Interface"
+	<osgi:reference id="Ngsi10Interface"
+		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" bean-name="brokercore"></osgi:reference>
+	
+ 	<osgi:reference id="QoSNgsi10Interface"
 		interface="eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface" bean-name="QoSBrokerCore"></osgi:reference>
 
 	<osgi:reference id="Ngsi9Interface"
@@ -43,6 +46,7 @@
 		class="it.unipi.iotplatform.qosbroker.qosrestcontroller.impl.RestController" >
  		<beans:property name="ngsi9Core" ref="Ngsi9Interface"></beans:property>
 		<beans:property name="ngsiCore" ref="Ngsi10Interface"></beans:property> 
+		<beans:property name="qosNgsiCore" ref="QoSNgsi10Interface"></beans:property> 
 		<beans:property name="qosCore" ref="QoSBrokerService"></beans:property>
 	</beans:bean>
 	

@@ -29,6 +29,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -39,10 +41,15 @@ import org.w3c.dom.Node;
 import eu.neclab.iotplatform.couchdb.http.HttpRequester;
 import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.iotbroker.commons.FullHttpResponse;
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
+import eu.neclab.iotplatform.iotbroker.commons.TraceKeeper;
+import eu.neclab.iotplatform.iotbroker.core.QueryResponseMerger;
+import eu.neclab.iotplatform.iotbroker.core.RequestThread;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
+import eu.neclab.iotplatform.ngsi.api.datamodel.ContextMetadata;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationAttribute;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.DiscoverContextAvailabilityRequest;
@@ -79,6 +86,7 @@ import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 //import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
+import eu.neclab.iotplatform.ngsi.association.datamodel.AssociationDS;
 
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
@@ -90,6 +98,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	/** Executor for asynchronous tasks */
 	private final ExecutorService taskExecutor = Executors
 			.newCachedThreadPool();
+	
+	private boolean traceKeeperEnabled = false;
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
@@ -193,29 +203,6 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return queryResponse;
 		}
 		
-		/*	
-		<contextRegistrationAttributeList> 
-		<contextRegistrationAttribute> 
-			<name>temperature</name> 
-			<type>degree</type> 
-			<isDomain>false</isDomain> 
-			<metadata> 
-				<contextMetadata> 
-					<name>equivalentEnt_1</name> 
-					<type>string</type> 
-					<value>tempSens_1,temp_1</value> 
-				</contextMetadata> 
-				<contextMetadata> 
-					<name>equivalentEnt_2</name> 
-					<type>string</type> 
-					<value>tempSens_2,temp_2</value> 
-				</contextMetadata> 
-			</metadata> 
-		</contextRegistrationAttribute> 
-	</contextRegistrationAttributeList> 
-	<providingApplication>http://localhost:1024/QoSBroker
-	</providingApplication> */
-		
 		logger.info("QoSBrokerCore -- queryContext() read Allocation Schemas");
 		Reserveobj reservationResults = qosManager.getReservationResults();
 		
@@ -241,33 +228,36 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//Map<transId, operationType>
 		String opType = reservationResults.getTransId_opType().get(transId);
 		
-		if(allocationResult == null || opType == null){
+		if(allocationResult == null){
 			
 			statusCode = new StatusCode(
-					Code.INTERNALERROR_500.getCode(),
-					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error reading allocation schemas");
+					QoSCode.SERVICEALLOCATIONNOTFOUND_405.getCode(),
+					QoSReasonPhrase.SERVICEALLOCATIONNOTFOUND_405.toString(), "QoSBrokerCore -- queryContext() allocation schema not found");
 
 			queryResponse.setErrorCode(statusCode);
 
 			return queryResponse;
 		}
 		
-		QueryContextRequest qosQuery = new QueryContextRequest();
+		if(opType == null || !opType.contentEquals("queryContext")){
+			statusCode = new StatusCode(
+					Code.BADREQUEST_400.getCode(),
+					ReasonPhrase.BADREQUEST_400.toString(), "QoSBrokerCore -- queryContext() Error Allocation opType doesn't match");
+
+			queryResponse.setErrorCode(statusCode);
+
+			return queryResponse;
+		}
 		
-		List<EntityId> entityIdAllocList = new ArrayList<>();
-		List<String> attributeList = new ArrayList<>();
+		List<QueryContextRequest> qosQueryList = new ArrayList<>();
+		List<ContextElementResponse> contElemRespList = new ArrayList<>();
 		
 		for(Map.Entry<String, AllocationInfo> entryAlloc: allocationResult.entrySet()){
 
-			if(!opType.contentEquals(transId)){
-				statusCode = new StatusCode(
-						Code.BADREQUEST_400.getCode(),
-						ReasonPhrase.BADREQUEST_400.toString(), "QoSBrokerCore -- queryContext() Error Allocation opType doesn't match");
+			List<EntityId> entityIdAllocList = new ArrayList<>();
+			List<String> attributeList = new ArrayList<>();
+			
 
-				queryResponse.setErrorCode(statusCode);
-
-				return queryResponse;
-			}
 			
 			String service = entryAlloc.getKey();
 			attributeList.add(service);
@@ -291,29 +281,102 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			entId.setId(devId);
 			
 			entityIdAllocList.add(entId);
+			
+			QueryContextRequest qosQuery = new QueryContextRequest();
+			
+			qosQuery.setEntityIdList(entityIdAllocList);
+			qosQuery.setAttributeList(attributeList);
+			
+			qosQueryList.add(qosQuery);
+			
+
 		}
 		
-		qosQuery.setEntityIdList(entityIdAllocList);
-		qosQuery.setAttributeList(attributeList);
+		Restriction restriction = new Restriction();
+		restriction.setAttributeExpression("");
 		
-		//REST CALL QUERY TO IoTBROKER
-		try{
-			URL url = new URL(IOTBROKER_URL+"/queryContext");
-			FullHttpResponse resp = HttpRequester.sendPost(url, qosQuery.toString(), CONTENT_TYPE_XML);
-			
-			String body = resp.getBody();
-			
-			queryResponse = (QueryContextResponse)QueryContextResponse.convertStringToXml(body, QueryContextResponse.class);
-			
-			return queryResponse;
-			
-		} catch (MalformedURLException e) {
-			logger.error("Error: ", e);
-			return null;
-		} catch (Exception e) {
-			logger.error("Error: ", e);
-			return null;
-		}
+		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
+				request.getEntityIdList(), request.getAttributeList(),
+				restriction);
+		logger.debug("DiscoverContextAvailabilityRequest:"
+				+ discoveryRequest.toString());
+
+		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
+		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
+				.discoverContextAvailability(discoveryRequest);
+
+		
+
+		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
+				.getErrorCode().getCode() == 200)
+				&& discoveryResponse.getContextRegistrationResponse() != null) {
+
+			logger.debug("Receive discoveryResponse from Config Man:"
+					+ discoveryResponse);
+
+
+			List<Pair<QueryContextRequest, URI>> queryList = createQueryRequestList(
+					discoveryResponse, request);
+
+			logger.debug("Query List Size: " + queryList.size());
+
+			QueryResponseMerger merger = new QueryResponseMerger(request);
+
+			// List of Task
+			List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
+
+			// Countdown of Task
+			CountDownLatch count = new CountDownLatch(queryList.size());
+
+			for (int i = 0; i < queryList.size(); i++) {
+				logger.debug("Starting Thread number: " + i);
+
+				logger.debug("info1:"
+						+ queryList.get(i).getLeft().getEntityIdList().get(0)
+						.getId());
+				logger.debug("info2:"
+						+ discoveryResponse.getContextRegistrationResponse()
+						.get(i).getContextRegistration()
+						.getProvidingApplication());
+
+				tasks.add(Executors.callable(new RequestThread(null,
+						ngsi10Requester, queryList.get(i).getLeft(), queryList
+						.get(i).getRight(), merger, count,
+						null)));
+
+			}
+
+			try {
+
+				long t0 = System.currentTimeMillis();
+				taskExecutor.invokeAll(tasks);
+				long t1 = System.currentTimeMillis();
+				logger.debug("Finished all tasks in " + (t1 - t0) + " ms");
+
+			} catch (InterruptedException e) {
+				logger.debug("Thread Error", e);
+			}
+
+			// Call the Merge Method
+			QueryContextResponse threadResponse = merger.get();
+
+			logger.debug("Response after merging: " + threadResponse);
+		
+		
+		System.out.println();
+		System.out.println("####################################");
+		System.out.println("Response From sensors: ");
+		System.out.println(contElemRespList);
+		System.out.println("####################################");
+		System.out.println();
+		
+		queryResponse = new QueryContextResponse();
+		
+		queryResponse.setContextResponseList(contElemRespList);
+		
+		return queryResponse;
+		
+
 		
 //		/*
 //		 * create associations operation scope for discovery
@@ -716,7 +779,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		ServiceAgreementResponse response;
 		
 		//transactionID to identify the service request
-		String transactionId = UUID.randomUUID().toString();
+		String transactionId = "QoS_"+UUID.randomUUID().toString();
 		
 //		parse the request to create discovery request
 		
@@ -1279,6 +1342,143 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		this.qosManager = qosManager;
 	}
 
+	/**
+	 * This function creates a list of which query context request should be
+	 * sent to which address, based on a discovery response (containing the
+	 * available data sources) and a query context request (defining which data
+	 * should be retrieved).
+	 *
+	 * @param discoveryResponse
+	 *            The discovery response specifying the available data sources
+	 * @param request
+	 *            The query context request defining which data is to be
+	 *            obtained.
+	 * @return A list of (QueryContextRequest,URL) pairs specifying where to
+	 *         make which query.
+	 */
+	private List<Pair<QueryContextRequest, URI>> createQueryRequestList(
+			DiscoverContextAvailabilityResponse discoveryResponse,
+			QueryContextRequest request) {
+
+		List<Pair<QueryContextRequest, URI>> output = new ArrayList<Pair<QueryContextRequest, URI>>();
+
+		for (int i = 0; i < discoveryResponse.getContextRegistrationResponse()
+				.size(); i++) {
+			List<ContextMetadata> lstcmd = discoveryResponse
+					.getContextRegistrationResponse().get(i)
+					.getContextRegistration().getListContextMetadata();
+			if (lstcmd.size() > 0
+					&& "Association".equals(lstcmd.get(0).getName().toString())) {
+				continue;
+			}
+
+			// (1) get the access URI
+			URI uri = discoveryResponse.getContextRegistrationResponse().get(i)
+					.getContextRegistration().getProvidingApplication();
+
+			// Check the trace and discard in case of loop detected
+			if (traceKeeperEnabled) {
+				if (TraceKeeper.checkRequestorHopVSTrace(
+						request.getRestriction(), uri.toString())) {
+					logger.info(String
+							.format("Loop detected, discarding ContextRegistrationResponse: %sBecause of the QueryContext: %s",
+									discoveryResponse
+									.getContextRegistrationResponse()
+									.get(i), request));
+					continue;
+				}
+			}
+
+			// check if EntityId is != null
+			if (discoveryResponse.getContextRegistrationResponse().get(i)
+					.getContextRegistration().getListEntityId() != null) {
+
+				// (2) create QueryContextRequest
+				QueryContextRequest contextRequest = new QueryContextRequest();
+
+				contextRequest.setEntityIdList(discoveryResponse
+						.getContextRegistrationResponse().get(i)
+						.getContextRegistration().getListEntityId());
+
+				List<String> attributeNameList = new ArrayList<String>();
+
+				// check if different to null
+				if (discoveryResponse.getContextRegistrationResponse().get(i)
+						.getContextRegistration()
+						.getContextRegistrationAttribute() != null) {
+
+					// run over all attributes
+					for (int j = 0; j < discoveryResponse
+							.getContextRegistrationResponse().get(i)
+							.getContextRegistration()
+							.getContextRegistrationAttribute().size(); j++) {
+
+						String attributeName = discoveryResponse
+								.getContextRegistrationResponse().get(i)
+								.getContextRegistration()
+								.getContextRegistrationAttribute().get(j)
+								.getName();
+
+						attributeNameList.add(attributeName);
+
+					}
+
+					contextRequest.setAttributeList(attributeNameList);
+				}
+				// restriction comes from original ngsi10 request !
+				contextRequest.setRestriction(request.getRestriction());
+
+				// Keep trace of the queryContext
+				if (traceKeeperEnabled) {
+					Restriction restriction = contextRequest.getRestriction();
+					restriction = TraceKeeper.addHopToTrace(restriction);
+					contextRequest.setRestriction(restriction);
+				}
+
+				output.add(new Pair<QueryContextRequest, URI>(contextRequest,
+						uri));
+			} else {
+
+				QueryContextRequest contextRequest = new QueryContextRequest();
+
+				contextRequest.setEntityIdList(request.getEntityIdList());
+
+				List<String> attributeNameList = new ArrayList<String>();
+
+				// check if different to null
+				if (request.getAttributeList() != null) {
+
+					// run over all attributes
+					for (int j = 0; j < request.getAttributeList().size(); j++) {
+
+						String attributeName = request.getAttributeList()
+								.get(j);
+
+						attributeNameList.add(attributeName);
+
+					}
+
+					contextRequest.setAttributeList(attributeNameList);
+				}
+				// restriction comes from original ngsi1 request !
+				contextRequest.setRestriction(request.getRestriction());
+
+				// Keep trace of the queryContext
+				if (traceKeeperEnabled) {
+					Restriction restriction = contextRequest.getRestriction();
+					restriction = TraceKeeper.addHopToTrace(restriction);
+					contextRequest.setRestriction(restriction);
+				}
+
+				output.add(new Pair<QueryContextRequest, URI>(contextRequest,
+						uri));
+			}
+
+		}
+		return output;
+	}
+
+	
 //	public Ngsi10Requester getNgsi10IoTBrokerCore() {
 //		return ngsi10IoTBrokerCore;
 //	}

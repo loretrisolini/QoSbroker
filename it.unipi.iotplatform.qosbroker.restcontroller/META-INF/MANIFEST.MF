@@ -64,4 +64,4 @@ Import-Package: eu.neclab.iotplatform.iotbroker.commons;version="4.3.3",
  org.springframework.web.servlet.view;version="3.2.3.RELEASE"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
 Tool: Bnd-2.4.1.201501161923
-Web-ContextPath: /QoSbroker
+Web-ContextPath: /ngsi10
