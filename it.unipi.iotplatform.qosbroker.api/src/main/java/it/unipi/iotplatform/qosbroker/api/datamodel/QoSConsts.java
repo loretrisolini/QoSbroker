@@ -24,6 +24,7 @@ public class QoSConsts {
 	public static final String REQUESTS_DB = "requests_db";
 //	public static final String REQUIREMENTS_DB = "requirements_db";
 	public static final String ALLOCATION_DB = "allocation_db";
+	public static final String RESERVATION_RESULTS_DB = "reservation_results_db";
 	
 	public static final String COUCHDB_ID = "_id";
 	public static final String COUCHDB_REV = "_rev";

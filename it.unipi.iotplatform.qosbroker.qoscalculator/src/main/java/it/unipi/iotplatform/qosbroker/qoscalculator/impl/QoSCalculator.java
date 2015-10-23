@@ -4,6 +4,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Priority;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -15,9 +16,9 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ThingAssignmentParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
 import it.unipi.iotplatform.qosbroker.api.utils.Utils;
+import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,17 +28,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
+import com.google.gson.Gson;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class QoSCalculator implements QoSCalculatorIF {
 
-	private ReservationResults reservationResults;
+	private static Reserveobj reservationResults;
+	
+	private QoSBigDataRepository bigDataRepository;
 	
 	private final WRRPolicy wrrPolicyManager = new WRRPolicy();
 	
@@ -190,6 +198,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 				ret.setStatusCode(statusCode);
 				operationStatus = "";
 				
+				//store reservation results
+				reservationResults = res[imax];
+				
+				//store reservation results
+				storeReservationResults();
+				
 				return ret;
 			}
 			
@@ -211,8 +225,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 												QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation() " + operationStatus);
 		ret.setStatusCode(statusCode);
 		operationStatus = "";
-		
-		reservationResults = ret;
 		
 		return ret;
 	}
@@ -741,10 +753,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 							
 							//remove service in the list of the request object
 							//request obj index is requestIndex, service index is serviceIndex
-							requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
+							requestsBck.get(req).getRight().getRequiredServicesNameList().remove(s);
 							
-							if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
-								requestsBck.remove(requestIndex);
+							if(requestsBck.get(req).getRight().getRequiredServicesNameList().isEmpty()){
+								requestsBck.remove(req);
 							}
 							
 							allocationTransId = null;
@@ -870,103 +882,103 @@ public class QoSCalculator implements QoSCalculatorIF {
 				if(ds == INF) break;
 			}//iteration on the transIds in the list <transId, Request>
 				
-			//check if res is feasible and ds != INF
-			//because if ds == INF, it has been already done
-			//the allocation in one shoot 
+			//check if res is feasible  
 			if(res.isFeasible()){
 				
-				//TODO
-				if(ds == INF) continue;
+				//check if ds != INF
+				//because if ds == INF, it has been already done
+				//the allocation in one shoot
+				if(ds != INF){
 				
-				System.out.println();
-				System.out.println("##########################################################");
-				System.out.println("FINAL ALLOCATION");
-				System.out.println("##########################################################");
-				System.out.println();
-				writer.println();
-				writer.println("##########################################################");
-				writer.println("FINAL ALLOCATION");
-				writer.println("##########################################################");
-				writer.println();
-				
-				AllocationInfo allocation = new AllocationInfo();
-
-				Integer split = new Integer(allocationTemp.getSplit());
-				allocation.setSplit(split);
-				
-				//get the list <i, w_ij_sp> from the allocationTemp object
-				List<Pair<String, Integer>> listThingWij_sp = allocationTemp.getAllocatedThings();
-				
-				//set the list of allocated things as <i, w_ij_sp>
-				for(Pair<String, Integer> entryAllocation: listThingWij_sp){
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("FINAL ALLOCATION");
+					System.out.println("##########################################################");
+					System.out.println();
+					writer.println();
+					writer.println("##########################################################");
+					writer.println("FINAL ALLOCATION");
+					writer.println("##########################################################");
+					writer.println();
 					
-					String devId = entryAllocation.getLeft();
-					Integer wij_sp = entryAllocation.getRight();
+					AllocationInfo allocation = new AllocationInfo();
+	
+					Integer split = new Integer(allocationTemp.getSplit());
+					allocation.setSplit(split);
 					
-					//set <i, w_ij_sp> in the allocated things list
-					//(y_j <- I_star with <i, w_ij_sp> in decreasing priority order)
-					allocation.addThing(devId, wij_sp);
+					//get the list <i, w_ij_sp> from the allocationTemp object
+					List<Pair<String, Integer>> listThingWij_sp = allocationTemp.getAllocatedThings();
 					
-					//get f_ij, u_ij for the given devId, transId+"::"+reqServiceName
-					Double f_ij = matrixF.get(devId).get(allocationTransId+"::"+allocationServiceName);
-					Double u_ij = matrixU.get(devId).get(allocationTransId+"::"+allocationServiceName);
-					
-					if(f_ij == null || u_ij == null){
-						operationStatus = "QoSCalculator -- GAP() final allocation"
-												+" f_ij or u_ij null for service: "
-												+allocationServiceName+" and devId "+devId;
-						res.setFeasible(false);
-						return res;
+					//set the list of allocated things as <i, w_ij_sp>
+					for(Pair<String, Integer> entryAllocation: listThingWij_sp){
+						
+						String devId = entryAllocation.getLeft();
+						Integer wij_sp = entryAllocation.getRight();
+						
+						//set <i, w_ij_sp> in the allocated things list
+						//(y_j <- I_star with <i, w_ij_sp> in decreasing priority order)
+						allocation.addThing(devId, wij_sp);
+						
+						//get f_ij, u_ij for the given devId, transId+"::"+reqServiceName
+						Double f_ij = matrixF.get(devId).get(allocationTransId+"::"+allocationServiceName);
+						Double u_ij = matrixU.get(devId).get(allocationTransId+"::"+allocationServiceName);
+						
+						if(f_ij == null || u_ij == null){
+							operationStatus = "QoSCalculator -- GAP() final allocation"
+													+" f_ij or u_ij null for service: "
+													+allocationServiceName+" and devId "+devId;
+							res.setFeasible(false);
+							return res;
+						}
+						
+						//update capacity and residualBattery
+						//c_i = c_i + (u_ij/split)*w_ij_sp
+						//z_i = z_i - (f_ij/split)*w_ij_sp
+						updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, wij_sp, devId, 1);
 					}
+	
+					//set operationType for the specified transId
+					res.addTransactionIdOperationType(allocationTransId, operationType);
 					
-					//update capacity and residualBattery
-					//c_i = c_i + (u_ij/split)*w_ij_sp
-					//z_i = z_i - (f_ij/split)*w_ij_sp
-					updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, wij_sp, devId, 1);
+					//add allocation to the allocationSchema in the reserveObj
+					res.addAllocation(allocationTransId, allocationServiceName, allocation);
+					
+					//remove service in the list of the request object
+					//request obj index is requestIndex, service index is serviceIndex
+					requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
+					
+					if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
+						requestsBck.remove(requestIndex);
+					}
+	
+					allocationTransId = null;
+					allocationServiceName = null;
+					allocationTemp = null;
+					
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					logger.info("transId="+allocationTransId);
+					logger.info("and servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
+					logger.info(allocation.toString());
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					System.out.println();
+	
+					writer.println();
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("transId="+allocationTransId+
+									"\nand servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
+					writer.println(allocation.toString());
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println();
 				}
-
-				//set operationType for the specified transId
-				res.addTransactionIdOperationType(allocationTransId, operationType);
-				
-				//add allocation to the allocationSchema in the reserveObj
-				res.addAllocation(allocationTransId, allocationServiceName, allocation);
-				
-				//remove service in the list of the request object
-				//request obj index is requestIndex, service index is serviceIndex
-				requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
-				
-				if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
-					requestsBck.remove(requestIndex);
-				}
-
-				allocationTransId = null;
-				allocationServiceName = null;
-				allocationTemp = null;
-				
-				System.out.println();
-				System.out.println("##########################################################");
-				System.out.println("##########################################################");
-				logger.info("transId="+allocationTransId);
-				logger.info("and servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
-				logger.info(allocation.toString());
-				System.out.println("##########################################################");
-				System.out.println("##########################################################");
-				System.out.println();
-
-				writer.println();
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println("transId="+allocationTransId+
-								"\nand servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
-				writer.println(allocation.toString());
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println("##########################################################");
-				writer.println();
-
 				
 			}
 			else{
@@ -1761,32 +1773,86 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 
 	@Override
-	public ReservationResults readReservation() {
+	public Reserveobj readReservation() {
 		
-		return this.reservationResults;
+		return reservationResults;
 	}
 
 	@Override
 	public String getNextDevId(String transId, String service, AllocationPolicy allocPolicy) {
 		
-		if(reservationResults != null){
+		if(reservationResults != null && reservationResults.isFeasible()){
+				
+			List<Pair<String, Integer>> devIdList = 
+					reservationResults.getAllocationSchema().get(transId).get(service).getAllocatedThings();
+				
+			String nextDevId = null;
 			
-			if(reservationResults.isFeas()){
-				
-				List<Pair<String, Integer>> devIdList = 
-						reservationResults.getRes()[reservationResults.getWhich()]
-								.getAllocationSchema().get(transId).get(service).getAllocatedThings();
-					
-				String nextDevId = null;
-				
-				if(allocPolicy == AllocationPolicy.WRoundRobin)
-					nextDevId = wrrPolicyManager.getDevId(transId, service, devIdList);
-				
-				return nextDevId;
-			}
+			if(allocPolicy == AllocationPolicy.WRoundRobin)
+				nextDevId = wrrPolicyManager.getDevId(transId, service, devIdList);
+			
+			return nextDevId;
+
 		}
 
 		return null;
 	}
 
+	@PostConstruct 
+	public void loadReservationResults(){
+		
+		List<Pair<String, JSONObject>> reservationData = bigDataRepository.readData(null, QoSConsts.RESERVATION_RESULTS_DB);
+		
+		if(reservationData.size() > 0){
+			Gson gson = new Gson();
+	
+			String jsonReservationResults = null;
+			if(reservationData.get(0).getRight() != null)
+				jsonReservationResults = reservationData.get(0).getRight().toString();
+			
+			if(jsonReservationResults != null){
+				System.out.println("ReservationResults read from RESERVATION_RESULTS_DB: ");
+				System.out.println(jsonReservationResults);
+
+				reservationResults = gson.fromJson(jsonReservationResults, Reserveobj.class);
+				
+				System.out.println("ReservationResults loaded");
+			}
+			else{
+				System.out.println("ERROR reading ReservationResults from RESERVATION_RESULTS_DB: ");
+			}
+		}
+	}
+	
+	@PreDestroy
+	public boolean storeReservationResults(){
+		
+		if(reservationResults != null){
+			
+			Gson gson = new Gson();
+			
+			JSONObject reservationResultsJson = new JSONObject(gson.toJson(reservationResults));
+
+			System.out.println("store reservation Results: ");
+			System.out.println(reservationResultsJson);
+			
+			List<Pair<String, JSONObject>> reservationData = new ArrayList<>();
+			
+			reservationData.add(new Pair<String, JSONObject>(QoSCalculator.class.getCanonicalName(),reservationResultsJson));
+			
+			return bigDataRepository.storeData(reservationData, QoSConsts.RESERVATION_RESULTS_DB);
+
+		}
+		
+		System.out.println("WARNING reservationResults is NULL");
+		return true;
+	}
+
+	public QoSBigDataRepository getBigDataRepository() {
+		return bigDataRepository;
+	}
+
+	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
+		this.bigDataRepository = bigDataRepository;
+	}
 }

@@ -8,7 +8,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
@@ -54,7 +54,6 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.OperationScope;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.QueryContextResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ReasonPhrase;
@@ -218,13 +217,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	</providingApplication> */
 		
 		logger.info("QoSBrokerCore -- queryContext() read Allocation Schemas");
-		ReservationResults reservationResults = qosManager.getReservationResults();
+		Reserveobj reservationResults = qosManager.getReservationResults();
 		
 		if(reservationResults == null){
 			
 			statusCode = new StatusCode(
 					Code.INTERNALERROR_500.getCode(),
-					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error reading allocation schemas");
+					ReasonPhrase.RECEIVERINTERNALERROR_500.toString(), "QoSBrokerCore -- queryContext() Error reading allocation schemas or there is no"
+							+ "	allocation schema set");
 
 			queryResponse.setErrorCode(statusCode);
 
@@ -232,14 +232,14 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 
 		//Allocation Policy
-		AllocationPolicy allocPolicy = reservationResults.getRes()[reservationResults.getWhich()].getAllocPolicy();
+		AllocationPolicy allocPolicy = reservationResults.getAllocPolicy();
 		
 		//Map<reqServName, List<devId>>
 		HashMap<String, AllocationInfo> allocationResult = 
-				reservationResults.getRes()[reservationResults.getWhich()].getAllocationSchema().get(transId);
+				reservationResults.getAllocationSchema().get(transId);
 		
 		//Map<transId, operationType>
-		String opType = reservationResults.getRes()[reservationResults.getWhich()].getTransId_opType().get(transId);
+		String opType = reservationResults.getTransId_opType().get(transId);
 		
 		if(allocationResult == null || opType == null){
 			

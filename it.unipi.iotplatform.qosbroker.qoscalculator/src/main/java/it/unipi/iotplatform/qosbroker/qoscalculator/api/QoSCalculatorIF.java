@@ -5,6 +5,7 @@ package it.unipi.iotplatform.qosbroker.qoscalculator.api;
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
@@ -22,7 +23,7 @@ public interface QoSCalculatorIF {
 												HashMap<String, ThingsIdList> servNameThingsIdList,
 												double epsilon);
 	
-	public ReservationResults readReservation();
+	public Reserveobj readReservation();
 	
 	public String getNextDevId(String transId, String service, AllocationPolicy allocPolicy);
 }

@@ -387,7 +387,7 @@ public class QoSManager implements QoSManagerIF {
 	}
 
 	@Override
-	public ReservationResults getReservationResults() {
+	public Reserveobj getReservationResults() {
 		
 		return qosCalculator.readReservation();
 	}

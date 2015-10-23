@@ -3,7 +3,7 @@ package it.unipi.iotplatform.qosbroker.qosmanager.api;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public interface QoSManagerIF {
 	
 	public List<ContextRegistration> readAllocationSchema(List<String> transIdList);
 
-	public ReservationResults getReservationResults();
+	public Reserveobj getReservationResults();
 	
 	public String computeNextDevId(String transId, String service, AllocationPolicy allocPolicy);
 }

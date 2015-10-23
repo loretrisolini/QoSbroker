@@ -9,4 +9,6 @@
     <osgi:service id="QoSCalculatorService" ref="QoSCalculator"
         interface="it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF" />
 
+ 	<osgi:reference id="QoSBigDataRepositoryInterface"
+		interface="it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository" cardinality="0..1"></osgi:reference> 
 </beans>
