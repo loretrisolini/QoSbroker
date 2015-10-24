@@ -259,15 +259,17 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//list of pairs <thing(id), serviceAllocated>
 		HashMap<String,String> allocationPairs = new HashMap<String,String>();
 		
+
+		List<EntityId> entityIdAllocList = new ArrayList<>();
+		List<String> attributeAllocList = new ArrayList<>();
+		
 		//build the list of entityId and attribute to query the IoTDiscovery
 		for(Map.Entry<String, AllocationInfo> entryAlloc: allocationResult.entrySet()){
 
-			List<EntityId> entityIdAllocList = new ArrayList<>();
-			List<String> attributeList = new ArrayList<>();
 			
 			//get the serviceName
 			String service = entryAlloc.getKey();
-			attributeList.add(service);
+			attributeAllocList.add(service);
 			
 			//given the list of id of the things allocated to a service
 			//take one thingId based on the allocationPolicy
@@ -291,23 +293,28 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			entId.setType(URI.create(""));
 			entId.setId(devId);
 			entityIdAllocList.add(entId);
-
 		}
+		
+		//create the QueryContextRequest
+		//with the entityIds of the Allocation
+		//and the attributeList of the Allocation
+		QueryContextRequest queryRequestAllocation = new QueryContextRequest();
+		queryRequestAllocation.setEntityIdList(entityIdAllocList);
+		queryRequestAllocation.setAttributeList(attributeAllocList);
 		
 		Restriction restriction = new Restriction();
 		restriction.setAttributeExpression("");
 		
+		//discovery Request to find contReg 
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
-				request.getEntityIdList(), request.getAttributeList(),
-				restriction);
-		logger.debug("DiscoverContextAvailabilityRequest:"
+				entityIdAllocList, attributeAllocList, restriction);
+		
+		logger.debug("DiscoverContextAvailabilityRequest: "
 				+ discoveryRequest.toString());
 
 		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
 		DiscoverContextAvailabilityResponse discoveryResponse = ngsi9Impl
 				.discoverContextAvailability(discoveryRequest);
-
-		
 
 		if ((discoveryResponse.getErrorCode() == null || discoveryResponse
 				.getErrorCode().getCode() == 200)
@@ -315,8 +322,8 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 
 			logger.debug("Receive discoveryResponse from Config Man:"
 					+ discoveryResponse);
-
-
+			
+			//get create list of QueryContextRequest, URI
 			List<Pair<QueryContextRequest, URI>> queryList = createQueryRequestList(
 					discoveryResponse, allocationPairs);
 			
@@ -327,7 +334,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			logger.debug("Query List Size: " + queryList.size());
 
 
-			QueryResponseMerger merger = new QueryResponseMerger(request);
+			QueryResponseMerger merger = new QueryResponseMerger(queryRequestAllocation);
 
 			// List of Task
 			List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
@@ -342,9 +349,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						+ queryList.get(i).getLeft().getEntityIdList().get(0)
 						.getId());
 				logger.debug("info2:"
-						+ discoveryResponse.getContextRegistrationResponse()
-						.get(i).getContextRegistration()
-						.getProvidingApplication());
+						+ queryList.get(i).getRight());
 
 				tasks.add(Executors.callable(new RequestThread(null,
 						ngsi10Requester, queryList.get(i).getLeft(), queryList

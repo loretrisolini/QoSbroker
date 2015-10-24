@@ -249,12 +249,14 @@ public class RestController {
 
 			QueryContextResponse response = null;
 			
-			if(request.getEntityIdList().size() > 0 && request.getEntityIdList().get(0).getId().startsWith("QoS_")){
-				response = qosNgsiCore.queryContext(request);
-			}
-			else{
-				response = ngsiCore.queryContext(request);
-			}
+			response = qosNgsiCore.queryContext(request);
+			
+//			if(request.getEntityIdList().size() > 0 && request.getEntityIdList().get(0).getId().startsWith("QoS_")){
+//				response = qosNgsiCore.queryContext(request);
+//			}
+//			else{
+//				response = ngsiCore.queryContext(request);
+//			}
 			
 			logger.debug("Entity TYPE = "
 					+ request.getEntityIdList().get(0).getType());
