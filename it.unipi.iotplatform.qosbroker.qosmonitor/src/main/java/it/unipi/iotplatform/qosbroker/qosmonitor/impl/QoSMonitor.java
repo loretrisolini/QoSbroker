@@ -387,7 +387,7 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 
 	/* function to update ThingsInfoDB and ServNameEqThingsDB */
 	@Override
-	public StatusCode updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
+	public synchronized StatusCode updateThingsServicesInfo(HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 		
 		System.out.println("QoSMonitor -- updateThingsServicesInfo()");
@@ -416,8 +416,6 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 				//two case: 
 				//FIRST case, create Map<DevId, Thing> after an updateContext so the 
 				//update operation is only for batt and coords
-				//SECOND case, create Map<DevId, Thing> after ServAgreement and
-				//if batt or coords are null try to read this from thingsInfoDB
 				if(thingsInfo.get(entryOldThing.getLeft()) != null){
 					
 					//convert json to Thing (Old)

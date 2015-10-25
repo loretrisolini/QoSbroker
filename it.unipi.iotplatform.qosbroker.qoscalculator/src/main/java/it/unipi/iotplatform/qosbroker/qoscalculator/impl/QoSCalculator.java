@@ -492,7 +492,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		//file for debugging
 		Statistics.setTestDir();
-		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+Statistics.count+""+prio.name()+".txt", "UTF-8");
+		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+prio.name()+".txt", "UTF-8");
 		
 		System.out.println();
 		System.out.println("##########################################################");

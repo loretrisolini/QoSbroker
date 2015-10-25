@@ -93,7 +93,7 @@
 							org.springframework.web.servlet.view;version="${spring.version}"
 					</Import-Package>
 					<Include-Resource>src/main/webapp</Include-Resource>
-					<Web-ContextPath>/QoSbroker</Web-ContextPath>
+					<Web-ContextPath>/ngsi10</Web-ContextPath>
 				</instructions>
 			</configuration>
 		</plugin>

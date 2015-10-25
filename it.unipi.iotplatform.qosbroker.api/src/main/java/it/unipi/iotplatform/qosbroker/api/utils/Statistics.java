@@ -24,10 +24,8 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 
 public class Statistics{
-	
-	public static int count = 0;
+
 	public static int r = 0;
-	public static String testFolder = "testFolder";
 	public static File file;
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
@@ -39,7 +37,7 @@ public class Statistics{
 			
 			setTestDir();
 				
-			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things"+count+".csv");
+			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things.csv");
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
 			fileWriterThingsMappings.append("\n");
@@ -127,12 +125,13 @@ public class Statistics{
 	}
 	
 	
-	public static void setTestDir() {
+	public synchronized static void setTestDir() {
 		
-		file = new File("/home/lorenzo/Desktop/Tests/"+Statistics.testFolder+r);
+		file = new File("/home/lorenzo/Desktop/TestsFolder/testFolder"+r);
 		if(!file.exists()){ 
 			file.mkdir();
-
+			
+			r++;
 		}
 		
 	}
@@ -152,7 +151,7 @@ public class Statistics{
 		try{
 			setTestDir();
 			
-			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP"+count+".csv");
+			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP.csv");
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy,AllocationPolicy");
 			fileWriterInputGap.append("\n");
@@ -179,7 +178,6 @@ public class Statistics{
 				
 				Point point = null;
 				Circle circle = null;
-				Polygon polygon = null;
 
 
 				if(req.getLocationRequirementPoint()!=null){
@@ -191,15 +189,6 @@ public class Statistics{
 						circle = req.getLocationRequirementCircle().getLocationRequirement();
 						fileWriterInputGap.append("Circle: cLat: "+String.valueOf(circle.getCenterLatitude())+" | cLon: "+String.valueOf(circle.getCenterLongitude())
 											+" | rad: "+String.valueOf(circle.getRadius()));
-					}
-					else{
-						polygon = req.getLocationRequirementPolygon().getLocationRequirement();
-						
-						List<Vertex> vertexList = polygon.getVertexList();
-						fileWriterInputGap.append("Polygon: ");
-						for(Vertex v: vertexList){
-							fileWriterInputGap.append("vLat: "+String.valueOf(v.getLatitude())+" vLon: "+String.valueOf(v.getLongitude())+" | ");
-						}
 					}
 				}
 				
@@ -391,7 +380,7 @@ public class Statistics{
 		try{
 			setTestDir();
 			
-			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap"+count+".txt", "UTF-8");
+			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap.txt", "UTF-8");
 			writer.println("####################################");
 			writer.println("####################################");
 			
@@ -429,7 +418,7 @@ public class Statistics{
 		try{
 			setTestDir();
 			
-			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults"+count+".txt", "UTF-8");
+			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults.txt", "UTF-8");
 			writer.println("####################################");
 			writer.println("####################################");
 			
@@ -453,14 +442,13 @@ public class Statistics{
 	
 	public static void printServiceAgreementReq(ServiceDefinition serviceRequest){
 		
-		r++;
-		count++; 
+
 		PrintWriter writer=null;
 		
 		try{
 			setTestDir();
 			
-			writer = new PrintWriter(file.getAbsolutePath()+"/ServiceAgreementReq"+count+".txt", "UTF-8");
+			writer = new PrintWriter(file.getAbsolutePath()+"/ServiceAgreementReq.txt", "UTF-8");
 			writer.println("####################################");
 			writer.println("####################################");
 			

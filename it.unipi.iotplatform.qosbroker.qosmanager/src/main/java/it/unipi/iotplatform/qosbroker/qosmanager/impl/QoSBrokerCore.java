@@ -31,6 +31,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,6 @@ import org.w3c.dom.Node;
 
 import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
-import eu.neclab.iotplatform.iotbroker.commons.TraceKeeper;
 import eu.neclab.iotplatform.iotbroker.core.QueryResponseMerger;
 import eu.neclab.iotplatform.iotbroker.core.RequestThread;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
@@ -82,6 +83,7 @@ import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
 //import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
+import eu.neclab.iotplatform.ngsi.association.datamodel.AssociationDS;
 
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
@@ -309,7 +311,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		DiscoverContextAvailabilityRequest discoveryRequest = new DiscoverContextAvailabilityRequest(
 				entityIdAllocList, attributeAllocList, restriction);
 		
-		logger.debug("DiscoverContextAvailabilityRequest: "
+		logger.info("DiscoverContextAvailabilityRequest: "
 				+ discoveryRequest.toString());
 
 		/* Get the NGSI 9 DiscoverContextAvailabilityResponse */
@@ -320,7 +322,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				.getErrorCode().getCode() == 200)
 				&& discoveryResponse.getContextRegistrationResponse() != null) {
 
-			logger.debug("Receive discoveryResponse from Config Man:"
+			logger.info("Receive discoveryResponse from Config Man:"
 					+ discoveryResponse);
 			
 			//get create list of QueryContextRequest, URI
@@ -331,7 +333,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				return null;
 			}
 			
-			logger.debug("Query List Size: " + queryList.size());
+			logger.info("Query List Size: " + queryList.size());
 
 
 			QueryResponseMerger merger = new QueryResponseMerger(queryRequestAllocation);
@@ -343,18 +345,18 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			CountDownLatch count = new CountDownLatch(queryList.size());
 
 			for (int i = 0; i < queryList.size(); i++) {
-				logger.debug("Starting Thread number: " + i);
+				logger.info("Starting Thread number: " + i);
 
-				logger.debug("info1:"
+				logger.info("info1:"
 						+ queryList.get(i).getLeft().getEntityIdList().get(0)
 						.getId());
-				logger.debug("info2:"
+				logger.info("info2:"
 						+ queryList.get(i).getRight());
 
 				tasks.add(Executors.callable(new RequestThread(null,
 						ngsi10Requester, queryList.get(i).getLeft(), queryList
 						.get(i).getRight(), merger, count,
-						null)));
+						new ArrayList<AssociationDS>())));
 
 			}
 
@@ -363,16 +365,16 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				long t0 = System.currentTimeMillis();
 				taskExecutor.invokeAll(tasks);
 				long t1 = System.currentTimeMillis();
-				logger.debug("Finished all tasks in " + (t1 - t0) + " ms");
+				logger.info("Finished all tasks in " + (t1 - t0) + " ms");
 
 			} catch (InterruptedException e) {
-				logger.debug("Thread Error", e);
+				logger.info("Thread Error", e);
 			}
 
 			// Call the Merge Method
 			QueryContextResponse threadResponse = merger.get();
 
-			logger.debug("Response after merging: " + threadResponse);
+			logger.info("Response after merging: " + threadResponse);
 		
 		
 			System.out.println();
@@ -787,7 +789,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	@Override
-	public ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer){
+	public synchronized ServiceAgreementResponse createAgreement(ServiceAgreementRequest offer){
 		
 		StatusCode statusCode;
 		ServiceAgreementResponse response;
@@ -870,8 +872,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		String negotiationOffer = qosManager.getTemplate();
 		//TODO set values in the template
 
+
 		statusCode = qosManager.createAgreement(negotiationOffer, transactionId, request/*, thingTransactionsMap*/);
-		
+
+			
 		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 			response = new ServiceAgreementResponse();
 			
@@ -1381,11 +1385,10 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		for (int i = 0; i < contRegRespList.size(); i++) {
 
 			//take the contReg 
-			ContextRegistration contReg = contRegRespList.get(0).getContextRegistration();
+			ContextRegistration contReg = contRegRespList.get(i).getContextRegistration();
 			
 			// (1) get the access URI
-			URI uri = discoveryResponse.getContextRegistrationResponse().get(i)
-					.getContextRegistration().getProvidingApplication();
+			URI uri = contRegRespList.get(i).getContextRegistration().getProvidingApplication();
 
 			if(uri == null){
 				return null;
