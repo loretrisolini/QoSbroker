@@ -385,7 +385,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		Statistics.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name());
 		
-		res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+//		res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+		res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
 	
 		if(res.isFeasible() == true)
 		{
@@ -394,7 +395,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			{
 				System.out.println("teta = "+teta);
 				
-				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+//				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
 	
 				if(res.isFeasible())
 				{
@@ -413,7 +415,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 				teta = z;
 				System.out.println("teta = "+teta);
 				
-				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+//				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
 			}
 		}
 
@@ -491,7 +494,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 		List<Pair<String, Integer>> Fj_sp;
 		
 		//file for debugging
-		Statistics.setTestDir();
 		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+prio.name()+".txt", "UTF-8");
 		
 		System.out.println();
@@ -950,10 +952,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
 						requestsBck.remove(requestIndex);
 					}
-	
-					allocationTransId = null;
-					allocationServiceName = null;
-					allocationTemp = null;
+
 					
 					System.out.println();
 					System.out.println("##########################################################");
@@ -978,6 +977,771 @@ public class QoSCalculator implements QoSCalculatorIF {
 					writer.println("##########################################################");
 					writer.println("##########################################################");
 					writer.println();
+					
+					
+					allocationTransId = null;
+					allocationServiceName = null;
+					allocationTemp = null;
+				}
+				
+			}
+			else{
+				System.out.println();
+				System.out.println("##########################################################");
+				logger.info("ALLOCATION FAILED, TETA: "+teta);
+				System.out.println("##########################################################");
+				System.out.println();
+				
+				writer.println();
+				writer.println("##########################################################");
+				writer.println("ALLOCATION FAILED, TETA: "+teta);
+				writer.println("##########################################################");
+				writer.println();
+			
+				writer.close();
+				return res;
+			}
+		}
+		
+//		//Local optimization
+//		if(prio != Priority.BATTERY && res.feasible){
+//			
+//			writer.println("##########################################################");
+//			writer.println("##########################################################");
+//			writer.println("##########################################################");
+//			System.out.println();
+//			System.out.println("##########################################################");
+//			logger.info("Local Optimization");
+//			writer.println("Local Optimization");
+//			
+//			//iterate over the list of request identify by transId
+//			for(Pair<String, Request> servRequest : requestsBckLoc){
+//				
+//				//get the transaId that identify a request with multiple
+//				//service requests
+//				String transId = servRequest.getLeft();
+//				
+//				//Request object contains
+//				//operationType, QoSRequirements, LocationRequirements,
+//				//required service list
+//				Request requestObj = servRequest.getRight();
+//				
+//				System.out.println();
+//				logger.info("request with TransId: "+transId);
+//				writer.println("request with TransId: "+transId);
+//				
+//				//Get the list of required services for this request
+//				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
+//				
+//				//iterate over the List of required services in the request
+//				//identified by transId
+//				for(String reqServiceName: reqServicesList){
+//					
+//					System.out.println();
+//					logger.info("ServiceRequest Name: "+ reqServiceName.toUpperCase() +
+//							" inside request with TransId: "+transId);
+//					writer.println("ServiceRequest Name: "+ reqServiceName.toUpperCase());
+//					
+//					//get the list<DevId> for that reqServName
+//					//this list represents the list of equivalent things
+//					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
+//					
+//					//get the Allocation associated to the pair transId, servId
+//					allocationTemp = res.allocationSchema.get(transId).get(reqServiceName);
+//					
+//					//get the split factor for that allocation
+//					int split = allocationTemp.getSplit();
+//					
+//					System.out.println();
+//					logger.info("split factor="+String.valueOf(split));
+//					writer.println("split factor="+String.valueOf(split));
+//					
+//					for(int s = 0; s<split; s++){
+//					
+//						String devId_substitution = allocationTemp.getDevIdList()[s];
+//						
+//						System.out.println();
+//						logger.info("try to substitute the thing with id= "+devId_substitution);
+//						writer.println("try to substitute the thing with id= "+devId_substitution);
+//						
+//						//check the constraints excluding the thing with id thingId_sub
+//						Fjr = checkConstraints(assignmentParamsMap, eqThings, matrixF_ij, matrixU_ij, 
+//								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
+//								split, ni, teta, devId_substitution);
+//						
+//						logger.info("Fjr: "+Fjr);
+//						
+//						if(Fjr.isEmpty()) continue;
+//						
+//						//get the id (from Fjr) of the thing with max residualBattery
+//						String devId_star = getArgMax(Fjr, matrixF_ij, matrixU_ij, prio, 
+//								reqServiceName, transId, split, assignmentParamsMap, false);
+//						
+//						if(devId_star == null){
+//							res.feasible = false;
+//							
+//							writer.println(operationStatus);
+//							writer.close();
+//							return res;
+//						}
+//						
+//						logger.info("thingId* with max residual battery="+devId_star);
+//						writer.println("thingId* with max residual battery="+devId_star);
+//						logger.info("max residual battery value="+String.valueOf(maxResidualBattery));
+//						writer.println("max residual battery value="+String.valueOf(maxResidualBattery));
+//						
+//						//z_i'-f_i'j residual battery value of the thing to substitute
+//						double residualBatt_substitution = assignmentParamsMap.get(devId_substitution).getResidualBattery();
+//						logger.info("residual battery value of thing to substitute="+String.valueOf(residualBatt_substitution));
+//						writer.println("residual battery value of thing to substitute="+String.valueOf(residualBatt_substitution));
+//						
+//						//if the max value of residual battery is greater than
+//						//the value of residual battery of the thing to substitute
+//						//there is a change in the allocation
+//						if(maxResidualBattery > residualBatt_substitution){
+//							
+//							writer.println("##########################################################");
+//							writer.println("##########################################################");
+//							writer.println("##########################################################");
+//							System.out.println();
+//							System.out.println("##########################################################");
+//							logger.info("remove allocation of service "+reqServiceName);
+//							logger.info("to devId "+devId_substitution);
+//							logger.info("and assigned to "+devId_star);
+//							writer.println("remove allocation of service "+reqServiceName);
+//							writer.println("to devId "+devId_substitution);
+//							writer.println("and assigned to "+devId_star);
+//							writer.println("##########################################################");
+//							writer.println("##########################################################");
+//							writer.println("##########################################################");
+//
+//							
+//							//update the value of the thing substituted
+//							//c_i-(u_ij/split) and z_i+(f_ij/split)
+//							//using -split
+//							logger.info("c_i-(u_ij/split) and z_i+(f_ij/split) devId_substitution "+devId_substitution);
+//							writer.println("c_i-(u_ij/split) and z_i+(f_ij/split) devId_substitution "+devId_substitution);
+//							Double oldF_ij = allocationTemp.getF_ij()[s];
+//							Double oldU_ij = allocationTemp.getU_ij()[s];
+//							split = allocationTemp.getSplit();
+//							updateAssignmentsParams(assignmentParamsMap, oldF_ij, oldU_ij, split, devId_substitution, -1);
+//
+//							
+//							//compute pair f_ij, u_ij
+//							Pair<Double, Double> f_u_ij = computeF_U(devId_star, matrixF_ij, matrixU_ij, transId, reqServiceName);
+//							if(f_u_ij == null){
+//								res.feasible = false;
+//								operationStatus = "QoSCalculator -- GAP() LocalOptimization f_u_ij null for service: "+reqServiceName;
+//								
+//								writer.println(operationStatus);
+//								writer.close();
+//								return res;
+//							}
+//							
+//							Double newF_ij = f_u_ij.getLeft();
+//							Double newU_ij = f_u_ij.getRight();
+//							//add the new thing, with new f_ij, new u_ij
+//							allocationTemp.getDevIdList()[s] = devId_star;
+//							allocationTemp.getF_ij()[s] = newF_ij;
+//							allocationTemp.getU_ij()[s] = newU_ij;
+//							
+//							logger.info("c_i+(u_ij/split) and z_i-(f_ij/split) devId_star "+devId_star);
+//							writer.println("c_i+(u_ij/split) and z_i-(f_ij/split) devId_star "+devId_star);
+//							//update the value of the new thing allocated
+//							//c_i+(u_ij/split) and z_i-(f_ij/split)
+//							updateAssignmentsParams(assignmentParamsMap, newF_ij, newU_ij, split, devId_star, 1);
+//							
+//							System.out.println("##########################################################");
+//							System.out.println();
+//							
+//							//update the allocation in reservation object
+//							res.allocationSchema.get(transId).put(reqServiceName, allocationTemp);
+//
+//							Fjr.clear();
+//						}
+//						
+//						maxResidualBattery = Double.NEGATIVE_INFINITY;
+//						
+//					}
+//				}
+//			}
+//			writer.println("##########################################################");
+//			writer.println("##########################################################");
+//			writer.println("##########################################################");
+//		}
+	
+		//store the values of <c_i, z_i> for this execution
+		//of the heuristic
+		res.setAssignmentsParamsMap(assignmentParamsMap);
+		
+		writer.println();
+		writer.println();
+		writer.println("ALLOCATION COMPLETED, TETA: "+teta +"<-------------------------------------");
+		writer.close();
+		
+		operationStatus = "QoSCalculator -- GAP() allocation operation OK, TETA: "+teta;
+		
+		return res;
+	}
+	
+	/**
+	 * Real_battery_ gap.
+	 *
+	 * @param k the number of request
+	 * @param requests all the requests as Pair <transId, Request>
+	 * @param HashMap<String, Double> hyperperiodPeriodMap,
+	 * @param eqThingInfo Map<devId, Thing>
+	 * @param servNameThingsIdList Map<reServName, List<DevId>>
+	 * @param matrixM Map<transId::servName, List<devId>> list of devId that respect 
+	 * 					restrictions for that transaction
+	 * @param teta the teta for the constraint on z_i - f_ij > teta
+	 * @param prio say which value using as priority p_ij
+	 * @param policy say if must be used max or min split policy
+	 * @return the reserveobj
+	 */
+	private Reserveobj GAP1(
+			int k, List<Pair<String, Request>> requests, 
+			HashMap<String,HashMap<String, Double>> matrixP,
+			HashMap<String,HashMap<String, Double>> matrixF,
+			HashMap<String,HashMap<String, Double>> matrixU,
+			HashMap<String, Integer> hyperperiodPeriodMap,
+			HashMap<String, Thing> thingsInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList,
+			HashMap<String, List<String>> matrixM,
+			double teta,
+			Priority prio) throws IOException, UnsupportedEncodingException,FileNotFoundException{
+
+		//object to store reservation results
+		Reserveobj res = new Reserveobj();
+		
+		//Backup of the requests list List<transId, Request>
+		List<Pair<String, Request>> requestsBck = cloneRequests(requests);
+		
+		List<Pair<String, Request>> requestsBckLoc = new ArrayList<>();
+		if(prio != Priority.BATTERY){
+			//backup of the requests list List<transId, Request>
+			//for the local optimization
+			requestsBckLoc = cloneRequests(requests);
+		}
+		
+		//create Map<devId, <c_i, z_i>> from the eqThingInfo Map<DevId, Thing>
+		//(for i<-1 to n ci<-0 and zi<-1)
+		HashMap<String, ThingAssignmentParams> assignmentParamsMap = createAssignmentParamsMap(thingsInfo);
+		
+		Double pow = Math.pow(2, (double)1/k);
+		//upper bound for utilization
+		Double ni = k*(pow-1);
+		
+		System.out.println();
+		System.out.println("##########################################################");
+		logger.info("ni= "+ni);
+		logger.info("TETA= "+teta);
+		System.out.println("##########################################################");
+		System.out.println();
+		
+		//(isFeas<-TRUE)
+		res.setFeasible(true);
+		
+		double ds, d = Double.NEGATIVE_INFINITY;
+		
+		double INF = Double.POSITIVE_INFINITY;
+		
+		//List of devId that satisfy the constraints
+		//as <i, C_ij, p_ij> where c_ij says
+		//how many times can assign that job (or splitted job)
+		//to that thing
+		List<Pair<String, Integer>> Fj_sp;
+		
+		//file for debugging
+		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+prio.name()+".txt", "UTF-8");
+		
+		System.out.println();
+		System.out.println("##########################################################");
+		logger.info("PRIORITY: "+prio.name());
+		System.out.println("##########################################################");
+		System.out.println();
+		
+		//index to identify the position of the ServiceObject 
+		//on which an assignment is executed
+		int requestIndex = 0;
+		int serviceIndex = 0;
+		
+		//iterate over the service requests as List<<transId, Request>>
+		//(while isFeas & k!=0)
+		while(res.isFeasible() && !requestsBck.isEmpty()){
+			
+			ds = -1 * INF;
+
+			//iterate over the list of request identify by transId
+			//(for each j in K)
+			for(int req=0; req<requestsBck.size() && res.isFeasible(); req++){
+				
+				//take the pair <transId, Request>
+				Pair<String, Request> servRequest = requestsBck.get(req);
+				
+				//get the transaId that identify a request with multiple
+				//service requests
+				String transId = servRequest.getLeft();
+				
+				//Request object contains
+				//operationType, QoSRequirements, LocationRequirements,
+				//required service list
+				Request requestObj = servRequest.getRight();
+				
+				//store operation type
+				//for example: queryContext
+				String opType = requestObj.getOpType();
+				
+				System.out.println();
+				System.out.println("##########################################################");
+				logger.info("request with TransId: "+transId);
+				logger.info("opType: "+opType);
+				System.out.println("##########################################################");
+				System.out.println();
+				
+				writer.println();
+				writer.println("##########################################################");
+				writer.println("request with TransId: "+transId);
+				writer.println("opType: "+opType);
+				writer.println("##########################################################");
+				writer.println();
+				
+				//Get the list of required services for this request
+				//identified by the transId
+				List<String> reqServicesList = requestObj.getRequiredServicesNameList();
+				
+				//iterate over the List of required services in the request
+				//identified by transId
+				//(for each j in K)
+				for(int s=0; s<reqServicesList.size() && res.isFeasible() ; s++){
+					
+					//get the required Service name
+					//(service j taken from K)
+					String reqServiceName = reqServicesList.get(s);
+					
+					//get the list<DevId> for that reqServName
+					//this list represents the list of equivalent things
+					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
+					
+					
+					System.out.println();
+					System.out.println("##########################################################");
+					logger.info("ServiceRequest Name: "+reqServiceName.toUpperCase() +
+									" inside request with TransId: "+transId);
+					System.out.println("##########################################################");
+					System.out.println();
+					writer.println();
+					writer.println("##########################################################");
+					writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase()
+									+ " inside request with TransId: "+transId);
+					writer.println("##########################################################");
+					writer.println();
+					
+					//coefficientMap has the transId as key and h/pj as value
+					//factorization returns the list of factor in creasing order
+					List<Integer> Sj = Utils.factorization(hyperperiodPeriodMap.get(transId));
+					
+					Integer split = 1;
+					
+					//iterate over the list of split factors
+					//of a service, any way the first trial is with
+					//a split factor equal to one
+					//so one service to only one thing
+					while(!Sj.isEmpty()){
+						
+						System.out.println();
+						System.out.println("##########################################################");
+						logger.info("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
+						System.out.println("##########################################################");
+						System.out.println();
+						
+						writer.println();
+						writer.println("##########################################################");
+						writer.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
+						writer.println("##########################################################");
+						writer.println();
+						
+						//List of devId that satisfy
+						//the constraints about
+						//utilization and residual battery
+						//the list is returned as list of pairs <devId, c_ij_sp>
+						//and in decreasing order respect to the priority
+						//so the first element will be the one with max priority
+						//where c_ij_sp represents, given a split factor, the maximum 
+						//times that i can allocate the service to the thing
+						//set also the sum(c_ij_sp) for all the things that
+						//respect the constraints
+						Fj_sp = checkConstraints(assignmentParamsMap, eqThings, matrixP, matrixF, matrixU,
+								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
+								split, ni, teta, null);
+								
+						System.out.println();
+						System.out.println("##########################################################");
+						logger.info("Fj_sp: "+Fj_sp);
+						logger.info("priorityList: "+priorityList);
+						System.out.println("##########################################################");
+						System.out.println();
+						
+						writer.println();
+						writer.println("##########################################################");
+						writer.println("Fj_sp: "+Fj_sp);
+						writer.println("priorityList: "+priorityList);
+						writer.println("##########################################################");
+						writer.println();
+						
+						//there is no thing that satisfy the
+						//requirements
+						//if(Fj_sp = 0 || sum(c_ij_sp) < split)
+						if(c_ij_sp_Sum < split){
+							
+							System.out.println();
+							System.out.println("##########################################################");
+							logger.info("SPLIT FACTOR: "+split);
+							logger.info("ServiceRequest Name: "+reqServiceName.toUpperCase()+
+									" inside request with TransId: "+transId);
+							logger.info("NO THINGS FOUND, TETA: "+teta);
+							System.out.println("##########################################################");
+							System.out.println();
+							
+							writer.println();
+							writer.println("##########################################################");
+							writer.println("SPLIT FACTOR: "+split);
+							writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase()+
+									" inside request with TransId: "+transId);
+							writer.println("NO THINGS FOUND, TETA: "+teta);
+							writer.println("##########################################################");
+							writer.println();
+							
+							operationStatus = "QoSCalculator -- GAP() ServiceRequest Name: "+reqServiceName+
+									" inside request with TransId: "+transId+" NO THINGS FOUND, "
+									+ "SPLIT factor: "+String.valueOf(split)+", TETA: "+teta;
+							
+							//version in which i stop at the first split
+							Sj.clear();
+							
+							if(Sj.isEmpty()) res.setFeasible(false);
+							else
+								split = Sj.get(0);
+							
+							continue;
+						}
+
+						
+						//get the devId of the Thing that have max priority
+						//Fjsp is ordered on decreasing priority order
+						//(i' = argMax{P_ij: i in Fj_sp})
+						String devId_maxPriority = Fj_sp.get(0).getLeft();
+						if(devId_maxPriority == null){
+							res.setFeasible(false);
+							
+							operationStatus = "QoSCalculator -- GAP() devId_maxPriority taken as first elem of Fj_sp is null";
+							
+							writer.println(operationStatus);
+							writer.close();
+							return res;
+						}
+						
+						System.out.println();
+						System.out.println("##########################################################");
+						logger.info("devId with max priority: " + devId_maxPriority);
+						System.out.println("##########################################################");
+						System.out.println();
+						
+						writer.println();
+						writer.println("##########################################################");
+						writer.println("devId with max priority: " + devId_maxPriority);
+						writer.println("##########################################################");
+						writer.println();
+						
+						//verify conditions for direct assignment
+						int c_ij_sp_MaxPriority = Fj_sp.get(0).getRight();
+						
+						if((c_ij_sp_Sum - c_ij_sp_MaxPriority) < split){
+							ds = INF;
+							
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("FINAL ALLOCATION in ONE SHOOT");
+							System.out.println("##########################################################");
+							System.out.println();
+							writer.println();
+							writer.println("##########################################################");
+							writer.println("FINAL ALLOCATION in ONE SHOOT");
+							writer.println("##########################################################");
+							writer.println();
+							
+							AllocationInfo allocation = new AllocationInfo();
+							
+							//set the split
+							allocation.setSplit(new Integer(split));
+							
+							//compute the list <i, w_ij_sp>
+							List<Pair<String, Integer>> listThingWij_sp = computeAllocation(Fj_sp, split);
+							
+							//set the list of allocated things as <i, w_ij_sp>
+							for(Pair<String, Integer> entryAllocation: listThingWij_sp){
+								
+								String devId = entryAllocation.getLeft();
+								Integer wij_sp = entryAllocation.getRight();
+								
+								//set <i, w_ij_sp> in the allocated things list
+								//(y_j <- I_star with <i, w_ij_sp> in decreasing priority order)
+								allocation.addThing(devId, wij_sp);
+								
+								//get f_ij, u_ij for the given devId, transId+"::"+reqServiceName
+								Double f_ij = matrixF.get(devId).get(transId+"::"+reqServiceName);
+								Double u_ij = matrixU.get(devId).get(transId+"::"+reqServiceName);
+								
+								if(f_ij == null || u_ij == null){
+									operationStatus = "QoSCalculator -- GAP() allocation in one shot"
+															+" f_ij or u_ij null for service: "
+															+reqServiceName+"and devId "+devId;
+									res.setFeasible(false);
+									return res;
+								}
+								
+								//update capacity and residualBattery
+								//c_i = c_i + (u_ij/split)*w_ij_sp
+								//z_i = z_i - (f_ij/split)*w_ij_sp
+								updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, wij_sp, devId, 1);
+							}
+							
+							
+							//set operationType for the specified transId
+							res.addTransactionIdOperationType(transId, opType);
+							
+							//add allocation to the allocationSchema in the reserveObj
+							res.addAllocation(transId, reqServiceName, allocation);
+							
+							//remove service in the list of the request object
+							//request obj index is requestIndex, service index is serviceIndex
+							requestsBck.get(req).getRight().getRequiredServicesNameList().remove(s);
+							
+							if(requestsBck.get(req).getRight().getRequiredServicesNameList().isEmpty()){
+								requestsBck.remove(req);
+							}
+							
+							allocationTransId = null;
+							allocationServiceName = null;
+							allocationTemp = null;
+							
+							
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("##########################################################");
+							logger.info("transId="+transId);
+							logger.info("and servName="+reqServiceName.toUpperCase()+" TETA: "+teta);
+							logger.info(allocation.toString());
+							System.out.println("##########################################################");
+							System.out.println("##########################################################");
+							System.out.println();
+
+							writer.println();
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");		
+							writer.println("transId="+transId+
+											"\nand servName="+reqServiceName.toUpperCase()+" TETA: "+teta);
+							writer.println(allocation.toString());
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println();
+
+							break;
+						}
+						else{
+							
+							d = getDiffMaxSecondMax(Fj_sp, split);
+							
+							System.out.println();
+							logger.info("DIFFERENCE d="+String.valueOf(d));
+							System.out.println();
+							writer.println();
+							writer.println("DIFFERENCE d="+String.valueOf(d));
+							writer.println();
+						}
+						
+						if(d > ds){
+							
+							System.out.println();
+							logger.info("d > ds: "+ (d > ds));
+							System.out.println();
+							
+							ds = d;
+							
+							if(allocationTemp == null)
+								allocationTemp = new AllocationInfo();
+							else{
+								
+								if(allocationTemp.getAllocatedThings().size() > 0)
+									//clear the list <i, c_ij_sp> because it is was set
+									//in a previous iteration
+									allocationTemp.getAllocatedThings().clear();
+							}
+							
+							//set transId, service, operationType
+							//relative to the chosen service
+							allocationTransId = transId;
+							allocationServiceName = reqServiceName;
+							operationType = opType;
+							
+							allocationTemp.setSplit(split);
+
+							//compute the list <i, w_ij_sp>
+							List<Pair<String, Integer>> listThingWij_sp = computeAllocation(Fj_sp, split);
+							
+							//set the list of allocated things as <i, w_ij_sp>
+							for(Pair<String, Integer> entryAllocation: listThingWij_sp){
+								
+								String devId = entryAllocation.getLeft();
+								Integer wij_sp = entryAllocation.getRight();
+								
+								allocationTemp.addThing(devId, wij_sp);
+							}
+							
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("TEMPORARY CHOSEN SERVICE");
+							System.out.println("transId: "+allocationTransId);
+							System.out.println("serviceName: "+allocationServiceName.toUpperCase());
+							System.out.println(allocationTemp.toString()+" TETA: "+teta);
+							System.out.println("##########################################################");
+							System.out.println();
+							writer.println();
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println("TEMPORARY CHOSEN SERVICE");
+							writer.println("transId: "+allocationTransId);
+							writer.println("serviceName: "+allocationServiceName.toUpperCase());
+							writer.println(allocationTemp.toString()+" TETA: "+teta);
+							writer.println("##########################################################");
+							writer.println("##########################################################");
+							writer.println();
+							
+							//store the index of the service for which
+							//a list of things has been assigned
+							requestIndex = req;
+							serviceIndex = s;
+							
+							//exit from the cycle of Sj
+							//beacuse a feasible allocation is found
+							break;
+						}
+						else
+							//exit from the cycle of Sj
+							//beacuse a feasible allocation is found
+							//for the service j with split factor sp
+							break;
+					
+					}
+					
+					if(ds == INF) break;
+				}//iteration on service list in the Request with transId
+				
+				if(ds == INF) break;
+			}//iteration on the transIds in the list <transId, Request>
+				
+			//check if res is feasible  
+			if(res.isFeasible()){
+				
+				//check if ds != INF
+				//because if ds == INF, it has been already done
+				//the allocation in one shoot
+				if(ds != INF){
+				
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("FINAL ALLOCATION");
+					System.out.println("##########################################################");
+					System.out.println();
+					writer.println();
+					writer.println("##########################################################");
+					writer.println("FINAL ALLOCATION");
+					writer.println("##########################################################");
+					writer.println();
+					
+					AllocationInfo allocation = new AllocationInfo();
+	
+					Integer split = new Integer(allocationTemp.getSplit());
+					allocation.setSplit(split);
+					
+					//get the list <i, w_ij_sp> from the allocationTemp object
+					List<Pair<String, Integer>> listThingWij_sp = allocationTemp.getAllocatedThings();
+					
+					//set the list of allocated things as <i, w_ij_sp>
+					for(Pair<String, Integer> entryAllocation: listThingWij_sp){
+						
+						String devId = entryAllocation.getLeft();
+						Integer wij_sp = entryAllocation.getRight();
+						
+						//set <i, w_ij_sp> in the allocated things list
+						//(y_j <- I_star with <i, w_ij_sp> in decreasing priority order)
+						allocation.addThing(devId, wij_sp);
+						
+						//get f_ij, u_ij for the given devId, transId+"::"+reqServiceName
+						Double f_ij = matrixF.get(devId).get(allocationTransId+"::"+allocationServiceName);
+						Double u_ij = matrixU.get(devId).get(allocationTransId+"::"+allocationServiceName);
+						
+						if(f_ij == null || u_ij == null){
+							operationStatus = "QoSCalculator -- GAP() final allocation"
+													+" f_ij or u_ij null for service: "
+													+allocationServiceName+" and devId "+devId;
+							res.setFeasible(false);
+							return res;
+						}
+						
+						//update capacity and residualBattery
+						//c_i = c_i + (u_ij/split)*w_ij_sp
+						//z_i = z_i - (f_ij/split)*w_ij_sp
+						updateAssignmentsParams(assignmentParamsMap, f_ij, u_ij, split, wij_sp, devId, 1);
+					}
+	
+					//set operationType for the specified transId
+					res.addTransactionIdOperationType(allocationTransId, operationType);
+					
+					//add allocation to the allocationSchema in the reserveObj
+					res.addAllocation(allocationTransId, allocationServiceName, allocation);
+					
+					//remove service in the list of the request object
+					//request obj index is requestIndex, service index is serviceIndex
+					requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().remove(serviceIndex);
+					
+					if(requestsBck.get(requestIndex).getRight().getRequiredServicesNameList().isEmpty()){
+						requestsBck.remove(requestIndex);
+					}
+
+					
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					logger.info("transId="+allocationTransId);
+					logger.info("and servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
+					logger.info(allocation.toString());
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					System.out.println();
+	
+					writer.println();
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("transId="+allocationTransId+
+									"\nand servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
+					writer.println(allocation.toString());
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println("##########################################################");
+					writer.println();
+					
+					
+					allocationTransId = null;
+					allocationServiceName = null;
+					allocationTemp = null;
 				}
 				
 			}

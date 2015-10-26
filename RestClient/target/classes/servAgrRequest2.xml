@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<serviceAgreementRequest>
+	<serviceDefinition>
+		<operationType>queryContext</operationType>
+			<entityIdList> 
+				<entityId type="environment" isPattern="true"> 
+				    <id>.*</id>			 
+				</entityId>
+				<entityId type="temperature" isPattern="true"> 
+				    <id>.*</id>			 
+				</entityId>
+			</entityIdList> 
+		<attributeList> 
+			<attribute>temperature</attribute>  
+			<attribute>CO2</attribute>  
+		</attributeList>
+		<restriction>
+		<scope>
+			<operationScope>
+				<scopeType>QoS</scopeType>
+				<scopeValue>
+					<maxResponseTime>9</maxResponseTime>
+					<maxRateRequest>3</maxRateRequest>
+				</scopeValue>
+			</operationScope> 
+			<operationScope>
+				<scopeType>LocationCircle</scopeType>
+				<scopeValue>
+                    <circle>
+                       <centerLatitude>8</centerLatitude>
+                       <centerLongitude>8</centerLongitude>
+                       <radius>50</radius>
+                    </circle>
+				</scopeValue>
+			</operationScope>
+		</scope>
+		</restriction>
+	</serviceDefinition>
+</serviceAgreementRequest>

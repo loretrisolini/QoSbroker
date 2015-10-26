@@ -14,10 +14,10 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 public class ServiceAgreementResponse extends DataStructure{
 	
 	@XmlElement(name = "serviceID")
-	private String serviceID = null;
+	private String serviceID;
 	
 	@XmlElement(name = "errorCode")
-	private StatusCode errorCode = null;
+	private StatusCode errorCode;
 
 	public String getServiceID() {
 		return serviceID;
@@ -33,15 +33,6 @@ public class ServiceAgreementResponse extends DataStructure{
 
 	public void setErrorCode(StatusCode errorCode) {
 		this.errorCode = errorCode;
-	}
-
-	@Override
-	public String toString() {
-		return "ServiceAgreementResponse [serviceID=" + serviceID
-				+ ", errorCode=" + errorCode + ", getServiceID()="
-				+ getServiceID() + ", getErrorCode()=" + getErrorCode()
-				+ ", toString()=" + super.toString() + ", getClass()="
-				+ getClass() + ", hashCode()=" + hashCode() + "]";
 	}
 
 }

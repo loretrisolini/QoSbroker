@@ -205,10 +205,20 @@ public class RestController {
 //				String requestHttp = request.toString();
 //				System.out.println("Negotiation"); 
 //			}
-
+			
 			logger.debug("UPDATE QOS BROKER");
 			
-			UpdateContextResponse response = qosNgsiCore.updateContext(request);
+			UpdateContextResponse response = null;
+			
+			if(request.getUpdateAction().name().contentEquals("QoS")){
+				//qosNgsiCore.updateContext(request);
+			}
+			if(request.getUpdateAction().name().contentEquals("UPDATE")){
+				//response = ngsiCore.updateContext(request);
+			}
+			else{
+				response = qosNgsiCore.updateContext(request);
+			}
 
 			return new ResponseEntity<UpdateContextResponse>(response,
 					HttpStatus.OK);

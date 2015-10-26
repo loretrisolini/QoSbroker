@@ -887,7 +887,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		if(statusCode.getCode() != QoSCode.OK_200.getCode()){
 			response = new ServiceAgreementResponse();
 			
-			response.setServiceID("");
+			response.setServiceID("NO SERVICE ID");
 			
 			response.setErrorCode(statusCode);
 		}

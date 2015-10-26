@@ -34,8 +34,6 @@ public class Statistics{
 		FileWriter fileWriterThingsMappings = null;
 		
 		try{
-			
-			setTestDir();
 				
 			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things.csv");
 			
@@ -127,11 +125,11 @@ public class Statistics{
 	
 	public synchronized static void setTestDir() {
 		
-		file = new File("/home/lorenzo/Desktop/TestsFolder/testFolder"+r);
+		r++;
+		file = new File("src/test/resources/testFolder"+r);
 		if(!file.exists()){ 
 			file.mkdir();
-			
-			r++;
+
 		}
 		
 	}
@@ -149,7 +147,6 @@ public class Statistics{
 		FileWriter fileWriterInputGap=null;
 		
 		try{
-			setTestDir();
 			
 			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP.csv");
 			
@@ -378,7 +375,6 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			setTestDir();
 			
 			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap.txt", "UTF-8");
 			writer.println("####################################");
@@ -416,7 +412,6 @@ public class Statistics{
 		PrintWriter writer=null;
 		
 		try{
-			setTestDir();
 			
 			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults.txt", "UTF-8");
 			writer.println("####################################");
