@@ -259,7 +259,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		}
 		
 		//list of pairs <thing(id), serviceAllocated>
-		HashMap<String,String> allocationPairs = new HashMap<String,String>();
+		HashMap<String, List<String>> allocationPairs = new HashMap<>();
 		
 
 		List<EntityId> entityIdAllocList = new ArrayList<>();
@@ -288,13 +288,21 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 				return queryResponse;
 			}
 			
-			allocationPairs.put(devId, service);
+			if(allocationPairs.get(devId)==null){
+				allocationPairs.put(devId, new ArrayList<String>());
+				allocationPairs.get(devId).add(service);
+			}
+			else{
+				allocationPairs.get(devId).add(service);
+			}
 			
 			EntityId entId = new EntityId();
 			entId.setIsPattern(false);
 			entId.setType(URI.create(""));
 			entId.setId(devId);
-			entityIdAllocList.add(entId);
+			
+			if(!entityIdAllocList.contains(entId))
+				entityIdAllocList.add(entId);
 		}
 		
 		//create the QueryContextRequest
@@ -1376,7 +1384,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	 */
 	private List<Pair<QueryContextRequest, URI>> createQueryRequestList(
 			DiscoverContextAvailabilityResponse discoveryResponse,
-			HashMap<String,String> allocationPairs) {
+			HashMap<String, List<String>> allocationPairs) {
 
 		List<Pair<QueryContextRequest, URI>> output = new ArrayList<Pair<QueryContextRequest, URI>>();
 
@@ -1430,10 +1438,9 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 						String attributeName = contReg.getContextRegistrationAttribute().get(j)
 								.getName();
 						
-						if(attributeName.contentEquals(allocationPairs.get(id))){
+						if(allocationPairs.get(id).contains(attributeName)){
 							attributeFound = true;
-						
-							break;
+
 						}
 					}
 					
@@ -1453,7 +1460,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 					
 					entityIdListRequest.add(entId);
 					
-					attributeListRequest.add(allocationPairs.get(id));
+					attributeListRequest = allocationPairs.get(id);
 					
 					query.setEntityIdList(entityIdListRequest);
 					query.setAttributeList(attributeListRequest);

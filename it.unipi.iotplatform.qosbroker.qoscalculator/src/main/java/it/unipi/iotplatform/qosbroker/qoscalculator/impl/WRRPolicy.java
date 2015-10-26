@@ -73,11 +73,11 @@ public class WRRPolicy extends Policy{
 			}
 			else{
 				
-				policyMap.get(transId).put(service, devIdList.get((i+1%devIdList.size())).getLeft());
+				policyMap.get(transId).put(service, devIdList.get(((i+1)%devIdList.size())).getLeft());
 				
 				howMany.get(transId).put(service, 1);
 				
-				lastDevId = devIdList.get((i+1%devIdList.size())).getLeft();
+				lastDevId = devIdList.get(((i+1)%devIdList.size())).getLeft();
 				
 				break;
 			}
