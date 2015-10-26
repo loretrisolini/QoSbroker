@@ -12,6 +12,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
@@ -218,6 +219,8 @@ public class QoSManager implements QoSManagerIF {
 								res.getPriority());
 			
 			allocationResult = result.getRes()[result.getWhich()].getAllocationSchema();
+			
+			Statistics.printAllocationSchema(allocationResult);
 			
 			//convert the new request in JSON and add thins one to the old
 			//list of request read from the DB

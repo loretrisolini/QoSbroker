@@ -27,14 +27,6 @@ public class RestClient {
 			return;
 		}
 		
-		String split = args[0];
-		
-		if(!split.contentEquals("single") && !split.contentEquals("multi")){
-			
-			System.out.println("no split specification");
-			return;
-		}
-		
 		setTestDir();
 		
 		PrintWriter writer=null;
@@ -100,7 +92,6 @@ public class RestClient {
 			long t1 = System.currentTimeMillis();
 			
 			System.out.println("Feasible requests: "+ allocationResult.getHowManyFeasible());
-			System.out.println("split: "+split);
 			System.out.println("Time Interval: "+ (t1 - t0));
 			System.out.println("Service request Period: "+ startInterval/1000 +"sec");
 			
