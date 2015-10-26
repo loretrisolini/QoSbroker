@@ -34,7 +34,7 @@ public class RequestThread implements Callable<Boolean>{
 	}
 	
 	@Override
-    public Boolean call() throws InterruptedException{
+    public Boolean call(){
 		
 		System.out.println("Start Request number: "+reqId);
 		
@@ -101,10 +101,12 @@ public class RequestThread implements Callable<Boolean>{
 			}
 			
 			synchronized(merger){
-				if(allocResult)
+				if(allocResult){
 					merger.setResult();
+					return true;
+				}
 				else{
-					throw new InterruptedException();
+					return false;
 
 				}
 			}

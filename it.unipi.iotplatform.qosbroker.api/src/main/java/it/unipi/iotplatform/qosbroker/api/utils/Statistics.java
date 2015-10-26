@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +21,12 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistrationResponse;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Polygon;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Vertex;
 
 public class Statistics{
 
 	public static int r = 0;
 	public static File file;
+
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
@@ -35,7 +35,7 @@ public class Statistics{
 		
 		try{
 				
-			fileWriterThingsMappings = new FileWriter(file.getAbsolutePath()+"/Things.csv");
+			fileWriterThingsMappings = new FileWriter(file.getPath()+"/Things.csv", true);
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
 			fileWriterThingsMappings.append("\n");
@@ -126,7 +126,8 @@ public class Statistics{
 	public synchronized static void setTestDir() {
 		
 		r++;
-		file = new File("src/test/resources/testFolder"+r);
+		
+		file = new File("/home/lorenzo/Desktop/tests/"+"testFolder"+r);
 		if(!file.exists()){ 
 			file.mkdir();
 
@@ -148,7 +149,7 @@ public class Statistics{
 		
 		try{
 			
-			fileWriterInputGap = new FileWriter(file.getAbsolutePath()+"/InputsABGAP.csv");
+			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP.csv", true);
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy,AllocationPolicy");
 			fileWriterInputGap.append("\n");
@@ -373,10 +374,12 @@ public class Statistics{
 			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema) {
 		
 		PrintWriter writer=null;
+		FileWriter output = null;
 		
 		try{
-			
-			writer = new PrintWriter(file.getAbsolutePath()+"/ResultGap.txt", "UTF-8");
+
+			output = new FileWriter(file.getPath()+"/ResultGap.txt", true);
+			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
 			
@@ -399,10 +402,19 @@ public class Statistics{
 			
 			writer.println("########################################");
 			writer.println("########################################");
-			writer.close();
+
 		}
 		catch(Exception e){
 			e.printStackTrace();
+		}
+		finally{
+			try {
+				output.flush();
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+                e.printStackTrace();
+			}
 		}
 		
 	}
@@ -410,10 +422,12 @@ public class Statistics{
 	public static void printNgsiResults(List<ContextRegistrationResponse> contRegList, List<ContextElementResponse> contElemList){
 		
 		PrintWriter writer=null;
+		FileWriter output = null;
 		
 		try{
 			
-			writer = new PrintWriter(file.getAbsolutePath()+"/DiscoveryResults.txt", "UTF-8");
+			output = new FileWriter(file.getPath()+"/DiscoveryResults.txt", true);
+			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
 			
@@ -427,10 +441,19 @@ public class Statistics{
 			
 			writer.println("########################################");
 			writer.println("########################################");
-			writer.close();
+
 		}
 		catch(Exception e){
 			e.printStackTrace();
+		}
+		finally{
+			try {
+				output.flush();
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+                e.printStackTrace();
+			}
 		}
 		
 	}
@@ -439,11 +462,13 @@ public class Statistics{
 		
 
 		PrintWriter writer=null;
+		FileWriter output = null;
 		
 		try{
 			setTestDir();
 			
-			writer = new PrintWriter(file.getAbsolutePath()+"/ServiceAgreementReq.txt", "UTF-8");
+			output = new FileWriter(file.getPath()+"/ServiceAgreementReq.txt", true);
+			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
 			
@@ -454,10 +479,19 @@ public class Statistics{
 			
 			writer.println("########################################");
 			writer.println("########################################");
-			writer.close();
+
 		}
 		catch(Exception e){
 			e.printStackTrace();
+		}
+		finally{
+			try {
+				output.flush();
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+                e.printStackTrace();
+			}
 		}
 		
 	}
