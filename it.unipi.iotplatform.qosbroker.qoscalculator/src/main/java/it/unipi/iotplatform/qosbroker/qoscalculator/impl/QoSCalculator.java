@@ -11,6 +11,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingAssignmentParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
@@ -88,7 +89,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ServicePeriodParams> servPeriodsMap,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			double epsilon) {
+			double epsilon,
+			Split split) {
 		
 		Reserveobj[] res = new Reserveobj[2];
 		
@@ -158,7 +160,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//Map<DevId, Map<transId::ServName ,p_ij>>>
 			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
 			//execution with p_ij=f_ij
-			res[0] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio);
+			res[0] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+
 			res[0].setAllocPolicy(allocPolicy);
 			res[0].setPriority(prio);
 			res[0].setOperationStatus(operationStatus);
@@ -168,7 +171,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//Map<DevId, Map<transId::ServName ,p_ij>>>
 			matrixP = matrixF;
 			//execution with p_ij=u_ij
-			res[1] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio);
+			res[1] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+
 			res[1].setAllocPolicy(allocPolicy);
 			res[1].setPriority(prio);
 			res[1].setOperationStatus(operationStatus);
@@ -349,7 +353,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		else
 		return F;
 	}
-
+	
 	/**
 	 * Execute the heuristic specifically tailored for battery consumption.
 	 *
@@ -374,7 +378,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, ThingsIdList> servNameThingsIdList,
 			HashMap<String, List<String>> matrixM,
 			double epsilon,
-			Priority prio) throws IOException,UnsupportedEncodingException,FileNotFoundException{
+			Priority prio, Split split) throws IOException,UnsupportedEncodingException,FileNotFoundException{
 
 		Reserveobj res = null;
 		double upper = 1.0;
@@ -385,9 +389,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		Statistics.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name());
 		
-		res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
-//		res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
-	
+		if(split == Split.MULTI_SPLIT){
+			res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+		}
+		else{
+			res = GAP_singleSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+		}
+			
 		if(res.isFeasible() == true)
 		{
 			teta = (upper - lower) / 2;
@@ -395,9 +403,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 			{
 				System.out.println("teta = "+teta);
 				
-				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
-//				res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
-	
+				if(split == Split.MULTI_SPLIT){
+					res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				}
+				else{
+					res = GAP_singleSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				}
+					
 				if(res.isFeasible())
 				{
 					z = teta;
@@ -415,8 +427,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 				teta = z;
 				System.out.println("teta = "+teta);
 				
-				res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
-//				res = GAP1(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				if(split == Split.MULTI_SPLIT){
+					res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				}
+				else{
+					res = GAP_singleSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
+				}
 			}
 		}
 
@@ -1199,7 +1215,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param policy say if must be used max or min split policy
 	 * @return the reserveobj
 	 */
-	private Reserveobj GAP1(
+	private Reserveobj GAP_singleSplit(
 			int k, List<Pair<String, Request>> requests, 
 			HashMap<String,HashMap<String, Double>> matrixP,
 			HashMap<String,HashMap<String, Double>> matrixF,
@@ -2520,7 +2536,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 			req.setOpType(reqEntry.getRight().getOpType());
 			req.setLocationRequirementPoint(reqEntry.getRight().getLocationRequirementPoint());
 			req.setLocationRequirementCircle(reqEntry.getRight().getLocationRequirementCircle());
-			req.setLocationRequirementPolygon(reqEntry.getRight().getLocationRequirementPolygon());
 			req.setQosRequirements(reqEntry.getRight().getQosRequirements());
 			
 			List<String> servList = new ArrayList<>(); 

@@ -41,10 +41,6 @@ public class Request extends DataStructure{
 	@JsonProperty("locationRequirementCircle")
 	private LocationScopeValue<Circle> locationRequirementCircle;
 	
-	@XmlElement(name = "locationRequirementPolygon")
-	@JsonProperty("locationRequirementPolygon")
-	private LocationScopeValue<Polygon> locationRequirementPolygon;
-	
 	public String getOpType() {
 		return opType;
 	}
@@ -79,12 +75,6 @@ public class Request extends DataStructure{
 			LocationScopeValue<Circle> locationRequirementCircle) {
 		this.locationRequirementCircle = locationRequirementCircle;
 	}
-	public LocationScopeValue<Polygon> getLocationRequirementPolygon() {
-		return locationRequirementPolygon;
-	}
-	public void setLocationRequirementPolygon(
-			LocationScopeValue<Polygon> locationRequirementPolygon) {
-		this.locationRequirementPolygon = locationRequirementPolygon;
-	}
+
 
 }

@@ -1,127 +1,107 @@
 package it.unipi.iotplatform.restcontroller;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementRequest;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceAgreementResponse;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
+import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import eu.neclab.iotplatform.iotbroker.commons.XmlFactory;
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
 public class RequestThread implements Callable<Boolean>{
 
-	public final static String CREATE_AGREEMENT_URL = "http://localhost:8090/ngsi10/createAgreement";
-	
-	
-	private ServiceAgreementRequest servAgreementRequest;
-	private int reqId;
+	private final QoSCalculator qosCalculator;
 	private ResultMerger merger;
 	
-	public RequestThread(int req, ServiceAgreementRequest servAgrReq, ResultMerger resultMerger){
-		
-		reqId = req;
-		servAgreementRequest = servAgrReq;
-		merger = resultMerger;
+	private List<Pair<String, Request>> requestList;
+	private HashMap<String, Thing> thingsInfo;
+	private HashMap<String, ThingsIdList> servNameThingsIdList;
+	private double epsilon;
+	private Split split; 
+	
+	private static int requestCounter = 0;
+	
+	public RequestThread(QoSCalculator qosCalculator,
+			ResultMerger merger,
+			List<Pair<String, Request>> requestList,
+			HashMap<String, Thing> thingsInfo,
+			HashMap<String, ThingsIdList> servNameThingsIdList, double epsilon,
+			Split split) {
+
+		this.qosCalculator = qosCalculator;
+		this.merger = merger;
+		this.requestList = requestList;
+		this.thingsInfo = thingsInfo;
+		this.servNameThingsIdList = servNameThingsIdList;
+		this.epsilon = epsilon;
+		this.split = split;
 	}
+
+
 	
 	@Override
     public Boolean call(){
 		
-		System.out.println("Start Request number: "+reqId);
 		
-		System.out.println("Services Requested: ");
-		System.out.println(servAgreementRequest.getServiceDefinitionList().get(0).getAttributeList());
+		System.out.println("Start Request number: "+requestCounter);
+		synchronized(merger){
+			merger.setArrivalTime(new Date());
+		}
 		
-    	try {
-
-			DefaultHttpClient httpClient = new DefaultHttpClient();
-
-			HttpPost postRequest = new HttpPost(CREATE_AGREEMENT_URL);
-
-			StringEntity input = new StringEntity(servAgreementRequest.toString());
-
-			input.setContentType("application/xml");
-			postRequest.setEntity(input);
-
-			HttpResponse response = httpClient.execute(postRequest);
-
-			if (response.getStatusLine().getStatusCode() != 200) {
-				throw new RuntimeException("Failed : HTTP error code : "
-						+ response.getStatusLine().getStatusCode());
-			}
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					(response.getEntity().getContent())));
-
-			String output;
-			String result = "";
-			System.out.println("Output from Server .... \n");
-			while ((output = br.readLine()) != null) {
-				
-					result += output;
-			}
+		List<Pair<String, Request>> requests = new ArrayList<>();
+		ArrayList<Double> periodsList = new ArrayList<Double>();
+		HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
+		int k=0;
+		
+		for(int i=0; i < requestCounter; i++){
+			requests.add(requestList.get(i));
 			
-			boolean allocResult = false;
+			k+=requestList.get(i).getRight().getRequiredServicesNameList().size();
 			
-			if(result.isEmpty()){
-				System.out.println("QoSBroker response null");
-				allocResult = false;
+			String transId = requestList.get(i).getLeft();
+			
+			servPeriodsMap.put(transId, new ServicePeriodParams());
+			servPeriodsMap.get(transId).setPeriod(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
+			periodsList.add(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
+		}
+		
+		requestCounter++;
+		
+		//compute hyperiod h
+		Long h = ServicePeriodParams.getHyperperiod(periodsList);
+		
+		System.out.println("hyperperiod: "+h);
+
+		Double coeff;
+		//complete to fill Map<transactionId, <p_j, h/p_j>> with h/p_j
+		for(Map.Entry<String, ServicePeriodParams> entry: servPeriodsMap.entrySet()){
+			Double p_j = entry.getValue().getPeriod();
+			coeff = h/p_j;
+			entry.getValue().setNj(coeff.intValue());
+		}
+		
+		ReservationResults result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+
+		synchronized(merger){
+			if(result.isFeas()){
+				merger.setResult();
+				return true;
 			}
 			else{
-				ServiceAgreementResponse servResponse = (ServiceAgreementResponse)
-					(new XmlFactory()).convertStringToXml(result, ServiceAgreementResponse.class);
-				
-				httpClient.getConnectionManager().shutdown();
-				
-				if(servResponse == null){
-					System.out.println("error conversion QoSBroker response");
-					
-					allocResult = false;
-				}
-				
-				if(servResponse.getErrorCode().getCode() == QoSCode.SERVICEALLOCATIONFAILED_502.getCode() || 
-						servResponse.getErrorCode().getCode() != QoSCode.OK_200.getCode()){
-					System.out.println(servResponse.getErrorCode().getDetails());
-					
-					allocResult = false;
-				}
-				else{
-					allocResult = true;
-				}
+				return false;
 
 			}
-			
-			synchronized(merger){
-				if(allocResult){
-					merger.setResult();
-					return true;
-				}
-				else{
-					return false;
-
-				}
-			}
-
-		} catch (MalformedURLException e) {
-
-			e.printStackTrace();
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-
 		}
-    	
-    	return false;
+
     }
 	
 

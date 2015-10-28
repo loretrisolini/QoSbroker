@@ -82,13 +82,12 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.UpdateContextSubscriptionRespons
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Interface;
 import eu.neclab.iotplatform.ngsi.api.ngsi10.Ngsi10Requester;
 import eu.neclab.iotplatform.ngsi.api.ngsi9.Ngsi9Interface;
-//import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 import eu.neclab.iotplatform.ngsi.association.datamodel.AssociationDS;
 
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
-	private final String IOTBROKER_URL = "http://localhost:8090/ngsi10";
+
 	/** String representing xml content type. */
 	private final String CONTENT_TYPE_XML = "application/xml";
 	
@@ -96,17 +95,13 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	private final ExecutorService taskExecutor = Executors
 			.newCachedThreadPool();
 	
-	private boolean traceKeeperEnabled = false;
-	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSBrokerCore.class);
 	
 	private QoSManagerIF qosManager;
-//	private HashMap<String, TransIdList> thingTransactionsMap;
 	private QoSMonitorIF qosMonitor;
 	private Ngsi10Interface qosMonitorNgsi;
-	
-	private QoSBigDataRepository bigDataRepository;
+
 	
 	/** The implementation of the NGSI 9 interface */
 	@Autowired
@@ -898,7 +893,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			
 			response.setErrorCode(statusCode);
 		}
-
+		
 		return response;
 	}
 

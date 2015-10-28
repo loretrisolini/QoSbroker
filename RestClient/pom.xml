@@ -36,6 +36,12 @@
 			<version>4.3.3</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>it.unipi.iotplatform</groupId>
+			<artifactId>qosbroker.qoscalculator</artifactId>
+			<version>4.3.3</version>
+		</dependency>  
+		
 	</dependencies>
   
 </project>

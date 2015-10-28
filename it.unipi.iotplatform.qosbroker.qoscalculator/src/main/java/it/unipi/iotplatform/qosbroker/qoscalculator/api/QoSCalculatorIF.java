@@ -7,6 +7,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 
@@ -21,7 +22,7 @@ public interface QoSCalculatorIF {
 												HashMap<String, ServicePeriodParams> servPeriodsMap,
 												HashMap<String, Thing> thingsInfo,
 												HashMap<String, ThingsIdList> servNameThingsIdList,
-												double epsilon);
+												double epsilon, Split split);
 	
 	public Reserveobj readReservation();
 	

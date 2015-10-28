@@ -10,6 +10,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
@@ -205,7 +206,7 @@ public class QoSManager implements QoSManagerIF {
 		System.out.println("QoSManager -- createAgreement() compute allocation");
 		//execute allocation algorithm
 		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
-														thingsInfo, servNameThingsIdList, 0.001);
+														thingsInfo, servNameThingsIdList, 0.001, Split.MULTI_SPLIT);
 		
 		//Map<transId, Map<reqServName, List<devId>>>
 		HashMap<String, HashMap<String, AllocationInfo>> allocationResult = null;
