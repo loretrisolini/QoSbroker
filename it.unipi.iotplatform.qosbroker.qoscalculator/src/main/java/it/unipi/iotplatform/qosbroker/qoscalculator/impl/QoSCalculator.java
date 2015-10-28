@@ -73,6 +73,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	//<transId, servName, List<DevId>>
 	private AllocationInfo allocationTemp;
 	private PrintWriter writer;
+	private static int resultGapCounter = 0; 
 	
 	/**
 	 * @param k the number of requests
@@ -92,7 +93,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			double epsilon,
 			Split split) {
 		
-		Reserveobj[] res = new Reserveobj[2];
+		Reserveobj[] res = new Reserveobj[1];
 		
 		ReservationResults ret = new ReservationResults();
 
@@ -166,18 +167,18 @@ public class QoSCalculator implements QoSCalculatorIF {
 			res[0].setPriority(prio);
 			res[0].setOperationStatus(operationStatus);
 			
-			prio = Priority.UTILIZATION;
-			
-			//Map<DevId, Map<transId::ServName ,p_ij>>>
-			matrixP = matrixF;
-			//execution with p_ij=u_ij
-			res[1] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
-
-			res[1].setAllocPolicy(allocPolicy);
-			res[1].setPriority(prio);
-			res[1].setOperationStatus(operationStatus);
-			
-			prio = Priority.RANDOM;
+//			prio = Priority.UTILIZATION;
+//			
+//			//Map<DevId, Map<transId::ServName ,p_ij>>>
+//			matrixP = matrixF;
+//			//execution with p_ij=u_ij
+//			res[1] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+//
+//			res[1].setAllocPolicy(allocPolicy);
+//			res[1].setPriority(prio);
+//			res[1].setOperationStatus(operationStatus);
+//			
+//			prio = Priority.RANDOM;
 			//execution with p_ij=random_double
 //			res[2] = ABGAP(k, requests, matrixF_ij, matrixU_ij, servPeriodsMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, policy);
 			
@@ -185,7 +186,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			
 			int imax=0;
 			// Gets the best heuristic
-			for(int j=1;j<2;j++)
+			for(int j=1;j<1;j++)
 			{
 				if(res[imax].getTheta()<res[j].getTheta() && res[j].isFeasible())
 					imax = j;
@@ -207,6 +208,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				//store reservation results
 				storeReservationResults();
+				
+				Statistics.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
+				resultGapCounter = 0;
 				
 				return ret;
 			}
@@ -387,7 +391,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
-		Statistics.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name());
+		Statistics.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 		
 		if(split == Split.MULTI_SPLIT){
 			res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
@@ -510,7 +514,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		List<Pair<String, Integer>> Fj_sp;
 		
 		//file for debugging
-		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+prio.name()+".txt", "UTF-8");
+		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult_MultiSplit_"+prio.name()+"_"+resultGapCounter+"_ABGAP_"+Statistics.abgapCounter+".txt", "UTF-8");
+		resultGapCounter++;
 		
 		System.out.println();
 		System.out.println("##########################################################");
@@ -1269,7 +1274,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		List<Pair<String, Integer>> Fj_sp;
 		
 		//file for debugging
-		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult"+prio.name()+".txt", "UTF-8");
+		writer = new PrintWriter(Statistics.file.getAbsolutePath()+"/GapResult_SingleSplit_"+prio.name()+"_"+resultGapCounter+"_ABGAP_"+Statistics.abgapCounter+".txt", "UTF-8");
+		resultGapCounter++;
 		
 		System.out.println();
 		System.out.println("##########################################################");
@@ -2606,7 +2612,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	@PreDestroy
 	public boolean storeReservationResults(){
 		
-		if(reservationResults != null){
+		if(reservationResults != null && bigDataRepository!=null){
 			
 			Gson gson = new Gson();
 			
@@ -2623,7 +2629,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 		}
 		
-		System.out.println("WARNING reservationResults is NULL");
+		if(reservationResults == null) System.out.println("WARNING reservationResults is NULL");
 		return true;
 	}
 
@@ -2633,5 +2639,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 
 	public void setBigDataRepository(QoSBigDataRepository bigDataRepository) {
 		this.bigDataRepository = bigDataRepository;
+	}
+
+	public static Reserveobj getReservationResults() {
+		return reservationResults;
+	}
+
+	public static void setReservationResults(Reserveobj reservationResults) {
+		QoSCalculator.reservationResults = reservationResults;
 	}
 }

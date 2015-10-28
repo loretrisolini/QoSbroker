@@ -8,53 +8,102 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
-public class RequestThread implements Callable<Boolean>{
+public class RequestThread implements Runnable{
 
-	private final QoSCalculator qosCalculator;
-	private ResultMerger merger;
+	private AtomicInteger howManyFeasible = new AtomicInteger(0);
+	private List<Long> arrivalTimeList = new ArrayList<>();
+	private Long startTime;
 	
+	private final QoSCalculator qosCalculator = new QoSCalculator();;
 	private List<Pair<String, Request>> requestList;
 	private HashMap<String, Thing> thingsInfo;
 	private HashMap<String, ThingsIdList> servNameThingsIdList;
-	private double epsilon;
-	private Split split; 
+	private double epsilon; 
+	private Split split;
 	
+	private ScheduledExecutorService scheduledExecutorService;
+	
+	private static boolean allocationFeasible = true;
 	private static int requestCounter = 0;
 	
-	public RequestThread(QoSCalculator qosCalculator,
-			ResultMerger merger,
+	public RequestThread(
+			Long startTime,
 			List<Pair<String, Request>> requestList,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList, double epsilon,
-			Split split) {
+			ScheduledExecutorService scheduledExecutorService) {
 
-		this.qosCalculator = qosCalculator;
-		this.merger = merger;
+		this.startTime = startTime;
 		this.requestList = requestList;
 		this.thingsInfo = thingsInfo;
 		this.servNameThingsIdList = servNameThingsIdList;
 		this.epsilon = epsilon;
-		this.split = split;
+		this.scheduledExecutorService = scheduledExecutorService;
+		this.split = Split.SINGLE_SPLIT;
+
 	}
 
 
-	
 	@Override
-    public Boolean call(){
+    public void run(){
 		
+		allocationTest(this.split);
+		
+		if(!allocationFeasible && this.split == Split.SINGLE_SPLIT){
+			
+			
+			requestCounter = 0;
+			
+			synchronized(this){
+				arrivalTimeList.clear();
+				howManyFeasible = new AtomicInteger(0);
+			}
+				
+			startTime = new Date().getTime();
+			
+			this.split = Split.MULTI_SPLIT;
+			
+			allocationFeasible = true;
+		}
+
+		if(!allocationFeasible && this.split == Split.MULTI_SPLIT)
+			this.scheduledExecutorService.shutdown();
+		
+    }
+	
+
+	public void allocationTest(Split split){
+		
+		requestCounter++;
+		
+		if(requestCounter == requestList.size()){
+			System.out.println("Requests terminated");
+			
+			printResults();
+			
+			allocationFeasible = false;
+		}
 		
 		System.out.println("Start Request number: "+requestCounter);
-		synchronized(merger){
-			merger.setArrivalTime(new Date());
+		
+		synchronized(arrivalTimeList){
+			
+			Long arrivalTime = (new Date().getTime()) - startTime;
+			
+			arrivalTimeList.add(arrivalTime);
 		}
 		
 		List<Pair<String, Request>> requests = new ArrayList<>();
@@ -73,9 +122,7 @@ public class RequestThread implements Callable<Boolean>{
 			servPeriodsMap.get(transId).setPeriod(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
 			periodsList.add(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
 		}
-		
-		requestCounter++;
-		
+
 		//compute hyperiod h
 		Long h = ServicePeriodParams.getHyperperiod(periodsList);
 		
@@ -89,20 +136,64 @@ public class RequestThread implements Callable<Boolean>{
 			entry.getValue().setNj(coeff.intValue());
 		}
 		
-		ReservationResults result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+		ReservationResults result = null;
+		
+		synchronized(qosCalculator){
+			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
 
-		synchronized(merger){
-			if(result.isFeas()){
-				merger.setResult();
-				return true;
-			}
-			else{
-				return false;
+		}
+			
+		
+		if(result.isFeas()){
+			howManyFeasible.getAndIncrement();
 
-			}
+		}
+		else{
+			
+			printResults();
+
+			allocationFeasible = false;
 		}
 
-    }
+	}
+	
+	public void printResults(){
+		PrintWriter writer=null;
+		FileWriter output = null;
+		
+		try{
+			output = new FileWriter("/home/lorenzo/Desktop/RestClient/testResults"+split.name()+".txt", true);
+			writer = new PrintWriter(output);
+			writer.println("####################################");
+			writer.println("####################################");
+			
+			writer.println("Final Results "+split.name()+" :");
+			System.out.println("Final Results "+split.name()+" :");
+			
+			synchronized(this){
+				writer.println("Feasible allocations: "+ howManyFeasible);
+				System.out.println("Feasible allocations: "+ howManyFeasible);
+				
+				writer.println("Arrival Times: "+ arrivalTimeList);
+				System.out.println("Arrival Times: "+ arrivalTimeList);
+			}
+			
+			writer.println("####################################");
+			writer.println("####################################");
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				output.flush();
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+	            e.printStackTrace();
+			}
+		}
+	}
 	
 
 }

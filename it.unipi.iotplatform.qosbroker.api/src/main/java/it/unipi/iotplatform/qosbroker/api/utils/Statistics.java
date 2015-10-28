@@ -4,6 +4,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 
@@ -11,7 +12,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,12 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
 public class Statistics{
 
-	public static int r = 0;
+	public static int fileCounter = 1;
+	
+	public static int folderCounter = 1;
+	
+	public static int abgapCounter = 1;
+	
 	public static File file;
 
 	
@@ -34,7 +39,11 @@ public class Statistics{
 		FileWriter fileWriterThingsMappings = null;
 		
 		try{
-				
+			
+			if(file==null){
+				setTestDir();
+			}
+			
 			fileWriterThingsMappings = new FileWriter(file.getPath()+"/Things.csv", true);
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
@@ -125,10 +134,10 @@ public class Statistics{
 	
 	public synchronized static void setTestDir() {
 		
-		r++;
-		
-		file = new File("/home/lorenzo/Desktop/tests/"+"testFolder"+r);
-		if(!file.exists()){ 
+		file = new File("/home/lorenzo/Desktop/tests/"+"testFolder"+(folderCounter-1));
+		if(!file.exists()){
+			
+			folderCounter++;
 			file.mkdir();
 
 		}
@@ -143,21 +152,31 @@ public class Statistics{
 			HashMap<String, Integer> hyperperiodPeriodMap,
 			HashMap<String, Thing> eqThingInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
-			HashMap<String, List<String>> matrixM, String prio) {
+			HashMap<String, List<String>> matrixM, String prio, String split) {
 		
 		FileWriter fileWriterInputGap=null;
 		
 		try{
 			
-			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP.csv", true);
+			if(file==null){
+				setTestDir();
+			}
 			
-			fileWriterInputGap.append("k,Priority,SplitPolicy,AllocationPolicy");
+			
+			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP_"+split+"ABGAPexecution_"+abgapCounter+".csv", true);
+			abgapCounter++;
+			
+			
+			fileWriterInputGap.append("k,Priority,SplitPolicy");
 			fileWriterInputGap.append("\n");
 			
 			fileWriterInputGap.append(String.valueOf(k));
 			fileWriterInputGap.append(",");
 			fileWriterInputGap.append(prio);
+			fileWriterInputGap.append(",");
+			fileWriterInputGap.append(split);
 			fileWriterInputGap.append("\n");
+			
 			
 			fileWriterInputGap.append("TransactionID, operationType, maxRespTime, maxRateRequest, LocationRequirement, ServiceList");
 			fileWriterInputGap.append("\n");
@@ -371,14 +390,15 @@ public class Statistics{
 	
 	
 	public static void printAllocationSchema(
-			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema) {
+			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema, String split) {
 		
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
 		try{
-
-			output = new FileWriter(file.getPath()+"/ResultGap.txt", true);
+			
+			output = new FileWriter(file.getPath()+"/ResultABGAP_"+split+"_"+abgapCounter+".txt", true);
+			
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
@@ -426,6 +446,10 @@ public class Statistics{
 		
 		try{
 			
+			if(file==null){
+				setTestDir();
+			}
+			
 			output = new FileWriter(file.getPath()+"/DiscoveryResults.txt", true);
 			writer = new PrintWriter(output);
 			writer.println("####################################");
@@ -465,7 +489,9 @@ public class Statistics{
 		FileWriter output = null;
 		
 		try{
-			setTestDir();
+			if(file==null){
+				setTestDir();
+			}
 			
 			output = new FileWriter(file.getPath()+"/ServiceAgreementReq.txt", true);
 			writer = new PrintWriter(output);

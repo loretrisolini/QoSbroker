@@ -221,8 +221,6 @@ public class QoSManager implements QoSManagerIF {
 			
 			allocationResult = result.getRes()[result.getWhich()].getAllocationSchema();
 			
-			Statistics.printAllocationSchema(allocationResult);
-			
 			//convert the new request in JSON and add thins one to the old
 			//list of request read from the DB
 			JSONObject newRequestJson = Request.fromJaxbToJson(request, Request.class);
