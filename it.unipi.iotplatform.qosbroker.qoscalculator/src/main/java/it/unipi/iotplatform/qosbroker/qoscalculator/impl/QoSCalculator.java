@@ -2170,11 +2170,16 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//iterate over the list of required servName
 			for(String reqServName: reqServNameList){
 				
+				if(servNameThingsIdList.get(reqServName) == null || servNameThingsIdList.get(reqServName).getEqThings()==null){
+					return null;
+				}
+				
 				//clone the list of DevId of all equivalent things for that 
 				//required service name
 				List<String> eqThings = new ArrayList<>();
 				eqThings.addAll(servNameThingsIdList.get(reqServName).getEqThings());
 				
+
 				//iterate over the list of equivalent things
 				//for that serviceName
 				for(int i=1; i<=eqThings.size(); i++){

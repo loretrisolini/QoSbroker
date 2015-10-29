@@ -1,10 +1,9 @@
-package it.unipi.iotplatform.restcontroller;
+package it.unipi.iotplatform.qosbroker.test;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 
@@ -25,7 +24,7 @@ import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
-public class RestClient {
+public class TestClient {
 
 	private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	
@@ -52,7 +51,7 @@ public class RestClient {
 	//#TotalNumber of services[temperature, humidity, CO2, presence]
 	public static void main(String[] args) {
 
-		if(args.length < 5){
+		if(args.length < 4){
 			System.out.println("Error num of params not correct");
 			return;
 		}
@@ -69,16 +68,16 @@ public class RestClient {
 			writer.println("####################################");
 			writer.println("####################################");
 			
-			Split split = Split.valueOf(args[0]);
-			if(split == null || (split != Split.SINGLE_SPLIT && split != Split.MULTI_SPLIT)){
-				System.out.println("ERROR reading split");
-				
-				return;
-			}
-			System.out.println("Split: "+split.name());
-			writer.println("Split: "+split.name());
+//			Split split = Split.valueOf(args[0]);
+//			if(split == null || (split != Split.SINGLE_SPLIT && split != Split.MULTI_SPLIT)){
+//				System.out.println("ERROR reading split");
+//				
+//				return;
+//			}
+//			System.out.println("Split: "+split.name());
+//			writer.println("Split: "+split.name());
 			
-			if(args[1].contentEquals("null")){
+			if(args[0].contentEquals("null")){
 				System.out.println("no seed read, creation of the seed");
 				seed = System.currentTimeMillis();
 			}
@@ -96,18 +95,18 @@ public class RestClient {
 			System.out.println("eqThingsPerService: "+eqThingsPerService);
 			writer.println("eqThingsPerService: "+eqThingsPerService);
 			
-			int requests = Integer.parseInt(args[2]);
+			int requests = Integer.parseInt(args[1]);
 			
 			System.out.println("requests: "+requests);
 			writer.println("requests: "+requests);
 			
 			//initial assumption is 1
-			int requiredServicesPerRequest = Integer.parseInt(args[3]);
+			int requiredServicesPerRequest = Integer.parseInt(args[2]);
 			
 			System.out.println("requiredServicesPerRequest: "+requiredServicesPerRequest);
 			writer.println("requiredServicesPerRequest: "+requiredServicesPerRequest);
 			
-			int totalServices = Integer.parseInt(args[4]);
+			int totalServices = Integer.parseInt(args[3]);
 			
 			System.out.println("totalServices: "+totalServices);
 			writer.println("totalServices: "+totalServices);
@@ -268,8 +267,7 @@ public class RestClient {
 					requestList,
 					thingsInfo,
 					servNameThingsIdList, 0.001,
-					scheduledExecutorService,
-					split);
+					scheduledExecutorService);
 			
 			scheduledExecutorService.scheduleWithFixedDelay(reqSingle, 0, 5, TimeUnit.SECONDS);
 			
@@ -290,8 +288,10 @@ public class RestClient {
 	
 	private static void setTestDir() {
 		
-		file = new File("/home/lorenzo/Desktop/RestClient/");
-		
+		file = new File("/home/beetas/TestClient");
+		if(!file.exists()){
+			file.mkdir();
+		}
 	}
 	
 	private static int getRandomIndex(int max){

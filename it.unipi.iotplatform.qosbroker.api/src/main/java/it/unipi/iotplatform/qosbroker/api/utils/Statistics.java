@@ -134,7 +134,7 @@ public class Statistics{
 	
 	public synchronized static void setTestDir() {
 		
-		file = new File("/home/lorenzo/Desktop/tests/"+"testFolder"+(folderCounter-1));
+		file = new File("/home/beetas/testsABGAP");//+(folderCounter-1));
 		if(!file.exists()){
 			
 			folderCounter++;

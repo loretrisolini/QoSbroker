@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.restcontroller;
+package it.unipi.iotplatform.qosbroker.test;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,8 +31,12 @@ public class TestThread implements Runnable{
 	
 	private final QoSCalculator qosCalculator = new QoSCalculator();;
 	private List<Pair<String, Request>> requestList;
+	private List<Pair<String, Request>> requestListBck;
+	
 	private HashMap<String, Thing> thingsInfo;
+	private HashMap<String, Thing> thingsInfoBck;
 	private HashMap<String, ThingsIdList> servNameThingsIdList;
+	private HashMap<String, ThingsIdList> servNameThingsIdListBck;
 	private double epsilon; 
 	private Split split;
 	
@@ -50,14 +55,18 @@ public class TestThread implements Runnable{
 			List<Pair<String, Request>> requestList,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList, double epsilon,
-			ScheduledExecutorService scheduledExecutorService, Split split) {
+			ScheduledExecutorService scheduledExecutorService) {
 
 		this.requestList = requestList;
+		this.requestListBck = requestList;
+		
 		this.thingsInfo = thingsInfo;
+		this.thingsInfoBck = thingsInfo;
 		this.servNameThingsIdList = servNameThingsIdList;
+		this.servNameThingsIdListBck = servNameThingsIdList;
 		this.epsilon = epsilon;
 		this.scheduledExecutorService = scheduledExecutorService;
-		this.split = split;
+		this.split = Split.SINGLE_SPLIT;
 		
 		eqThingsxServ = eqThingsxServList[eqThingsxServList.length-testCounter];
 		totalNumberOfServices = thingsInfo.size()/eqThingsxServ;
@@ -69,11 +78,36 @@ public class TestThread implements Runnable{
 	@Override
     public void run(){
 		
+		if(this.scheduledExecutorService.isShutdown()) return;
+		
 		allocationTest(this.split);
 		
-		if(stopTest && (eqThingsxServList.length-testCounter)==0){
+		//stop
+		if(stopTest && (eqThingsxServList.length-testCounter)==0 && this.split==Split.MULTI_SPLIT){
+			
+			System.out.println("STOP");
 			this.scheduledExecutorService.shutdownNow();
 			return;
+		}
+		
+		//pass to multi-split
+		if(stopTest && (eqThingsxServList.length-testCounter)==0 && this.split==Split.SINGLE_SPLIT){
+			
+			System.out.println();
+			System.out.println("NOW MULTI-SPLIT");
+			
+			requestCounter = 0;
+			stopTest = false;
+			testCounter=1;
+			
+			eqThingsxServ = eqThingsxServList[eqThingsxServList.length-testCounter];
+			startTime = new Date().getTime();
+			arrivalTimeList.clear();
+			feasibleAllocations.set(0);
+			
+			this.thingsInfo = this.thingsInfoBck;
+			this.servNameThingsIdList = this.servNameThingsIdListBck;
+			this.split = Split.MULTI_SPLIT;
 		}
 		
 		if(stopTest){
@@ -86,30 +120,35 @@ public class TestThread implements Runnable{
 			arrivalTimeList.clear();
 			feasibleAllocations.set(0);
 			
-			int newNumberOfThings = totalNumberOfServices*eqThingsxServ;
 			HashMap<String, Thing> newThingsInfo = new HashMap<String, Thing>();
-			int howManyThingsTaken = 0;
-			for(Map.Entry<String, Thing> entryThing : thingsInfo.entrySet()){
-				
-				newThingsInfo.put(entryThing.getKey(), entryThing.getValue());
-				howManyThingsTaken++;
-				if(howManyThingsTaken == newNumberOfThings){
-					break;
-				}
-			}
-			this.thingsInfo = newThingsInfo;
-			
 			HashMap<String, ThingsIdList>  newServNameThingsIdList = new HashMap<String, ThingsIdList>();
-			for(Map.Entry<String, ThingsIdList> entryServ : servNameThingsIdList.entrySet()){
+			int newNumberOfThings = 0;
+			for(Map.Entry<String, ThingsIdList> entry: servNameThingsIdList.entrySet()){
 				
-				ThingsIdList newThingsIdList = new ThingsIdList();
-				for(int i=0; i<eqThingsxServ; i++){
+				newServNameThingsIdList.put(entry.getKey(), new ThingsIdList());
+				
+				//take the first "eqThingsxServ" things for each service
+				for(int e = 0; e < eqThingsxServ; e++){
 					
-					newThingsIdList.addEqThing(entryServ.getValue().getEqThings().get(i));
+					newServNameThingsIdList.get(entry.getKey()).addEqThing(entry.getValue().getEqThings().get(e));
+					
+					Thing t = this.thingsInfo.get(entry.getValue().getEqThings().get(e));
+					
+					newThingsInfo.put(entry.getValue().getEqThings().get(e), t);
+					newNumberOfThings++;
 				}
-				
-				newServNameThingsIdList.put(entryServ.getKey(), newThingsIdList);
 			}
+			
+			if(newNumberOfThings == totalNumberOfServices*eqThingsxServ)
+				System.out.println("# things OK");
+			else{
+				System.out.println("ERROR CREATION THINGS");
+				this.scheduledExecutorService.shutdownNow();
+				return;
+			}
+
+			this.thingsInfo = newThingsInfo;
+
 			this.servNameThingsIdList = newServNameThingsIdList;
 			
 		}
@@ -167,11 +206,15 @@ public class TestThread implements Runnable{
 		
 		ReservationResults result = null;
 		
-		synchronized(qosCalculator){
-			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
-
+		try{
+			synchronized(qosCalculator){
+				result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+			}
 		}
-		
+		catch(Exception e){
+			e.printStackTrace();
+		}
+			
 		if(result == null){
 			System.out.println("QoSCalculator ERROR");
 			this.scheduledExecutorService.shutdownNow();
@@ -209,7 +252,7 @@ public class TestThread implements Runnable{
 		FileWriter output = null;
 		
 		try{
-			output = new FileWriter("/home/lorenzo/Desktop/RestClient/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
+			output = new FileWriter("/home/beetas/TestClient/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
