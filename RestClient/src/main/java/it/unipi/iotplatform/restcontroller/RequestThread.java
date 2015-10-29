@@ -23,9 +23,10 @@ import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
 public class RequestThread implements Runnable{
 
-	private AtomicInteger howManyFeasible = new AtomicInteger(0);
-	private List<Long> arrivalTimeList = new ArrayList<>();
+	private List<Pair<Long, Boolean>> arrivalTimeList = new ArrayList<>();
 	private Long startTime;
+	
+	private final int[] eqThingsxServList = {2, 4, 6, 10};
 	
 	private final QoSCalculator qosCalculator = new QoSCalculator();;
 	private List<Pair<String, Request>> requestList;
@@ -34,26 +35,34 @@ public class RequestThread implements Runnable{
 	private double epsilon; 
 	private Split split;
 	
+	private int eqThingsxServ;
+	private int testCounter = 1;
+	private int totalNumberOfServices;
+	
+	private boolean stopTest = false;
+	
+	private static AtomicInteger feasibleAllocations = new AtomicInteger(0);
 	private ScheduledExecutorService scheduledExecutorService;
 	
-	private static boolean allocationFeasible = true;
 	private static int requestCounter = 0;
 	
 	public RequestThread(
-			Long startTime,
 			List<Pair<String, Request>> requestList,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList, double epsilon,
-			ScheduledExecutorService scheduledExecutorService) {
+			ScheduledExecutorService scheduledExecutorService, Split split) {
 
-		this.startTime = startTime;
 		this.requestList = requestList;
 		this.thingsInfo = thingsInfo;
 		this.servNameThingsIdList = servNameThingsIdList;
 		this.epsilon = epsilon;
 		this.scheduledExecutorService = scheduledExecutorService;
-		this.split = Split.SINGLE_SPLIT;
+		this.split = split;
+		
+		eqThingsxServ = eqThingsxServList[eqThingsxServList.length-testCounter];
+		totalNumberOfServices = thingsInfo.size()/eqThingsxServ;
 
+		startTime = new Date().getTime();
 	}
 
 
@@ -62,25 +71,48 @@ public class RequestThread implements Runnable{
 		
 		allocationTest(this.split);
 		
-		if(!allocationFeasible && this.split == Split.SINGLE_SPLIT){
-			
-			
-			requestCounter = 0;
-			
-			synchronized(this){
-				arrivalTimeList.clear();
-				howManyFeasible = new AtomicInteger(0);
-			}
-				
-			startTime = new Date().getTime();
-			
-			this.split = Split.MULTI_SPLIT;
-			
-			allocationFeasible = true;
-		}
-
-		if(!allocationFeasible && this.split == Split.MULTI_SPLIT)
+		if(stopTest && (eqThingsxServList.length-testCounter)==0){
 			this.scheduledExecutorService.shutdown();
+			return;
+		}
+		
+		if(stopTest){
+			requestCounter = 0;
+			stopTest = false;
+			testCounter++;
+			
+			eqThingsxServ = eqThingsxServList[eqThingsxServList.length-testCounter];
+			startTime = new Date().getTime();
+			arrivalTimeList.clear();
+			feasibleAllocations.set(0);
+			
+			int newNumberOfThings = totalNumberOfServices*eqThingsxServ;
+			HashMap<String, Thing> newThingsInfo = new HashMap<String, Thing>();
+			int howManyThingsTaken = 0;
+			for(Map.Entry<String, Thing> entryThing : thingsInfo.entrySet()){
+				
+				newThingsInfo.put(entryThing.getKey(), entryThing.getValue());
+				howManyThingsTaken++;
+				if(howManyThingsTaken == newNumberOfThings){
+					break;
+				}
+			}
+			this.thingsInfo = newThingsInfo;
+			
+			HashMap<String, ThingsIdList>  newServNameThingsIdList = new HashMap<String, ThingsIdList>();
+			for(Map.Entry<String, ThingsIdList> entryServ : servNameThingsIdList.entrySet()){
+				
+				ThingsIdList newThingsIdList = new ThingsIdList();
+				for(int i=0; i<eqThingsxServ; i++){
+					
+					newThingsIdList.addEqThing(entryServ.getValue().getEqThings().get(i));
+				}
+				
+				newServNameThingsIdList.put(entryServ.getKey(), newThingsIdList);
+			}
+			this.servNameThingsIdList = newServNameThingsIdList;
+			
+		}
 		
     }
 	
@@ -94,18 +126,13 @@ public class RequestThread implements Runnable{
 			
 			printResults();
 			
-			allocationFeasible = false;
+			stopTest = true;
 		}
 		
 		System.out.println("Start Request number: "+requestCounter);
 		
-		synchronized(arrivalTimeList){
+		Long ArrivalTime = new Date().getTime() - startTime;
 			
-			Long arrivalTime = (new Date().getTime()) - startTime;
-			
-			arrivalTimeList.add(arrivalTime);
-		}
-		
 		List<Pair<String, Request>> requests = new ArrayList<>();
 		ArrayList<Double> periodsList = new ArrayList<Double>();
 		HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
@@ -145,14 +172,25 @@ public class RequestThread implements Runnable{
 			
 		
 		if(result.isFeas()){
-			howManyFeasible.getAndIncrement();
+			
+			feasibleAllocations.getAndIncrement();
+			
+			synchronized(arrivalTimeList){
+				
+				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
+			}
 
 		}
 		else{
 			
+			synchronized(arrivalTimeList){
+				
+				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
+			}
+			
 			printResults();
 
-			allocationFeasible = false;
+			stopTest = true;
 		}
 
 	}
@@ -162,7 +200,7 @@ public class RequestThread implements Runnable{
 		FileWriter output = null;
 		
 		try{
-			output = new FileWriter("/home/lorenzo/Desktop/RestClient/testResults"+split.name()+".txt", true);
+			output = new FileWriter("/home/lorenzo/Desktop/RestClient/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
@@ -171,11 +209,11 @@ public class RequestThread implements Runnable{
 			System.out.println("Final Results "+split.name()+" :");
 			
 			synchronized(this){
-				writer.println("Feasible allocations: "+ howManyFeasible);
-				System.out.println("Feasible allocations: "+ howManyFeasible);
 				
-				writer.println("Arrival Times: "+ arrivalTimeList);
-				System.out.println("Arrival Times: "+ arrivalTimeList);
+				writer.println("feasible allocations: "+ feasibleAllocations);
+				System.out.println("feasible allocations: "+ feasibleAllocations);
+				writer.println("<Arrival Times, result>: "+ arrivalTimeList);
+				System.out.println("<Arrival Times, result>: "+ arrivalTimeList);
 			}
 			
 			writer.println("####################################");

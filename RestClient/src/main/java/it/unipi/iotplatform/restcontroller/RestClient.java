@@ -12,14 +12,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,23 +27,32 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
 public class RestClient {
 
-	private static final Double[] latency = {0.10, 0.20, 0.40, 0.60, 0.80, 1.0};
-	private static final Double[] energyCost = {0.10, 0.20, 0.40, 0.45};
-	private static final int[] periods = {10, 20, 40, 60, 80, 100, 120};
-	private static final Double[] battery = {98.0, 99.0, 100.0};
 	private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	
+	private static final double ttransf[]={3.0 / 1000, 3.5 / 1000, 4.0 / 1000, 4.5 / 1000, 5.0 / 1000, 5.5 / 1000, 6.0 / 1000, 6.5 / 1000, 7.0 / 1000, 7.5 / 1000, 8.0 / 1000, 8.5 / 1000, 9.0 / 1000, 9.5 / 1000, 10.0 / 1000}; //s
+	private static final double pmcu = 3.6 * (10) / 3600; //mW/s
+	private static final double prx = 3.6 * (18.8) / 3600; //mW/s
+	private static final double ptx = 3.6 * (17.4) / 3600; //mW/s
+	private static final double texe[]={1.0 / 1000, 1.5 / 1000, 1.8 / 1000, 2.0 / 1000, 2.5 / 1000}; //s
+	
+	private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
+	private static final double bat[]={50.710, 45.639, 40.568, 35.497, 30.426, 25.355}; //mJ/100000
+	
+	private static Long seed;
+	private static Random generator;
 	private static final AtomicInteger thingIdCounter = new AtomicInteger(0);
 	private static final AtomicInteger transIdCounter = new AtomicInteger(0);
 	
 	private static File file;
 	
+	//split
+	//seed
 	//#EqThings x Serv,
 	//#reqs and #requiresServ <-- assumptions 1 required service per request
 	//#TotalNumber of services[temperature, humidity, CO2, presence]
 	public static void main(String[] args) {
 
-		if(args.length < 4){
+		if(args.length < 5){
 			System.out.println("Error num of params not correct");
 			return;
 		}
@@ -62,35 +69,56 @@ public class RestClient {
 			writer.println("####################################");
 			writer.println("####################################");
 			
+			Split split = Split.valueOf(args[0]);
+			if(split == null || (split != Split.SINGLE_SPLIT && split != Split.MULTI_SPLIT)){
+				System.out.println("ERROR reading split");
+				
+				return;
+			}
+			System.out.println("Split: "+split.name());
+			writer.println("Split: "+split.name());
+			
+			if(args[1].contentEquals("null")){
+				System.out.println("no seed read, creation of the seed");
+				seed = System.currentTimeMillis();
+			}
+			else{
+				seed = Long.valueOf(args[1]);
+			}
+			
+			System.out.println("Seed: "+seed);
+			writer.println("Seed: "+seed);
+			generator = new Random(seed);
+			
 			//read parameters of the test
-			int eqThingsPerService = Integer.parseInt(args[0]);
+			int eqThingsPerService = 10;//Integer.parseInt(args[2]);
 			
 			System.out.println("eqThingsPerService: "+eqThingsPerService);
 			writer.println("eqThingsPerService: "+eqThingsPerService);
 			
-			int requests = Integer.parseInt(args[1]);
+			int requests = Integer.parseInt(args[2]);
 			
 			System.out.println("requests: "+requests);
 			writer.println("requests: "+requests);
 			
 			//initial assumption is 1
-			int requiredServicesPerRequest = Integer.parseInt(args[2]);
+			int requiredServicesPerRequest = Integer.parseInt(args[3]);
 			
 			System.out.println("requiredServicesPerRequest: "+requiredServicesPerRequest);
 			writer.println("requiredServicesPerRequest: "+requiredServicesPerRequest);
 			
-			int totalServices = Integer.parseInt(args[3]);
+			int totalServices = Integer.parseInt(args[4]);
 			
 			System.out.println("totalServices: "+totalServices);
 			writer.println("totalServices: "+totalServices);
 			
-			double rate = (double)eqThingsPerService/totalServices;
 			
 			System.out.println("Parameters of the test set");
 			writer.println("Parameters of the test set");
 			writer.println("####################################");
 			writer.println("####################################");
-
+			System.out.println("####################################");
+			System.out.println("####################################");
 		
 			int k = requests*requiredServicesPerRequest;
 			System.out.println("number of services requested: "+k);
@@ -117,8 +145,8 @@ public class RestClient {
 					int index = 0;
 					Thing t = new Thing();
 					
-					index = getRandomIndex(battery.length);
-					t.setBatteryLevel(battery[index]);
+					index = getRandomIndex(bat.length);
+					t.setBatteryLevel(bat[index]);
 					
 					Point point = new Point();
 					index = getRandomIndex(coords.length);
@@ -134,10 +162,22 @@ public class RestClient {
 					
 					ServiceFeatures servFeat = new ServiceFeatures();
 					
-					index = getRandomIndex(latency.length);
-					servFeat.setLatency(latency[index]);
-					index = getRandomIndex(energyCost.length);
-					servFeat.setEnergyCost(energyCost[index]);
+					//latency = ttransf_1 + texe + ttransf_2
+					index = getRandomIndex(ttransf.length);
+					double t_transf_1 = ttransf[index];
+					
+					index = getRandomIndex(texe.length);
+					double t_exe = texe[index];
+					
+					index = getRandomIndex(ttransf.length);
+					double t_transf_2 = ttransf[index];
+					
+					double latency = t_transf_1 + t_exe + t_transf_2;
+					servFeat.setLatency(latency);
+					
+					//c_ij = prx*ttransf+pmcu*texe+ptx*ttransf
+					double enCost = prx*t_transf_1+pmcu*t_exe+ptx*t_transf_2;
+					servFeat.setEnergyCost(enCost);
 					
 					String service = String.valueOf(i);
 					
@@ -182,11 +222,10 @@ public class RestClient {
 				
 				String opType = "queryContext";
 				
-				index = getRandomIndex(periods.length);
-				double maxRateRequest  = periods[index];
+				index = getRandomIndex(per.length);
+				double maxRateRequest  = per[index];
 				
-				index = getRandomIndex(latency.length);
-				double maxRespTime = 2; //latency[index];
+				double maxRespTime = 20; //latency[index];
 				
 				QoSscopeValue qosReq = new QoSscopeValue();
 				qosReq.setMaxResponseTime(maxRespTime);
@@ -225,18 +264,14 @@ public class RestClient {
 			ScheduledExecutorService scheduledExecutorService =
 			        Executors.newScheduledThreadPool(1);
 			
-			System.out.println("Test single Split");
-			
-			Long startTime = new Date().getTime();
-			
 			Runnable reqSingle = new RequestThread(
-					startTime,
 					requestList,
 					thingsInfo,
 					servNameThingsIdList, 0.001,
-					scheduledExecutorService);
+					scheduledExecutorService,
+					split);
 			
-			scheduledExecutorService.scheduleWithFixedDelay(reqSingle, 0, 3, TimeUnit.SECONDS);
+			scheduledExecutorService.scheduleWithFixedDelay(reqSingle, 0, 5, TimeUnit.SECONDS);
 			
 		}
 		catch(Exception e){
@@ -261,7 +296,6 @@ public class RestClient {
 	
 	private static int getRandomIndex(int max){
 
-		SecureRandom generator = new SecureRandom();
 		int i = generator.nextInt(max);
 		
 		return i;

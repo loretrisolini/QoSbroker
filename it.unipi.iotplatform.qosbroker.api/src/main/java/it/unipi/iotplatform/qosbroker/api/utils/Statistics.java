@@ -28,10 +28,10 @@ public class Statistics{
 	
 	public static int folderCounter = 1;
 	
-	public static int abgapCounter = 1;
+	public static int abgapCounter = 0;
 	
 	public static File file;
-
+	public static File fileABGAP;
 	
 	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
@@ -162,9 +162,14 @@ public class Statistics{
 				setTestDir();
 			}
 			
+//			fileABGAP = new File(file.getAbsoluteFile()+"/ABGAP_"+abgapCounter);
+//			if(!fileABGAP.exists()){
+//				
+//				fileABGAP.mkdir();
+//
+//			}
 			
-			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP_"+split+"ABGAPexecution_"+abgapCounter+".csv", true);
-			abgapCounter++;
+			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapCounter+".csv", true);
 			
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy");
@@ -397,7 +402,12 @@ public class Statistics{
 		
 		try{
 			
-			output = new FileWriter(file.getPath()+"/ResultABGAP_"+split+"_"+abgapCounter+".txt", true);
+			if(file==null){
+				setTestDir();
+			}
+			
+			output = new FileWriter(file.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+abgapCounter+".txt", true);
+			abgapCounter++;
 			
 			writer = new PrintWriter(output);
 			writer.println("####################################");
