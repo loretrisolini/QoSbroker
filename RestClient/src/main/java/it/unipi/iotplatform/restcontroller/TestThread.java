@@ -72,7 +72,7 @@ public class TestThread implements Runnable{
 		allocationTest(this.split);
 		
 		if(stopTest && (eqThingsxServList.length-testCounter)==0){
-			this.scheduledExecutorService.shutdown();
+			this.scheduledExecutorService.shutdownNow();
 			return;
 		}
 		
@@ -127,6 +127,8 @@ public class TestThread implements Runnable{
 			printResults();
 			
 			stopTest = true;
+			
+			return;
 		}
 		
 		System.out.println("Start Request number: "+requestCounter);
@@ -169,7 +171,12 @@ public class TestThread implements Runnable{
 			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
 
 		}
-			
+		
+		if(result == null){
+			System.out.println("QoSCalculator ERROR");
+			this.scheduledExecutorService.shutdownNow();
+		}
+		
 		
 		if(result.isFeas()){
 			
@@ -191,6 +198,8 @@ public class TestThread implements Runnable{
 			printResults();
 
 			stopTest = true;
+			
+			return;
 		}
 
 	}

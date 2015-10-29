@@ -199,17 +199,17 @@ public class RestClient {
 				servNameThingsIdList.put(service, thingsId);
 			}
 			
-			System.out.println("####################################");
-			System.out.println("thingsInfo: "+thingsInfo);
-			System.out.println("####################################");
-			System.out.println("servNameThingsIdList: "+servNameThingsIdList);
-			System.out.println("####################################");
-			
-			writer.println("####################################");
-			writer.println("thingsInfo: "+thingsInfo);
-			writer.println("####################################");
-			writer.println("servNameThingsIdList: "+servNameThingsIdList);
-			writer.println("####################################");
+//			System.out.println("####################################");
+//			System.out.println("thingsInfo: "+thingsInfo);
+//			System.out.println("####################################");
+//			System.out.println("servNameThingsIdList: "+servNameThingsIdList);
+//			System.out.println("####################################");
+//			
+//			writer.println("####################################");
+//			writer.println("thingsInfo: "+thingsInfo);
+//			writer.println("####################################");
+//			writer.println("servNameThingsIdList: "+servNameThingsIdList);
+//			writer.println("####################################");
 			
 			List<Pair<String, Request>> requestList = new ArrayList<>();
 			
@@ -256,15 +256,15 @@ public class RestClient {
 				requestList.add(new Pair<String, Request>(transId, req));
 			}
 
-			System.out.println("requestList: "+requestList);
-			System.out.println("####################################");
-			writer.println("requestList: "+requestList);
-			writer.println("####################################");
+//			System.out.println("requestList: "+requestList);
+//			System.out.println("####################################");
+//			writer.println("requestList: "+requestList);
+//			writer.println("####################################");
 			
 			ScheduledExecutorService scheduledExecutorService =
 			        Executors.newScheduledThreadPool(1);
 			
-			Runnable reqSingle = new RequestThread(
+			Runnable reqSingle = new TestThread(
 					requestList,
 					thingsInfo,
 					servNameThingsIdList, 0.001,

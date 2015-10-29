@@ -207,7 +207,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				reservationResults = res[imax];
 				
 				//store reservation results
-				storeReservationResults();
+//				storeReservationResults();
 				
 				Statistics.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
 //				resultGapCounter = 0;
