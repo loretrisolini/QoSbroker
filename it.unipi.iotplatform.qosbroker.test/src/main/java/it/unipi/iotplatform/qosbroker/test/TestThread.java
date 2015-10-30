@@ -8,6 +8,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,7 +17,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,9 +29,8 @@ public class TestThread implements Runnable{
 	
 	private final int[] eqThingsxServList = {2, 4, 6, 10};
 	
-	private final QoSCalculator qosCalculator = new QoSCalculator();;
+	private final QoSCalculator qosCalculator = new QoSCalculator();
 	private List<Pair<String, Request>> requestList;
-	private List<Pair<String, Request>> requestListBck;
 	
 	private HashMap<String, Thing> thingsInfo;
 	private HashMap<String, Thing> thingsInfoBck;
@@ -58,7 +57,6 @@ public class TestThread implements Runnable{
 			ScheduledExecutorService scheduledExecutorService) {
 
 		this.requestList = requestList;
-		this.requestListBck = requestList;
 		
 		this.thingsInfo = thingsInfo;
 		this.thingsInfoBck = thingsInfo;
@@ -156,7 +154,7 @@ public class TestThread implements Runnable{
     }
 	
 
-	public void allocationTest(Split split){
+	public synchronized void allocationTest(Split split){
 		
 		requestCounter++;
 		
@@ -207,9 +205,9 @@ public class TestThread implements Runnable{
 		ReservationResults result = null;
 		
 		try{
-			synchronized(qosCalculator){
-				result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
-			}
+
+			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+			
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -225,19 +223,13 @@ public class TestThread implements Runnable{
 			
 			feasibleAllocations.getAndIncrement();
 			
-			synchronized(arrivalTimeList){
-				
-				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
-			}
+			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
 
 		}
 		else{
 			
-			synchronized(arrivalTimeList){
-				
-				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
-			}
-			
+			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
+
 			printResults();
 
 			stopTest = true;
@@ -248,11 +240,17 @@ public class TestThread implements Runnable{
 	}
 	
 	public void printResults(){
+		
+		File fileTest = new File("./TestClient");
+		if(!fileTest.exists()){
+			fileTest.mkdir();
+		}
+		
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
 		try{
-			output = new FileWriter("/home/beetas/TestClient/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
+			output = new FileWriter(fileTest.getAbsoluteFile()+"/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
@@ -260,13 +258,10 @@ public class TestThread implements Runnable{
 			writer.println("Final Results "+split.name()+" :");
 			System.out.println("Final Results "+split.name()+" :");
 			
-			synchronized(this){
-				
-				writer.println("feasible allocations: "+ feasibleAllocations);
-				System.out.println("feasible allocations: "+ feasibleAllocations);
-				writer.println("<Arrival Times, result>: "+ arrivalTimeList);
-				System.out.println("<Arrival Times, result>: "+ arrivalTimeList);
-			}
+			writer.println("feasible allocations: "+ feasibleAllocations);
+			System.out.println("feasible allocations: "+ feasibleAllocations);
+			writer.println("<Arrival Times, result>: "+ arrivalTimeList);
+			System.out.println("<Arrival Times, result>: "+ arrivalTimeList);
 			
 			writer.println("####################################");
 			writer.println("####################################");

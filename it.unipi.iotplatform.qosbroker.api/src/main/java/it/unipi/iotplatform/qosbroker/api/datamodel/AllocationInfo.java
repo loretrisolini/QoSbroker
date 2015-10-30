@@ -9,25 +9,6 @@ import eu.neclab.iotplatform.iotbroker.commons.Pair;
 /* allocation class to store a single service
  * allocation transId,ServId -> tId, tsId */
 public class AllocationInfo{
-
-//	public class AllocationInfo{
-//		public String devId;
-//		
-//		//how many times calls
-//		//this thing to
-//		//satisfies this service
-//		public Integer c_ij_split;
-//		
-//		Double u_ij;
-//		Double f_ij;
-//		
-//		public AllocationInfo(String devId, Integer c_ij_split, Double u_ij, Double f_ij){
-//			this.devId = devId;
-//			this.c_ij_split = c_ij_split;
-//			this.u_ij = u_ij;
-//			this.f_ij = f_ij;
-//		}
-//	}
 	
 	//pair thingId and how many times this thing is taken
 	private List<Pair<String, Integer>> allocatedThings;

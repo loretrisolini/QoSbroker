@@ -24,27 +24,25 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
 public class Statistics{
 
-	public static int fileCounter = 1;
+	public static final String STAT_DIR = "./Statistics/";
 	
-	public static int folderCounter = 1;
+	public static File file = new File(STAT_DIR);
 	
-	public static int abgapCounter = 0;
+	private static int abgapIterationCounter = 0;
 	
-	public static File file;
-	public static File fileABGAP;
-	
-	public static void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
+	public void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 			
 		FileWriter fileWriterThingsMappings = null;
 		
 		try{
-			
-			if(file==null){
-				setTestDir();
+			//create Thing folder
+			File fileThing = new File(file.getAbsolutePath()+"Things");
+			if(!fileThing.exists()){
+				fileThing.mkdirs();
 			}
 			
-			fileWriterThingsMappings = new FileWriter(file.getPath()+"/Things.csv", true);
+			fileWriterThingsMappings = new FileWriter(fileThing.getPath()+"/Things.csv", true);
 			
 			fileWriterThingsMappings.append("DevId,BatteryLevel,Coords");
 			fileWriterThingsMappings.append("\n");
@@ -130,23 +128,10 @@ public class Statistics{
 			}
 		}
 	}
-	
-	
-	public synchronized static void setTestDir() {
-		
-		file = new File("/home/beetas/testsABGAP");//+(folderCounter-1));
-		if(!file.exists()){
-			
-			folderCounter++;
-			file.mkdir();
-
-		}
-		
-	}
 
 
 	/* function to print the input values of the GAP algorithm */
-	public static void printInputsABGAP(int k, List<Pair<String, Request>> requests,
+	public void printInputsABGAP(int k, List<Pair<String, Request>> requests,
 			HashMap<String,HashMap<String, Double>> matrixF_ij,
 			HashMap<String,HashMap<String, Double>> matrixU_ij,
 			HashMap<String, Integer> hyperperiodPeriodMap,
@@ -158,19 +143,13 @@ public class Statistics{
 		
 		try{
 			
-			if(file==null){
-				setTestDir();
+			//create Thing folder
+			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results");
+			if(!fileABGAP.exists()){
+				fileABGAP.mkdirs();
 			}
-			
-//			fileABGAP = new File(file.getAbsoluteFile()+"/ABGAP_"+abgapCounter);
-//			if(!fileABGAP.exists()){
-//				
-//				fileABGAP.mkdir();
-//
-//			}
-			
-			fileWriterInputGap = new FileWriter(file.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapCounter+".csv", true);
-			
+
+			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapIterationCounter+".csv", true);
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy");
 			fileWriterInputGap.append("\n");
@@ -394,7 +373,7 @@ public class Statistics{
 	}
 	
 	
-	public static void printAllocationSchema(
+	public void printAllocationSchema(
 			HashMap<String, HashMap<String, AllocationInfo>> allocationSchema, String split) {
 		
 		PrintWriter writer=null;
@@ -402,12 +381,14 @@ public class Statistics{
 		
 		try{
 			
-			if(file==null){
-				setTestDir();
+			//create Thing folder
+			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results");
+			if(!fileABGAP.exists()){
+				fileABGAP.mkdirs();
 			}
 			
-			output = new FileWriter(file.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+abgapCounter+".txt", true);
-			abgapCounter++;
+			output = new FileWriter(fileABGAP.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+abgapIterationCounter+".txt", true);
+			abgapIterationCounter++;
 			
 			writer = new PrintWriter(output);
 			writer.println("####################################");
@@ -449,16 +430,50 @@ public class Statistics{
 		
 	}
 	
-	public static void printNgsiResults(List<ContextRegistrationResponse> contRegList, List<ContextElementResponse> contElemList){
+
+	public void printServiceAgreementReq(ServiceDefinition serviceRequest){
 		
+
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
 		try{
 			
-			if(file==null){
-				setTestDir();
+			output = new FileWriter(file.getPath()+"/ServiceAgreementReq.txt", true);
+			writer = new PrintWriter(output);
+			writer.println("####################################");
+			writer.println("####################################");
+			
+			writer.println("ServiceAgreementRequest");
+			
+			writer.println(serviceRequest.toString());
+			
+			
+			writer.println("########################################");
+			writer.println("########################################");
+
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		finally{
+			try {
+				output.flush();
+				output.close();
+			} catch (IOException e) {
+				System.out.println("Error while flushing/closing fileWriter !!!");
+                e.printStackTrace();
 			}
+		}
+		
+	}
+
+	public void printNgsiResults(List<ContextRegistrationResponse> contRegList, List<ContextElementResponse> contElemList){
+		
+		PrintWriter writer=null;
+		FileWriter output = null;
+		
+		try{
 			
 			output = new FileWriter(file.getPath()+"/DiscoveryResults.txt", true);
 			writer = new PrintWriter(output);
@@ -492,43 +507,4 @@ public class Statistics{
 		
 	}
 	
-	public static void printServiceAgreementReq(ServiceDefinition serviceRequest){
-		
-
-		PrintWriter writer=null;
-		FileWriter output = null;
-		
-		try{
-			if(file==null){
-				setTestDir();
-			}
-			
-			output = new FileWriter(file.getPath()+"/ServiceAgreementReq.txt", true);
-			writer = new PrintWriter(output);
-			writer.println("####################################");
-			writer.println("####################################");
-			
-			writer.println("ServiceAgreementRequest");
-			
-			writer.println(serviceRequest.toString());
-			
-			
-			writer.println("########################################");
-			writer.println("########################################");
-
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
-		finally{
-			try {
-				output.flush();
-				output.close();
-			} catch (IOException e) {
-				System.out.println("Error while flushing/closing fileWriter !!!");
-                e.printStackTrace();
-			}
-		}
-		
-	}
 }

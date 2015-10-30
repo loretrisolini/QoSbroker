@@ -48,6 +48,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 	private QoSBigDataRepository bigDataRepository;
 	
+	private final Statistics stat = new Statistics();
+	
 	private final WRRPolicy wrrPolicyManager = new WRRPolicy();
 	
 	/** The logger. */
@@ -62,11 +64,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 	private List<Double> priorityList;
 	private Integer c_ij_sp_Sum;
 	
-//	private Integer c_ij_sp_MaxPriority;
-//	
-//	private Double maxPriority = 0.0;
-//	private Double maxResidualBattery = 0.0;
-//	private Double secondMaxPriority = 0.0;
 	private String operationStatus = new String("");
 	
 	//temporary allocation object
@@ -209,7 +206,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//store reservation results
 //				storeReservationResults();
 				
-				Statistics.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
+				stat.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
 //				resultGapCounter = 0;
 				
 				return ret;
@@ -391,7 +388,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
-//		Statistics.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+		stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 		
 		if(split == Split.MULTI_SPLIT){
 			res = GAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
@@ -2116,6 +2113,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		logger.info("c_i: "+(c_i));
 		logger.info("z_i: "+(z_i));
+		logger.info("u_ij: "+(u_ij));
+		logger.info("f_ij: "+(f_ij));
+		logger.info("(u_ij/split)*w_ij_sp: "+((u_ij/split)*w_ij_sp));
+		logger.info("(f_ij/split)*w_ij_sp: "+((f_ij/split)*w_ij_sp));
 		logger.info("update c_i: "+(c_i + i*(u_ij/split)*w_ij_sp));
 		logger.info("update z_i: "+(z_i - i*(f_ij/split)*w_ij_sp));
 		logger.info("SPLIT: "+split);
@@ -2474,6 +2475,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 					System.out.println();
 //					writer.println("");
 //					writer.println("");
+				}
+				else{
+//					writer.println(devId+"not respect the constraints");
 				}
 			}
 		}

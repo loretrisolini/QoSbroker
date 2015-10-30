@@ -6,6 +6,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,13 +43,10 @@ public class TestClient {
 	private static final AtomicInteger thingIdCounter = new AtomicInteger(0);
 	private static final AtomicInteger transIdCounter = new AtomicInteger(0);
 	
-	private static File file;
-	
-	//split
 	//seed
-	//#EqThings x Serv,
-	//#reqs and #requiresServ <-- assumptions 1 required service per request
-	//#TotalNumber of services[temperature, humidity, CO2, presence]
+	//#reqs 
+	//#requiresServ <-- assumptions 1 required service per request
+	//#TotalNumber of services all different
 	public static void main(String[] args) {
 
 		if(args.length < 4){
@@ -56,26 +54,20 @@ public class TestClient {
 			return;
 		}
 		
-		setTestDir();
+		File fileTest = new File("./TestClient");
+		if(!fileTest.exists()){
+			fileTest.mkdir();
+		}
 		
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
 		try{
 		
-			output = new FileWriter(file.getPath()+"/testInfo.txt", true);
+			output = new FileWriter(fileTest.getAbsolutePath()+"/testInfo.txt", true);
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
-			
-//			Split split = Split.valueOf(args[0]);
-//			if(split == null || (split != Split.SINGLE_SPLIT && split != Split.MULTI_SPLIT)){
-//				System.out.println("ERROR reading split");
-//				
-//				return;
-//			}
-//			System.out.println("Split: "+split.name());
-//			writer.println("Split: "+split.name());
 			
 			if(args[0].contentEquals("null")){
 				System.out.println("no seed read, creation of the seed");
@@ -89,8 +81,7 @@ public class TestClient {
 			writer.println("Seed: "+seed);
 			generator = new Random(seed);
 			
-			//read parameters of the test
-			int eqThingsPerService = 10;//Integer.parseInt(args[2]);
+			int eqThingsPerService = 10;
 			
 			System.out.println("eqThingsPerService: "+eqThingsPerService);
 			writer.println("eqThingsPerService: "+eqThingsPerService);
@@ -203,12 +194,12 @@ public class TestClient {
 //			System.out.println("####################################");
 //			System.out.println("servNameThingsIdList: "+servNameThingsIdList);
 //			System.out.println("####################################");
-//			
-//			writer.println("####################################");
-//			writer.println("thingsInfo: "+thingsInfo);
-//			writer.println("####################################");
-//			writer.println("servNameThingsIdList: "+servNameThingsIdList);
-//			writer.println("####################################");
+		
+			writer.println("####################################");
+			writer.println("thingsInfo: "+thingsInfo);
+			writer.println("####################################");
+			writer.println("servNameThingsIdList: "+servNameThingsIdList);
+			writer.println("####################################");
 			
 			List<Pair<String, Request>> requestList = new ArrayList<>();
 			
@@ -255,10 +246,10 @@ public class TestClient {
 				requestList.add(new Pair<String, Request>(transId, req));
 			}
 
-//			System.out.println("requestList: "+requestList);
-//			System.out.println("####################################");
-//			writer.println("requestList: "+requestList);
-//			writer.println("####################################");
+			System.out.println("requestList: "+requestList);
+			System.out.println("####################################");
+			writer.println("requestList: "+requestList);
+			writer.println("####################################");
 			
 			ScheduledExecutorService scheduledExecutorService =
 			        Executors.newScheduledThreadPool(1);
@@ -283,14 +274,6 @@ public class TestClient {
 				System.out.println("Error while flushing/closing fileWriter !!!");
                 e.printStackTrace();
 			}
-		}
-	}
-	
-	private static void setTestDir() {
-		
-		file = new File("/home/beetas/TestClient");
-		if(!file.exists()){
-			file.mkdir();
 		}
 	}
 	

@@ -15,7 +15,6 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceDefinition;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
-import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
 import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
@@ -31,8 +30,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +84,8 @@ import eu.neclab.iotplatform.ngsi.association.datamodel.AssociationDS;
 public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBrokerIF {
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
+	
+	private final Statistics stat = new Statistics();
 
 	/** String representing xml content type. */
 	private final String CONTENT_TYPE_XML = "application/xml";
@@ -806,7 +805,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		//TODO manage serviceAgreementRequest as List of serviceDefinition
 		ServiceDefinition serviceRequest = offer.getServiceDefinitionList().get(0);
 		
-		Statistics.printServiceAgreementReq(serviceRequest);
+		stat.printServiceAgreementReq(serviceRequest);
 		
 		String opType = serviceRequest.getOperationType();
 		
@@ -1045,7 +1044,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			List<ContextRegistrationResponse> contextRegistrationResponseList,
 			List<ContextElementResponse> qosMonitorResponse, Request request, String transId) {
 		
-		Statistics.printNgsiResults(contextRegistrationResponseList, qosMonitorResponse);
+		stat.printNgsiResults(contextRegistrationResponseList, qosMonitorResponse);
 		
 		StatusCode statusCode;
 		
@@ -1155,7 +1154,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 			return statusCode;
 		}
 		
-		Statistics.printThingsMappings(request, thingsInfo, serviceEquivalentThings);
+		stat.printThingsMappings(request, thingsInfo, serviceEquivalentThings);
 		
 		logger.info("QoSBrokerCore -- createThingsMap() checkServiceAllocationConditions");
 		//check the condition for the serviceAgreementRequest
@@ -1475,14 +1474,4 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	}
 
 	
-//	public Ngsi10Requester getNgsi10IoTBrokerCore() {
-//		return ngsi10IoTBrokerCore;
-//	}
-//
-//	public void setNgsi10IoTBrokerCore(Ngsi10Requester ngsi10IoTBrokerCore) {
-//		this.ngsi10IoTBrokerCore = ngsi10IoTBrokerCore;
-//	}
-
-
-
 }
