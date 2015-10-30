@@ -39,7 +39,7 @@ public class Thing extends DataStructure{
 	@JsonProperty("coordinates")
 	private Point coords;
 	
-	@XmlElementWrapper(name = "servicesList")
+	//@XmlElementWrapper(name = "servicesList")
 	@XmlElement(name = "service")
 	@JsonProperty("services")
 	//Map<ServiceName, ServiceFeatures>

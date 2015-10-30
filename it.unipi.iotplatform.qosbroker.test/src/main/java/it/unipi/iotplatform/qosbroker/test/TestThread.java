@@ -108,6 +108,7 @@ public class TestThread implements Runnable{
 			this.split = Split.MULTI_SPLIT;
 		}
 		
+		//pass to another eqThingsxServ factor
 		if(stopTest){
 			requestCounter = 0;
 			stopTest = false;
