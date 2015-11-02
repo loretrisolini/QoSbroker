@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
@@ -49,6 +51,7 @@ public class TestThread implements Runnable{
 	private ScheduledExecutorService scheduledExecutorService;
 	
 	private static int requestCounter = 0;
+	private final Lock lock = new ReentrantLock();
 	
 	public TestThread(
 			List<Pair<String, Request>> requestList,
@@ -77,6 +80,8 @@ public class TestThread implements Runnable{
     public void run(){
 		
 		if(this.scheduledExecutorService.isShutdown()) return;
+
+		lock.lock();
 		
 		allocationTest(this.split);
 		
@@ -152,10 +157,12 @@ public class TestThread implements Runnable{
 			
 		}
 		
+		lock.unlock();
+		
     }
 	
 
-	public synchronized void allocationTest(Split split){
+	public void allocationTest(Split split){
 		
 		requestCounter++;
 		
@@ -170,6 +177,9 @@ public class TestThread implements Runnable{
 		}
 		
 		System.out.println("Start Request number: "+requestCounter);
+		System.out.println("############################################");
+		System.out.println("EqThingsPerService: "+eqThingsxServ+" split: "+split);
+		System.out.println("############################################");
 		
 		Long ArrivalTime = new Date().getTime() - startTime;
 			

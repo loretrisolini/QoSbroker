@@ -52,6 +52,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 	private final WRRPolicy wrrPolicyManager = new WRRPolicy();
 	
+	private final double BATT_CONST = 50.710;
+	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSCalculator.class);
 
@@ -108,9 +110,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 			return ret;
 		}
 		
-		System.out.println();
-		System.out.println("Matrix M: "+matrixM);
-		System.out.println();
+//		System.out.println();
+//		System.out.println("Matrix M: "+matrixM);
+//		System.out.println();
 		
 		//Map<DevId, Map<transId::ServName ,f_ij>>>
 		//matric of normalized energy cost
@@ -124,9 +126,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 			return ret;
 		}
 		
-		System.out.println();
-		System.out.println("Matrix F: "+matrixF);
-		System.out.println();
+//		System.out.println();
+//		System.out.println("Matrix F: "+matrixF);
+//		System.out.println();
 		
 		//Map<DevId, Map<transId::ServName ,u_ij>>>
 		//matrix of utilization
@@ -140,9 +142,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 			return ret;
 		}
 		
-		System.out.println();
-		System.out.println("Matrix U: "+matrixF);
-		System.out.println();
+//		System.out.println();
+//		System.out.println("Matrix U: "+matrixF);
+//		System.out.println();
 		
 		//Map<transId, h/p_j>
 		//matrix of coefficients hyperperiod / periodj
@@ -323,7 +325,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			Double b_i = 0.0;
 			//check if the batt is null
 			if(t.getBatteryLevel()!=null){
-				b_i=t.getBatteryLevel()/100;
+				b_i=t.getBatteryLevel()/BATT_CONST;
 			}
 			else{
 				continue;
@@ -404,7 +406,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
-		stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+		//stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 		
 		if(split == Split.MULTI_SPLIT){
 			res = GAP_multiSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
@@ -2129,7 +2131,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		for(Pair<String, Integer> pair: fj_sp){
 			
-			fj_spBck.add(new Pair<String, Integer>(pair.getLeft(), pair.getRight()));
+			fj_spBck.add(new Pair<String, Integer>(new String(pair.getLeft()), new Integer(pair.getRight())));
 		}
 		
 		return fj_spBck;
@@ -2281,6 +2283,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			for(String reqServName: reqServNameList){
 				
 				if(servNameThingsIdList.get(reqServName) == null || servNameThingsIdList.get(reqServName).getEqThings()==null){
+					System.out.println("ERROR matrixM");
 					return null;
 				}
 				

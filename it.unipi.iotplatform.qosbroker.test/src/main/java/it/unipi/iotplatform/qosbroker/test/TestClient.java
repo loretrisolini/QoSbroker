@@ -246,8 +246,8 @@ public class TestClient {
 				requestList.add(new Pair<String, Request>(transId, req));
 			}
 
-			System.out.println("requestList: "+requestList);
-			System.out.println("####################################");
+//			System.out.println("requestList: "+requestList);
+//			System.out.println("####################################");
 			writer.println("requestList: "+requestList);
 			writer.println("####################################");
 			
