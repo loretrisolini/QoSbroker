@@ -74,7 +74,7 @@ public class TestClient {
 				seed = System.currentTimeMillis();
 			}
 			else{
-				seed = Long.valueOf(args[1]);
+				seed = Long.valueOf(args[0]);
 			}
 			
 			System.out.println("Seed: "+seed);
@@ -195,11 +195,11 @@ public class TestClient {
 //			System.out.println("servNameThingsIdList: "+servNameThingsIdList);
 //			System.out.println("####################################");
 		
-			writer.println("####################################");
-			writer.println("thingsInfo: "+thingsInfo);
-			writer.println("####################################");
-			writer.println("servNameThingsIdList: "+servNameThingsIdList);
-			writer.println("####################################");
+//			writer.println("####################################");
+//			writer.println("thingsInfo: "+thingsInfo);
+//			writer.println("####################################");
+//			writer.println("servNameThingsIdList: "+servNameThingsIdList);
+//			writer.println("####################################");
 			
 			List<Pair<String, Request>> requestList = new ArrayList<>();
 			
