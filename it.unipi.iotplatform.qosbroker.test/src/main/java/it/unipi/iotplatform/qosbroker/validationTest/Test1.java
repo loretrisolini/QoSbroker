@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.qosbroker.test;
+package it.unipi.iotplatform.qosbroker.validationTest;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
@@ -6,7 +6,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
-import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
+import it.unipi.iotplatform.qosbroker.threadHeuristic.TestThread1;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +25,7 @@ import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
-public class TestClient {
+public class Test1 {
 
 	private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	
@@ -47,7 +47,7 @@ public class TestClient {
 	//#reqs 
 	//#requiresServ <-- assumptions 1 required service per request
 	//#TotalNumber of services all different
-	public static void main(String[] args) {
+	public void test(String[] args) {
 
 		if(args.length < 4){
 			System.out.println("Error num of params not correct");
@@ -254,13 +254,13 @@ public class TestClient {
 			ScheduledExecutorService scheduledExecutorService =
 			        Executors.newScheduledThreadPool(1);
 			
-			Runnable reqSingle = new TestThread(
+			Runnable reqSingle = new TestThread1(
 					requestList,
 					thingsInfo,
 					servNameThingsIdList, 0.001,
 					scheduledExecutorService);
 			
-			scheduledExecutorService.scheduleWithFixedDelay(reqSingle, 0, 5, TimeUnit.SECONDS);
+			scheduledExecutorService.scheduleWithFixedDelay(reqSingle, 0, 6, TimeUnit.SECONDS);
 			
 		}
 		catch(Exception e){

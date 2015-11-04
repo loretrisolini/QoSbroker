@@ -39,7 +39,7 @@ public class Thing extends DataStructure{
 	@JsonProperty("coordinates")
 	private Point coords;
 	
-	//@XmlElementWrapper(name = "servicesList")
+//	@XmlElementWrapper(name = "servicesList")
 	@XmlElement(name = "service")
 	@JsonProperty("services")
 	//Map<ServiceName, ServiceFeatures>
@@ -180,6 +180,8 @@ public class Thing extends DataStructure{
 	public void setCoords(Point coords) {
 		this.coords = coords;
 	}
+	
+
 	
 //	"thing":{"servicesList":{"entry":[{"value":"","key":"battery"},{"value":{"latency":0.2000000000000000111,"energyCost":0.9000000000000000222},"key":"degrees"}]},"batteryLevel":77}}
 }

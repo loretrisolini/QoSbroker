@@ -54,4 +54,5 @@ public class ServiceFeatures extends DataStructure{
 	public void setAccuracy(Double accuracy) {
 		this.accuracy = accuracy;
 	}
+	
 }

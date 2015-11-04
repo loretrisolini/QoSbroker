@@ -1,4 +1,4 @@
-package it.unipi.iotplatform.qosbroker.test;
+package it.unipi.iotplatform.qosbroker.threadHeuristic;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
-public class TestThread implements Runnable{
+public class TestThread1 implements Runnable{
 
 	private List<Pair<Long, Boolean>> arrivalTimeList = new ArrayList<>();
 	private Long startTime;
@@ -53,7 +53,7 @@ public class TestThread implements Runnable{
 	private static int requestCounter = 0;
 	private final Lock lock = new ReentrantLock();
 	
-	public TestThread(
+	public TestThread1(
 			List<Pair<String, Request>> requestList,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList, double epsilon,
