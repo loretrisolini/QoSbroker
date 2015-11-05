@@ -60,6 +60,10 @@ public class TestThread2 implements Runnable{
 		private static final AtomicInteger transIdCounter = new AtomicInteger(0);
 		private HashMap<String, Thing> thingsInfo;
 		private HashMap<String, ThingsIdList> servNameThingsIdList;
+		
+		private ArrayList<HashMap<String, Thing>> thingsInfoArrayBck;
+		private ArrayList<HashMap<String, ThingsIdList>> servNameThingsIdListArrayBck;
+		
 		private List<Pair<String, Request>> requestList;
 	
 		private List<Pair<Long, Boolean>> arrivalTimeList = new ArrayList<>();
@@ -86,6 +90,9 @@ public class TestThread2 implements Runnable{
 				int thingsNumber,
 				ScheduledExecutorService scheduledExecutorService) {
 			
+			thingsInfoArrayBck = new ArrayList<>();
+			servNameThingsIdListArrayBck = new ArrayList<>();
+			
 			this.generator = new Random(seed);
 			this.requests = requests;
 			this.requiredServicesPerRequest = requiredServicesPerRequest;
@@ -102,6 +109,9 @@ public class TestThread2 implements Runnable{
 			eqThingsxServ = eqThingsxServList[eqThingsIndex];
 			
 			generateThingsServicesData(eqThingsxServList[eqThingsIndex]);
+			
+			thingsInfoArrayBck.add(thingsInfo);
+			servNameThingsIdListArrayBck.add(servNameThingsIdList);
 			
 			System.out.println("####################################");
 			System.out.println("thingsInfo: "+thingsInfo);
@@ -156,9 +166,18 @@ public class TestThread2 implements Runnable{
 				arrivalTimeList.clear();
 				feasibleAllocations.set(0);
 				
-				generateServices();
-				generateThingsServicesData(eqThingsxServList[eqThingsIndex]);
-				
+				if(split==Split.SINGLE_SPLIT){
+					generateServices();
+					generateThingsServicesData(eqThingsxServList[eqThingsIndex]);
+					
+					thingsInfoArrayBck.add(thingsInfo);
+					servNameThingsIdListArrayBck.add(servNameThingsIdList);
+				}
+				else{
+					thingsInfo.get(eqThingsIndex);
+					servNameThingsIdList.get(eqThingsIndex);
+				}
+					
 				System.out.println("Next EqThings Per Service Number");
 			}
 			
@@ -398,7 +417,7 @@ public class TestThread2 implements Runnable{
 			
 			double tmp;
 			
-			List<Integer> eqThingsCounter = new ArrayList<>();
+			int[] M = new int[thingsNumber*totalServices];
 			
 			do{
 				for(int i=0; i<thingsNumber; i++){  
@@ -407,15 +426,23 @@ public class TestThread2 implements Runnable{
 			    	  tmp = (double)generator.nextDouble();
 			    	  
 	    			  if(tmp > q)
-	    				  servNameThingsIdList.get(String.valueOf(j)).getEqThings().add(String.valueOf(i));
-
+	    				  M[i * totalServices + j] = 1;
+	    				  
+	    			  else
+	    				  M[i * totalServices + j] = 0;
 			      }
 			    }
-				
-				eqThingsCounter = checkThingsPerService(servNameThingsIdList);
 			    
 			}
-			while(min(eqThingsCounter) == 0);
+			while(!checkThingsPerService(M));
+			
+			for(int j=0; j<totalServices; j++){  
+			      for(int i=0; i<thingsNumber; i++){
+			    	  
+			    	  if(M[i * totalServices + j] == 1)
+			    		  servNameThingsIdList.get(String.valueOf(j)).getEqThings().add(String.valueOf(i));
+			      }
+			}
 			
 			for(Map.Entry<String, Thing> entryThing : thingsInfo.entrySet()){
 				
@@ -467,31 +494,21 @@ public class TestThread2 implements Runnable{
 			}
 		}
 
-		private int min(List<Integer> eqThingsCounter) {
+		private boolean checkThingsPerService(
+				int[] M) {
 			
-			int min = eqThingsCounter.get(0);
+			int sum = 0;
 			
-			for(Integer howMany: eqThingsCounter){
-				
-				if(howMany < min){
-					min = howMany;
-				}
+			for(int j=0; j<totalServices; j++){  
+			      for(int i=0; i<thingsNumber; i++){
+			    	  
+			    	  sum += M[i * totalServices + j];
+			      }
+			      
+			      if(sum < 1) return false;
 			}
-			
-			return min;
-		}
 
-		private List<Integer> checkThingsPerService(
-				HashMap<String, ThingsIdList> servNameThingsIdList2) {
-			
-			List<Integer> eqThingsCounter = new ArrayList<>();
-			
-			for(ThingsIdList eqThings : servNameThingsIdList2.values()){
-				
-				eqThingsCounter.add(eqThings.getEqThings().size());
-			}
-			
-			return eqThingsCounter;
+			return true;
 		}
 
 	

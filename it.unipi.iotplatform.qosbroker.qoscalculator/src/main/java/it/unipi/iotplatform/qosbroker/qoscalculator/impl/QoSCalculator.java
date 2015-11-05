@@ -432,7 +432,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				else{
 					res = GAP_singleSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
 				}
-					
+				
 				if(res.isFeasible())
 				{
 					z = teta;
@@ -847,6 +847,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 							break;
 						}
 						else{
+							
+							if(Fj_sp.size() == 1){
+								System.out.println("ERROR");
+								System.out.println(servNameThingsIdList);
+								res.setFeasible(false);
+								
+								return res;
+							}
 							
 							d = getDiffMaxSecondMax(Fj_sp, split);
 							
@@ -1636,6 +1644,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 							break;
 						}
 						else{
+							
+							if(Fj_sp.size() == 1){
+								System.out.println("ERROR");
+								System.out.println(servNameThingsIdList);
+								res.setFeasible(false);
+								
+								return res;
+							}
 							
 							d = getDiffMaxSecondMax(Fj_sp, split);
 							

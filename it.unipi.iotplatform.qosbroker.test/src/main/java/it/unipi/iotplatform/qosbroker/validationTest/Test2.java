@@ -110,16 +110,16 @@ public class Test2 {
 			
 
 				
-				ScheduledExecutorService scheduledExecutorService =
-				        Executors.newScheduledThreadPool(1);
-				
-				Runnable run = new TestThread2(
-						seed,
-						requests,
-						requiredServicesPerRequest, totalServices, thingsNumber,
-						scheduledExecutorService);
-
-				scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);
+			ScheduledExecutorService scheduledExecutorService =
+			        Executors.newScheduledThreadPool(1);
+			
+			Runnable run = new TestThread2(
+					seed,
+					requests,
+					requiredServicesPerRequest, totalServices, thingsNumber,
+					scheduledExecutorService);
+	
+			scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);
 					
 
 			
