@@ -1,33 +1,15 @@
 package it.unipi.iotplatform.qosbroker.validationTest;
 
-import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
-import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.threadHeuristic.TestThread2;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import eu.neclab.iotplatform.iotbroker.commons.Pair;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
-import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
 public class Test2 {
 
@@ -39,12 +21,12 @@ public class Test2 {
 	//#TotalNumber of services all different
 	public void test(String[] args) {
 
-		if(args.length < 5){
+		if(args.length < 6){
 			System.out.println("Error num of params not correct");
 			return;
 		}
 		
-		File fileTest = new File("./TestClient");
+		File fileTest = new File("./TestParams");
 		if(!fileTest.exists()){
 			fileTest.mkdir();
 		}
@@ -57,6 +39,7 @@ public class Test2 {
 		int requiredServicesPerRequest;
 		int totalServices;
 		int thingsNumber;
+		Split split;
 		
 		try{
 		
@@ -97,6 +80,10 @@ public class Test2 {
 			System.out.println("thingsNumber: "+thingsNumber);
 			writer.println("thingsNumber: "+thingsNumber);
 			
+			split = Split.valueOf(args[5]);
+			System.out.println("split: "+split.name());
+			writer.println("split: "+split.name());
+			
 			System.out.println("Parameters of the test set");
 			writer.println("Parameters of the test set");
 			writer.println("####################################");
@@ -116,7 +103,7 @@ public class Test2 {
 			Runnable run = new TestThread2(
 					seed,
 					requests,
-					requiredServicesPerRequest, totalServices, thingsNumber,
+					requiredServicesPerRequest, totalServices, thingsNumber, split,
 					scheduledExecutorService);
 	
 			scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);

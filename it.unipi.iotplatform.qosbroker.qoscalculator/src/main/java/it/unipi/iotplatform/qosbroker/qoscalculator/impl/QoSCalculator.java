@@ -224,7 +224,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//store reservation results
 //				storeReservationResults();
 				
-//				stat.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
+				stat.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
 //				resultGapCounter = 0;
 				
 				return ret;
@@ -326,7 +326,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//check if the batt is null
 			if(t.getBatteryLevel()!=null){
 				
-				b_i=t.getBatteryLevel()/BATT_CONST;
+				b_i=t.getBatteryLevel();//BATT_CONST;
 			}
 			else{
 				continue;
@@ -410,7 +410,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
-		//stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+		stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 		
 		if(split == Split.MULTI_SPLIT){
 			res = GAP_multiSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
@@ -637,11 +637,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 					//so one service to only one thing
 					while(!Sj.isEmpty()){
 						
-						System.out.println();
-						System.out.println("##########################################################");
-						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
-						System.out.println("##########################################################");
-						System.out.println();
+//						System.out.println();
+//						System.out.println("##########################################################");
+//						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
+//						System.out.println("##########################################################");
+//						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -663,12 +663,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
 								split, ni, teta, null);
 								
-						System.out.println();
-						System.out.println("##########################################################");
-						System.out.println("Fj_sp: "+Fj_sp);
-						System.out.println("priorityList: "+priorityList);
-						System.out.println("##########################################################");
-						System.out.println();
+//						System.out.println();
+//						System.out.println("##########################################################");
+//						System.out.println("Fj_sp: "+Fj_sp);
+//						System.out.println("priorityList: "+priorityList);
+//						System.out.println("##########################################################");
+//						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -1374,13 +1374,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//for example: queryContext
 				String opType = requestObj.getOpType();
 				
-				System.out.println();
-				System.out.println("##########################################################");
-				System.out.println("request with TransId: "+transId);
-				System.out.println("opType: "+opType);
-				System.out.println("Request "+requestObj);
-				System.out.println("##########################################################");
-				System.out.println();
+//				System.out.println();
+//				System.out.println("##########################################################");
+//				System.out.println("request with TransId: "+transId);
+//				System.out.println("opType: "+opType);
+//				System.out.println("Request "+requestObj);
+//				System.out.println("##########################################################");
+//				System.out.println();
 				
 //				writer.println();
 //				writer.println("##########################################################");
@@ -1407,12 +1407,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
 					
 					
-					System.out.println();
-					System.out.println("##########################################################");
-					System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase() +
-									" inside request with TransId: "+transId);
-					System.out.println("##########################################################");
-					System.out.println();
+//					System.out.println();
+//					System.out.println("##########################################################");
+//					System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase() +
+//									" inside request with TransId: "+transId);
+//					System.out.println("##########################################################");
+//					System.out.println();
 //					writer.println();
 //					writer.println("##########################################################");
 //					writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase()
@@ -1433,11 +1433,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 					//so one service to only one thing
 					while(!Sj.isEmpty()){
 						
-						System.out.println();
-						System.out.println("##########################################################");
-						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
-						System.out.println("##########################################################");
-						System.out.println();
+//						System.out.println();
+//						System.out.println("##########################################################");
+//						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
+//						System.out.println("##########################################################");
+//						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -1503,8 +1503,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//version in which i stop at the first split
 							Sj.remove(split);
 							
-//							System.out.println("remove split "+split);
-//							System.out.println("Sj "+Sj);
+							System.out.println("remove split "+split);
+							System.out.println("Sj "+Sj);
 							
 							if(Sj.isEmpty()) res.setFeasible(false);
 							else
@@ -1665,9 +1665,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 						if(d > ds){
 							
-//							System.out.println();
-//							System.out.println("d > ds: "+ (d > ds));
-//							System.out.println();
+							System.out.println();
+							System.out.println("d > ds: "+ (d > ds));
+							System.out.println();
 							
 							System.out.println("################################");
 							System.out.println("TEMPORARY CHOSEN SERVICE");
@@ -2609,7 +2609,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 //						writer.println();
 						
 					}
-					System.out.println();
+//					System.out.println();
 //					writer.println("");
 //					writer.println("");
 				}

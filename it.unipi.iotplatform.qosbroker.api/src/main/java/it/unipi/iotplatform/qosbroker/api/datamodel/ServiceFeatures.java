@@ -23,13 +23,13 @@ public class ServiceFeatures extends DataStructure{
 	//c_ij
 	private Double energyCost;
 
-	@XmlElement(name = "accuracy")
-	@JsonProperty("accuracy")
-	private Double accuracy;
+//	@XmlElement(name = "accuracy")
+//	@JsonProperty("accuracy")
+//	private Double accuracy;
 	
 	public final static String LATENCY = "latency";
 	public final static String ENERGY_COST = "energy_cost";
-	public final static String ACCURACY = "accuracy";
+//	public final static String ACCURACY = "accuracy";
 	
 	public Double getLatency() {
 		return latency;
@@ -47,12 +47,12 @@ public class ServiceFeatures extends DataStructure{
 		this.energyCost = energyCost;
 	}
 
-	public Double getAccuracy() {
-		return accuracy;
-	}
-
-	public void setAccuracy(Double accuracy) {
-		this.accuracy = accuracy;
-	}
+//	public Double getAccuracy() {
+//		return accuracy;
+//	}
+//
+//	public void setAccuracy(Double accuracy) {
+//		this.accuracy = accuracy;
+//	}
 	
 }

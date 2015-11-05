@@ -112,13 +112,13 @@ public class Thing extends DataStructure{
 		    	servFeat.setEnergyCost(null);
 		    }
 		    
-		    if(mappedContMetadata.get(ServiceFeatures.ACCURACY) != null){
-		    	Double accuracy = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.ACCURACY).getValue()));
-			    servFeat.setAccuracy(accuracy);
-		    }
-		    else{
-			    servFeat.setAccuracy(null);
-		    }
+//		    if(mappedContMetadata.get(ServiceFeatures.ACCURACY) != null){
+//		    	Double accuracy = Double.valueOf(String.valueOf(mappedContMetadata.get(ServiceFeatures.ACCURACY).getValue()));
+//			    servFeat.setAccuracy(accuracy);
+//		    }
+//		    else{
+//			    servFeat.setAccuracy(null);
+//		    }
 		    
 		    services.put(contRegAttr.getName(), servFeat);
 		}

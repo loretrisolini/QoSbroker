@@ -29,6 +29,7 @@ public class Statistics{
 	public static File file = new File(STAT_DIR);
 	
 	private static int abgapIterationCounter = 0;
+	private static int resultCounter = 0;
 	
 	public void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
@@ -68,7 +69,7 @@ public class Statistics{
 			
 			if(!mapThingServices.isEmpty()){
 			
-				fileWriterThingsMappings.append("DevId,ServiceName,Latency,EnergyCost,Accuracy");
+				fileWriterThingsMappings.append("DevId,ServiceName,Latency,EnergyCost");//,Accuracy");
 				fileWriterThingsMappings.append("\n");
 				
 				for(Map.Entry<String, HashMap<String, ServiceFeatures>> entry: mapThingServices.entrySet()){
@@ -87,9 +88,9 @@ public class Statistics{
 						fileWriterThingsMappings.append(",");
 						fileWriterThingsMappings.append(service.getValue().getEnergyCost()==null ? "null"
 														: service.getValue().getEnergyCost().toString());
-						fileWriterThingsMappings.append(",");
-						fileWriterThingsMappings.append(service.getValue().getAccuracy()==null ? "null"
-														: service.getValue().getAccuracy().toString());
+//						fileWriterThingsMappings.append(",");
+//						fileWriterThingsMappings.append(service.getValue().getAccuracy()==null ? "null"
+//														: service.getValue().getAccuracy().toString());
 						fileWriterThingsMappings.append("\n");
 					}
 				}
@@ -144,12 +145,13 @@ public class Statistics{
 		try{
 			
 			//create Thing folder
-			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results");
+			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results_"+split);
 			if(!fileABGAP.exists()){
 				fileABGAP.mkdirs();
 			}
 
 			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapIterationCounter+".csv", true);
+			abgapIterationCounter++;
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy");
 			fileWriterInputGap.append("\n");
@@ -292,7 +294,7 @@ public class Statistics{
 			
 			if(!mapThingServices.isEmpty()){
 			
-				fileWriterInputGap.append("DevId,ServiceName,Latency,EnergyCost,Accuracy");
+				fileWriterInputGap.append("DevId,ServiceName,Latency,EnergyCost");//,Accuracy");
 				fileWriterInputGap.append("\n");
 				
 				for(Map.Entry<String, HashMap<String, ServiceFeatures>> entry: mapThingServices.entrySet()){
@@ -311,9 +313,9 @@ public class Statistics{
 						fileWriterInputGap.append(",");
 						fileWriterInputGap.append(service.getValue().getEnergyCost()==null ? "null"
 															: service.getValue().getEnergyCost().toString());
-						fileWriterInputGap.append(",");
-						fileWriterInputGap.append(service.getValue().getAccuracy()==null ? "null"
-														: service.getValue().getAccuracy().toString());
+//						fileWriterInputGap.append(",");
+//						fileWriterInputGap.append(service.getValue().getAccuracy()==null ? "null"
+//														: service.getValue().getAccuracy().toString());
 						fileWriterInputGap.append("\n");
 					}
 				}
@@ -382,13 +384,13 @@ public class Statistics{
 		try{
 			
 			//create Thing folder
-			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results");
+			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results_"+split);
 			if(!fileABGAP.exists()){
 				fileABGAP.mkdirs();
 			}
 			
-			output = new FileWriter(fileABGAP.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+abgapIterationCounter+".txt", true);
-			abgapIterationCounter++;
+			output = new FileWriter(fileABGAP.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+resultCounter+".txt", true);
+			resultCounter++;
 			
 			writer = new PrintWriter(output);
 			writer.println("####################################");

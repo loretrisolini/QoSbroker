@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,21 +47,18 @@ public class TestThread2 implements Runnable{
 		private int requiredServicesPerRequest;
 		private int totalServices;
 		private int thingsNumber;
-		private final int[] eqThingsxServList = {2, 4, 6, 10};
-		private int eqThingsIndex = 0;
+		private final int[] mediumList = {15, 25, 50, 75, 100};
+		private int mediumIndex;
 		
-		private final int EQTHINGS_LIST_SIZE = 4;
-
+		private final int EQTHINGS_LIST_SIZE = 5;
+		private final int[] M;
 		
-		private final Random generator;
+		private Random generator;
 		private ScheduledExecutorService scheduledExecutorService;
-		private static final AtomicInteger thingIdCounter = new AtomicInteger(0);
-		private static final AtomicInteger transIdCounter = new AtomicInteger(0);
+		private final AtomicInteger thingIdCounter = new AtomicInteger(0);
+		private final AtomicInteger transIdCounter = new AtomicInteger(0);
 		private HashMap<String, Thing> thingsInfo;
 		private HashMap<String, ThingsIdList> servNameThingsIdList;
-		
-		private ArrayList<HashMap<String, Thing>> thingsInfoArrayBck;
-		private ArrayList<HashMap<String, ThingsIdList>> servNameThingsIdListArrayBck;
 		
 		private List<Pair<String, Request>> requestList;
 	
@@ -70,14 +66,14 @@ public class TestThread2 implements Runnable{
 		private Long startTime;
 		
 		private final QoSCalculator qosCalculator = new QoSCalculator();
-		private int eqThingsxServ;
+		private int medium;
 		
 		private double epsilon; 
 		private Split split;
 		
-		private boolean stopTest = false;
+		private boolean stopTest;
 		
-		private AtomicInteger feasibleAllocations = new AtomicInteger(0);
+		private final AtomicInteger feasibleAllocations = new AtomicInteger(0);
 		
 		private static int requestCounter = 0;
 		private final Lock lock = new ReentrantLock();
@@ -88,30 +84,29 @@ public class TestThread2 implements Runnable{
 				int requiredServicesPerRequest,
 				int totalServices,
 				int thingsNumber,
+				Split split,
 				ScheduledExecutorService scheduledExecutorService) {
+
+			stopTest = false;
+			generator = new Random(seed);
 			
-			thingsInfoArrayBck = new ArrayList<>();
-			servNameThingsIdListArrayBck = new ArrayList<>();
-			
-			this.generator = new Random(seed);
 			this.requests = requests;
 			this.requiredServicesPerRequest = requiredServicesPerRequest;
 			this.totalServices = totalServices;
 			this.thingsNumber = thingsNumber;
 			this.scheduledExecutorService = scheduledExecutorService;
-			this.split = Split.SINGLE_SPLIT;
+			this.split = split;
 			this.epsilon = 0.001;
+			
+			M = new int[thingsNumber*totalServices];
 			
 			generateRequests();
 			generateServices();
 			generateThings();
 			
-			eqThingsxServ = eqThingsxServList[eqThingsIndex];
-			
-			generateThingsServicesData(eqThingsxServList[eqThingsIndex]);
-			
-			thingsInfoArrayBck.add(thingsInfo);
-			servNameThingsIdListArrayBck.add(servNameThingsIdList);
+			mediumIndex = 0;
+			medium = mediumList[mediumIndex];
+			generateThingsServicesData(medium);
 			
 			System.out.println("####################################");
 			System.out.println("thingsInfo: "+thingsInfo);
@@ -126,15 +121,17 @@ public class TestThread2 implements Runnable{
 		@Override
 	    public void run(){
 			
-			if(this.scheduledExecutorService.isShutdown()) return;
-			
 			lock.lock();
+			
+			if(this.scheduledExecutorService.isShutdown()){
+				lock.unlock();
+				return;
+			}
+			
 			allocationTest(this.split);
 			
 			//stop
-			if(stopTest && eqThingsIndex == EQTHINGS_LIST_SIZE-1 && split==Split.MULTI_SPLIT){
-				
-				System.out.println("STOP");
+			if(stopTest && mediumIndex == EQTHINGS_LIST_SIZE-1){
 				
 				System.out.println("STOP");
 				
@@ -142,48 +139,29 @@ public class TestThread2 implements Runnable{
 				this.scheduledExecutorService.shutdownNow();
 				return;
 			}
-			
-			//pass to multi-split
-			if(stopTest && eqThingsIndex == EQTHINGS_LIST_SIZE-1 && split==Split.SINGLE_SPLIT){
-				
-				System.out.println();
-				System.out.println("NOW MULTI-SPLIT");
-
-				eqThingsIndex=-1;
-				
-				this.split = Split.MULTI_SPLIT;
-			}
 
 			if(stopTest){
 				requestCounter = 0;
 				stopTest = false;
 				//the next number of eqThings Per Service
-				eqThingsIndex++;
+				mediumIndex++;
 				
-				eqThingsxServ = eqThingsxServList[eqThingsIndex];
+				medium = mediumList[mediumIndex];
 				
 				startTime = new Date().getTime();
 				arrivalTimeList.clear();
-				feasibleAllocations.set(0);
+				feasibleAllocations.set(0);;
 				
-				if(split==Split.SINGLE_SPLIT){
-					generateServices();
-					generateThingsServicesData(eqThingsxServList[eqThingsIndex]);
-					
-					thingsInfoArrayBck.add(thingsInfo);
-					servNameThingsIdListArrayBck.add(servNameThingsIdList);
-				}
-				else{
-					thingsInfo.get(eqThingsIndex);
-					servNameThingsIdList.get(eqThingsIndex);
-				}
+				generateServices();
+				generateThingsServicesData(mediumList[mediumIndex]);
 					
 				System.out.println("Next EqThings Per Service Number");
+				
 			}
 			
 			lock.unlock();
 	    }
-		
+
 
 		public void allocationTest(Split split){
 			
@@ -273,7 +251,7 @@ public class TestThread2 implements Runnable{
 		
 		public void printResults(){
 			
-			File fileTest = new File("./TestClient");
+			File fileTest = new File("./Test_"+split.name());
 			if(!fileTest.exists()){
 				fileTest.mkdir();
 			}
@@ -282,19 +260,42 @@ public class TestThread2 implements Runnable{
 			FileWriter output = null;
 			
 			try{
-				output = new FileWriter(fileTest.getAbsoluteFile()+"/testResults"+split.name()+"_EqThings_"+eqThingsxServ+".txt", true);
+				output = new FileWriter(fileTest.getAbsoluteFile()+"/testResults_"+split.name()+"_medium_"+medium+".txt", true);
 				writer = new PrintWriter(output);
 				writer.println("####################################");
 				writer.println("####################################");
 				
-				writer.println("Final Results "+split.name()+"_EqThings_"+eqThingsxServ+" :");
-				System.out.println("Final Results "+split.name()+"_EqThings_"+eqThingsxServ+" :");
+				writer.println("Final Results "+split.name()+"_medium_"+medium+" :");
+				System.out.println("Final Results "+split.name()+"_medium_"+medium+" :");
 				
 				writer.println("feasible allocations: "+ feasibleAllocations);
 				System.out.println("feasible allocations: "+ feasibleAllocations);
 				writer.println("<Arrival Times, result>: "+ arrivalTimeList);
 				System.out.println("<Arrival Times, result>: "+ arrivalTimeList);
 				
+				writer.println("####################################");   	  
+				writer.println("####################################");
+				writer.println("<Serv Eq Things>: ");
+				writer.println(servNameThingsIdList);
+				
+				writer.println("####################################");
+				writer.println("####################################");
+				
+				writer.println("<Things Info>: ");
+				
+				for(Map.Entry<String, Thing> entry: thingsInfo.entrySet()){
+					writer.println("thingId "+entry.getKey());
+					writer.println("thingBatt "+entry.getValue().getBatteryLevel());
+					
+					HashMap<String, ServiceFeatures> services = entry.getValue().getServicesList();
+					for(Map.Entry<String, ServiceFeatures> entryService : services.entrySet()){
+						writer.println("service "+entryService.getKey());
+						writer.println("latency "+entryService.getValue().getLatency());
+						writer.println("latency "+entryService.getValue().getEnergyCost());
+					}
+					writer.println();
+				}
+					
 				writer.println("####################################");
 				writer.println("####################################");
 			}
@@ -410,16 +411,15 @@ public class TestThread2 implements Runnable{
 			}
 		}
 		
-		private void generateThingsServicesData(int eqThingsPerService){
+		private void generateThingsServicesData(int medium){
 			
-			double p = (double)eqThingsPerService / (double)totalServices;
+			double p = (double)medium / (double)totalServices;
 			double q = 1 - p;
 			
 			double tmp;
 			
-			int[] M = new int[thingsNumber*totalServices];
-			
 			do{
+				
 				for(int i=0; i<thingsNumber; i++){  
 			      for(int j=0; j<totalServices; j++){
 				
@@ -432,9 +432,11 @@ public class TestThread2 implements Runnable{
 	    				  M[i * totalServices + j] = 0;
 			      }
 			    }
-			    
+				
 			}
-			while(!checkThingsPerService(M));
+			while(!checkM(M));
+			
+			printM(M);
 			
 			for(int j=0; j<totalServices; j++){  
 			      for(int i=0; i<thingsNumber; i++){
@@ -463,10 +465,10 @@ public class TestThread2 implements Runnable{
 				}
 				
 				//assumption one service per thing
-				HashMap<String, ServiceFeatures> services = new HashMap<>(serviceList.size());
-				
-				for(String service : serviceList){
+				HashMap<String, ServiceFeatures> services = new HashMap<String, ServiceFeatures>(serviceList.size());
 					
+				for(String service : serviceList){
+
 					ServiceFeatures servFeat = new ServiceFeatures();
 					
 					//latency = ttransf_1 + texe + ttransf_2
@@ -488,28 +490,71 @@ public class TestThread2 implements Runnable{
 					
 					//one service per thing
 					services.put(service, servFeat);
+					
 				}
 					
 				t.setServicesList(services);
 			}
 		}
 
-		private boolean checkThingsPerService(
-				int[] M) {
+
+		private boolean checkM(int[] m2) {
 			
 			int sum = 0;
 			
-			for(int j=0; j<totalServices; j++){  
-			      for(int i=0; i<thingsNumber; i++){
-			    	  
-			    	  sum += M[i * totalServices + j];
-			      }
-			      
-			      if(sum < 1) return false;
+			for(int j=0; j < totalServices; j++){
+				for(int i=0; i<thingsNumber; i++){
+					
+					if(m2[i*totalServices+j]==1){
+						sum+=m2[i*totalServices+j];
+					}
+				}
+				
+				if(sum < 1){
+					return false;
+				}
+				sum = 0;
 			}
-
+			
 			return true;
 		}
-
-	
+		
+		private void printM(int[] M){
+			
+			File fileTest = new File("./Test_"+split.name());
+			if(!fileTest.exists()){
+				fileTest.mkdir();
+			}
+			
+			PrintWriter writer=null;
+			FileWriter output = null;
+			
+			try{
+				output = new FileWriter(fileTest.getAbsoluteFile()+"/M_"+split.name()+"_medium_"+medium+".txt", true);
+				writer = new PrintWriter(output);
+			
+				writer.println("<Matrix M>: ");
+				
+				for(int i=0; i<thingsNumber; i++){  
+				      for(int j=0; j<totalServices; j++){
+				    	  
+				    	  writer.print(M[i*totalServices + j] + " ");
+				      }
+				      writer.println();
+				}
+				
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			finally{
+				try {
+					output.flush();
+					output.close();
+				} catch (IOException e) {
+					System.out.println("Error while flushing/closing fileWriter !!!");
+		            e.printStackTrace();
+				}
+			}
+		}
 }

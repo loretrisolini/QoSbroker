@@ -240,7 +240,7 @@ public class TestFunctionality {
 								ServiceFeatures servFeat = new ServiceFeatures();
 								servFeat.setLatency(values[2].contentEquals("null") ? null : Double.valueOf(values[2]));
 								servFeat.setEnergyCost(values[3].contentEquals("null") ? null : Double.valueOf(values[3]));
-								servFeat.setAccuracy(values[4].contentEquals("null") ? null : Double.valueOf(values[4]));
+//								servFeat.setAccuracy(values[4].contentEquals("null") ? null : Double.valueOf(values[4]));
 								services.put(values[1], servFeat);
 							}
 							eqThingInfo.get(devId).setServicesList(services);
