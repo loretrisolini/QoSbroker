@@ -47,8 +47,8 @@ public class TestThread2 implements Runnable{
 		private static final double texe[]={1.0 / 1000, 1.5 / 1000, 1.8 / 1000, 2.0 / 1000, 2.5 / 1000}; //s
 		
 		private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
-											//60	50		40		30		20		10
-		private static final double bat[]={30.426, 25.355, 20.284, 15.213, 10.142, 5.071}; //mJ/100000
+											//50	40		30		20		10		5
+		private static final double bat[]={25.355, 20.284, 15.213, 10.142, 5.071, 2.535}; //mJ/100000
 										//{50.710, 45.639, 40.568, 35.497, 30.426, 25.355}
 		private int requests;
 		private int requiredServicesPerRequest;
@@ -94,7 +94,6 @@ public class TestThread2 implements Runnable{
 				int requiredServicesPerRequest,
 				int totalServices,
 				int thingsNumber,
-				Split split,
 				ScheduledExecutorService scheduledExecutorService) {
 
 			stopTest = false;
@@ -107,7 +106,7 @@ public class TestThread2 implements Runnable{
 			this.totalServices = totalServices;
 			this.thingsNumber = thingsNumber;
 			this.scheduledExecutorService = scheduledExecutorService;
-			this.split = split;
+			this.split = Split.SINGLE_SPLIT;
 			this.epsilon = 0.001;
 			
 			M = new int[thingsNumber*totalServices];
@@ -145,13 +144,28 @@ public class TestThread2 implements Runnable{
 			allocationTest(this.split);
 			
 			//stop
-			if(stopTest && mediumIndex == EQTHINGS_LIST_SIZE-1){
+			if(stopTest && mediumIndex == EQTHINGS_LIST_SIZE-1 && split == Split.MULTI_SPLIT){
 				
 				System.out.println("STOP");
 				
 				lock.unlock();
 				this.scheduledExecutorService.shutdownNow();
 				return;
+			}
+			
+			if(stopTest && mediumIndex == EQTHINGS_LIST_SIZE-1 && split == Split.SINGLE_SPLIT){
+				
+				System.out.println("NOW MULTI SPLIT");
+				
+				mediumIndex = -1;
+				
+				this.split = Split.MULTI_SPLIT;
+				
+				System.out.println("####################################");
+				System.out.println("thingsInfo: "+thingsInfo);
+				System.out.println("####################################");
+				System.out.println("servNameThingsIdList: "+servNameThingsIdList);
+				System.out.println("####################################");
 			}
 
 			if(stopTest){

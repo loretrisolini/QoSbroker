@@ -749,11 +749,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 						if((c_ij_sp_Sum - c_ij_sp_MaxPriority) < split){
 							ds = INF;
 							
-							System.out.println();
-							System.out.println("##########################################################");
-							System.out.println("FINAL ALLOCATION in ONE SHOOT");
-							System.out.println("##########################################################");
-							System.out.println();
+//							System.out.println();
+//							System.out.println("##########################################################");
+//							System.out.println("FINAL ALLOCATION in ONE SHOOT");
+//							System.out.println("##########################################################");
+//							System.out.println();
 //							writer.println();
 //							writer.println("##########################################################");
 //							writer.println("FINAL ALLOCATION in ONE SHOOT");
@@ -872,9 +872,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 //							System.out.println("d > ds: "+ (d > ds));
 //							System.out.println();
 							
-							System.out.println("################################");
-							System.out.println("TEMPORARY CHOSEN SERVICE");
-							System.out.println("################################");
+//							System.out.println("################################");
+//							System.out.println("TEMPORARY CHOSEN SERVICE");
+//							System.out.println("################################");
 							
 							ds = d;
 							
@@ -965,11 +965,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//the allocation in one shoot
 				if(ds != INF){
 				
-					System.out.println();
-					System.out.println("##########################################################");
-					System.out.println("FINAL ALLOCATION");
-					System.out.println("##########################################################");
-					System.out.println();
+//					System.out.println();
+//					System.out.println("##########################################################");
+//					System.out.println("FINAL ALLOCATION");
+//					System.out.println("##########################################################");
+//					System.out.println();
 //					writer.println();
 //					writer.println("##########################################################");
 //					writer.println("FINAL ALLOCATION");
@@ -1063,11 +1063,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 			}
 			else{
-				System.out.println();
-				System.out.println("##########################################################");
-				System.out.println("ALLOCATION FAILED, TETA: "+teta);
-				System.out.println("##########################################################");
-				System.out.println();
+//				System.out.println();
+//				System.out.println("##########################################################");
+//				System.out.println("ALLOCATION FAILED, TETA: "+teta);
+//				System.out.println("##########################################################");
+//				System.out.println();
+				
+				allocationTransId = null;
+				allocationServiceName = null;
+				allocationTemp = null;
 				
 //				writer.println();
 //				writer.println("##########################################################");
@@ -1546,11 +1550,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 						if((c_ij_sp_Sum - c_ij_sp_MaxPriority) < split){
 							ds = INF;
 							
-							System.out.println();
-							System.out.println("##########################################################");
-							System.out.println("FINAL ALLOCATION in ONE SHOOT");
-							System.out.println("##########################################################");
-							System.out.println();
+//							System.out.println();
+//							System.out.println("##########################################################");
+//							System.out.println("FINAL ALLOCATION in ONE SHOOT");
+//							System.out.println("##########################################################");
+//							System.out.println();
 //							writer.println();
 //							writer.println("##########################################################");
 //							writer.println("FINAL ALLOCATION in ONE SHOOT");
@@ -1665,13 +1669,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 						if(d > ds){
 							
-							System.out.println();
-							System.out.println("d > ds: "+ (d > ds));
-							System.out.println();
-							
-							System.out.println("################################");
-							System.out.println("TEMPORARY CHOSEN SERVICE");
-							System.out.println("################################");
+//							System.out.println();
+//							System.out.println("d > ds: "+ (d > ds));
+//							System.out.println();
+//							
+//							System.out.println("################################");
+//							System.out.println("TEMPORARY CHOSEN SERVICE");
+//							System.out.println("################################");
 							
 							ds = d;
 							
@@ -1763,11 +1767,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//the allocation in one shoot
 				if(ds != INF){
 				
-					System.out.println();
-					System.out.println("##########################################################");
-					System.out.println("FINAL ALLOCATION");
-					System.out.println("##########################################################");
-					System.out.println();
+//					System.out.println();
+//					System.out.println("##########################################################");
+//					System.out.println("FINAL ALLOCATION");
+//					System.out.println("##########################################################");
+//					System.out.println();
 //					writer.println();
 //					writer.println("##########################################################");
 //					writer.println("FINAL ALLOCATION");
@@ -1861,11 +1865,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 			}
 			else{
-				System.out.println();
-				System.out.println("##########################################################");
-				System.out.println("ALLOCATION FAILED, TETA: "+teta);
-				System.out.println("##########################################################");
-				System.out.println();
+//				System.out.println();
+//				System.out.println("##########################################################");
+//				System.out.println("ALLOCATION FAILED, TETA: "+teta);
+//				System.out.println("##########################################################");
+//				System.out.println();
 				
 //				writer.println();
 //				writer.println("##########################################################");
@@ -2658,11 +2662,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		for(String devId: thingsInfo.keySet()){
 			
-			Double batt = thingsInfo.get(devId).getBatteryLevel();
-			
-			if(batt == null){
-				batt = 0.0;
-			}
+			Double batt = thingsInfo.get(devId).getBatteryLevel() == null ? 0.0 : 
+								new Double(thingsInfo.get(devId).getBatteryLevel().doubleValue());
 			
 			ThingAssignmentParams assParams = new ThingAssignmentParams();
 			

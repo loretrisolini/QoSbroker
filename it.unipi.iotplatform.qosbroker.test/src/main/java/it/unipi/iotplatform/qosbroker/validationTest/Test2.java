@@ -21,7 +21,7 @@ public class Test2 {
 	//#TotalNumber of services all different
 	public void test(String[] args) {
 
-		if(args.length < 6){
+		if(args.length < 5){
 			System.out.println("Error num of params not correct");
 			return;
 		}
@@ -80,10 +80,6 @@ public class Test2 {
 			System.out.println("thingsNumber: "+thingsNumber);
 			writer.println("thingsNumber: "+thingsNumber);
 			
-			split = Split.valueOf(args[5]);
-			System.out.println("split: "+split.name());
-			writer.println("split: "+split.name());
-			
 			System.out.println("Parameters of the test set");
 			writer.println("Parameters of the test set");
 			writer.println("####################################");
@@ -103,7 +99,7 @@ public class Test2 {
 			Runnable run = new TestThread2(
 					seed,
 					requests,
-					requiredServicesPerRequest, totalServices, thingsNumber, split,
+					requiredServicesPerRequest, totalServices, thingsNumber,
 					scheduledExecutorService);
 	
 			scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);
