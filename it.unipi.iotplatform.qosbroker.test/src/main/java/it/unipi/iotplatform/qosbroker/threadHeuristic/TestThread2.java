@@ -1,14 +1,19 @@
 package it.unipi.iotplatform.qosbroker.threadHeuristic;
 
+import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Priority;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
+import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
+import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
 import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
 
 import java.io.File;
@@ -29,6 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
+import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class TestThread2 implements Runnable{
 
@@ -41,16 +47,17 @@ public class TestThread2 implements Runnable{
 		private static final double texe[]={1.0 / 1000, 1.5 / 1000, 1.8 / 1000, 2.0 / 1000, 2.5 / 1000}; //s
 		
 		private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
-		private static final double bat[]={50.710, 45.639, 40.568, 35.497, 30.426, 25.355}; //mJ/100000
-		
+											//60	50		40		30		20		10
+		private static final double bat[]={30.426, 25.355, 20.284, 15.213, 10.142, 5.071}; //mJ/100000
+										//{50.710, 45.639, 40.568, 35.497, 30.426, 25.355}
 		private int requests;
 		private int requiredServicesPerRequest;
 		private int totalServices;
 		private int thingsNumber;
-		private final int[] mediumList = {15, 25, 50, 75, 100};
+		private final int[] mediumList = {15, 25, 50, 75};
 		private int mediumIndex;
 		
-		private final int EQTHINGS_LIST_SIZE = 5;
+		private final int EQTHINGS_LIST_SIZE = 4;
 		private final int[] M;
 		
 		private Random generator;
@@ -72,10 +79,13 @@ public class TestThread2 implements Runnable{
 		private Split split;
 		
 		private boolean stopTest;
-		
+		private static Statistics stat;
 		private final AtomicInteger feasibleAllocations = new AtomicInteger(0);
 		
 		private static int requestCounter = 0;
+		
+		//indice richieste fallite
+		private static ArrayList<Integer> failedRequestList;
 		private final Lock lock = new ReentrantLock();
 		
 		public TestThread2(
@@ -88,6 +98,8 @@ public class TestThread2 implements Runnable{
 				ScheduledExecutorService scheduledExecutorService) {
 
 			stopTest = false;
+			failedRequestList = new ArrayList<>();
+			stat = new Statistics();
 			generator = new Random(seed);
 			
 			this.requests = requests;
@@ -107,6 +119,8 @@ public class TestThread2 implements Runnable{
 			mediumIndex = 0;
 			medium = mediumList[mediumIndex];
 			generateThingsServicesData(medium);
+			
+			stat.medium = medium;
 			
 			System.out.println("####################################");
 			System.out.println("thingsInfo: "+thingsInfo);
@@ -148,9 +162,13 @@ public class TestThread2 implements Runnable{
 				
 				medium = mediumList[mediumIndex];
 				
+				stat.medium = medium;
+				
 				startTime = new Date().getTime();
 				arrivalTimeList.clear();
-				feasibleAllocations.set(0);;
+				failedRequestList.clear();
+				
+				feasibleAllocations.set(0);
 				
 				generateServices();
 				generateThingsServicesData(mediumList[mediumIndex]);
@@ -165,21 +183,15 @@ public class TestThread2 implements Runnable{
 
 		public void allocationTest(Split split){
 			
+			//increment request Counter
 			requestCounter++;
 			
-			if(requestCounter == requestList.size()){
-				System.out.println("Requests terminated");
-				
-				printResults();
-				
-				stopTest = true;
-				
-				return;
-			}
+			Reserveobj result = null;
 			
-			System.out.println("Start Request number: "+requestCounter);
+			System.out.println("Start Request number: "+requestCounter+" medium "+medium);
 			System.out.println("############################################");
 			
+			//set arrival time of the request
 			Long ArrivalTime = new Date().getTime() - startTime;
 				
 			List<Pair<String, Request>> requests = new ArrayList<>();
@@ -187,6 +199,7 @@ public class TestThread2 implements Runnable{
 			HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
 			int k=0;
 			
+			//get the first requestCounter requests
 			for(int i=0; i < requestCounter; i++){
 				requests.add(requestList.get(i));
 				
@@ -212,11 +225,69 @@ public class TestThread2 implements Runnable{
 				entry.getValue().setNj(coeff.intValue());
 			}
 			
-			ReservationResults result = null;
+			//create matrixM to filter equivalent Things accordingly to the restrictions in each request
+			HashMap<String, List<String>> matrixM = qosCalculator.createM(requests,thingsInfo,servNameThingsIdList);
+			if(matrixM == null){
+
+				System.out.println("ERROR matrixM");
+				
+				stopTest = true;
+				mediumIndex = EQTHINGS_LIST_SIZE-1;
+				return;
+			}
+			
+			//matrix F of the normalized energy costs
+			HashMap<String,HashMap<String, Double>> matrixF = qosCalculator.createF(thingsInfo, servPeriodsMap);
+			if(matrixF == null){
+				
+				System.out.println("ERROR matrixF");
+				
+				stopTest = true;
+				mediumIndex = EQTHINGS_LIST_SIZE-1;
+				return;
+			}
+			
+			//matrix U of the utilizations
+			HashMap<String,HashMap<String, Double>> matrixU = qosCalculator.createU(thingsInfo, servPeriodsMap);
+			if(matrixU == null){
+				
+				System.out.println("ERROR matrixU");
+				
+				stopTest = true;
+				mediumIndex = EQTHINGS_LIST_SIZE-1;
+				return;
+			}
+			
+			//coeff h/p_j for each request 
+			HashMap<String, Integer> hyperperiodPeriodMap = new HashMap<>();
+			for(Map.Entry<String, ServicePeriodParams> entryPeriod :servPeriodsMap.entrySet()){
+				
+				//transId
+				String transId = entryPeriod.getKey();
+				//h/p_j
+				Integer nj = entryPeriod.getValue().getNj();
+				
+				hyperperiodPeriodMap.put(transId, nj);
+			}
+			
+			System.out.println();
+			System.out.println("h/pj for each transId: "+hyperperiodPeriodMap);
+			System.out.println();
+
+			AllocationPolicy allocPolicy = AllocationPolicy.WRoundRobin;
+			Priority prio = Priority.BATTERY;
+
+			
+			//Map<DevId, Map<transId::ServName ,p_ij>>>
+			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
+			//execution with p_ij=f_ij
 			
 			try{
 
-				result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+				result = qosCalculator.ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+
+				result.setAllocPolicy(allocPolicy);
+				result.setPriority(prio);
 				
 			}
 			catch(Exception e){
@@ -225,28 +296,40 @@ public class TestThread2 implements Runnable{
 				
 			if(result == null){
 				System.out.println("QoSCalculator ERROR");
+				
+				stopTest = true;
+				mediumIndex = EQTHINGS_LIST_SIZE-1;
 				return;
 			}
 			
 			
-			if(result.isFeas()){
+			if(result.isFeasible()){
 				
 				feasibleAllocations.addAndGet(1);
 				
 				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
 
+				stat.printAllocationSchema(result.getAllocationSchema(), split.name());
+				
 			}
 			else{
 				
 				arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
+				
+				failedRequestList.add(requestCounter);
+			}
 
+			if((requestCounter+1) > requestList.size()){
+				System.out.println("Requests terminated");
+				
+				stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+				
 				printResults();
-
+				
 				stopTest = true;
 				
 				return;
 			}
-
 		}
 		
 		public void printResults(){
@@ -272,6 +355,9 @@ public class TestThread2 implements Runnable{
 				System.out.println("feasible allocations: "+ feasibleAllocations);
 				writer.println("<Arrival Times, result>: "+ arrivalTimeList);
 				System.out.println("<Arrival Times, result>: "+ arrivalTimeList);
+				
+				writer.println("failedRequests indexes: " + failedRequestList);
+				System.out.println("failedRequests indexes: " + failedRequestList);
 				
 				writer.println("####################################");   	  
 				writer.println("####################################");
@@ -416,6 +502,7 @@ public class TestThread2 implements Runnable{
 			double p = (double)medium / (double)totalServices;
 			double q = 1 - p;
 			
+			int[] rows = new int[thingsNumber];
 			double tmp;
 			
 			do{
@@ -433,8 +520,10 @@ public class TestThread2 implements Runnable{
 			      }
 			    }
 				
+				rows = sum(thingsNumber, totalServices, M);
+				
 			}
-			while(!checkM(M));
+			while(min(thingsNumber, rows)==0 || !checkM(M));
 			
 			printM(M);
 			
@@ -518,6 +607,33 @@ public class TestThread2 implements Runnable{
 			
 			return true;
 		}
+		
+		private int[] sum(int n, int k, int[] M){
+		  int i,j;
+		  
+		  int[] rows = new int[thingsNumber];
+		  
+		  for(i=0; i<n; i++){  
+		    rows[i] = 0;
+		    for(j=0; j<k; j++){
+		      rows[i] = rows[i] + M[i * k + j];
+		    }
+		  }
+		  return rows;
+		}
+
+		private int min(int n, int[] rows)
+		{
+		  int i;
+		  int min = rows[0];
+
+		  for(i=1; i<n; i++){
+		    if(min> rows[i])
+		      min = rows[i];
+		  }
+		  return min;
+		}
+
 		
 		private void printM(int[] M){
 			

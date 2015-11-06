@@ -31,6 +31,8 @@ public class Statistics{
 	private static int abgapIterationCounter = 0;
 	private static int resultCounter = 0;
 	
+	public int medium = 0;
+	
 	public void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 			
@@ -150,7 +152,7 @@ public class Statistics{
 				fileABGAP.mkdirs();
 			}
 
-			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapIterationCounter+".csv", true);
+			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapIterationCounter+"_Medium_"+medium+".csv", true);
 			abgapIterationCounter++;
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy");
@@ -389,30 +391,35 @@ public class Statistics{
 				fileABGAP.mkdirs();
 			}
 			
-			output = new FileWriter(fileABGAP.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+resultCounter+".txt", true);
+			output = new FileWriter(fileABGAP.getPath()+"/ResultABGAP_"+split+"_ABGAP_"+resultCounter+"_Medium_"+medium+".txt", true);
 			resultCounter++;
 			
 			writer = new PrintWriter(output);
 			writer.println("####################################");
 			writer.println("####################################");
 			
-			for(Map.Entry<String, HashMap<String, AllocationInfo>> entry: allocationSchema.entrySet()){
-				writer.println("transId: "+entry.getKey());
-				writer.println("");
-				
-				HashMap<String, AllocationInfo> services = entry.getValue();
-				
-				writer.println("services allocated:");
-				for(Map.Entry<String, AllocationInfo> entryAllocation: services.entrySet()){
-					writer.println("service Name: "+entryAllocation.getKey());
+			if(!allocationSchema.isEmpty()){
+				for(Map.Entry<String, HashMap<String, AllocationInfo>> entry: allocationSchema.entrySet()){
+					writer.println("transId: "+entry.getKey());
+					writer.println("");
 					
-					writer.println(entryAllocation.toString());
+					HashMap<String, AllocationInfo> services = entry.getValue();
 					
+					writer.println("services allocated:");
+					for(Map.Entry<String, AllocationInfo> entryAllocation: services.entrySet()){
+						writer.println("service Name: "+entryAllocation.getKey());
+						
+						writer.println(entryAllocation.toString());
+						
+					}
+					writer.println("");
+					writer.println("");
 				}
-				writer.println("");
-				writer.println("");
 			}
-			
+			else{
+				writer.println("NOT FEASIBLE");
+			}
+				
 			writer.println("########################################");
 			writer.println("########################################");
 

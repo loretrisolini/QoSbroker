@@ -100,7 +100,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//Map<transId::service, List<DevId>>
 		//matrix to get list of things
 		//that respect restrictions for that transaction and service
-		HashMap<String, List<String>> matrixM = createMatrixM(requests,thingsInfo,servNameThingsIdList);
+		HashMap<String, List<String>> matrixM = createM(requests,thingsInfo,servNameThingsIdList);
 		if(matrixM == null){
 			StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
 					QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation() " + operationStatus);
@@ -253,7 +253,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 
 	/* function to create the utilization matrix u_ij */
-	private HashMap<String,HashMap<String, Double>> createU(
+	public HashMap<String,HashMap<String, Double>> createU(
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ServicePeriodParams> servPeriodsMap) {
 		
@@ -309,7 +309,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	}
 
 	/* function to create the utilization matrix f_ij */
-	private HashMap<String,HashMap<String, Double>> createF(
+	public HashMap<String,HashMap<String, Double>> createF(
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ServicePeriodParams> servPeriodsMap) {
 		
@@ -391,7 +391,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	 * @param Policy policy
 	 * @return the Reserveobj object
 	 */
-	private Reserveobj ABGAP(
+	public Reserveobj ABGAP(
 			int k, List<Pair<String, Request>> requests,
 			HashMap<String,HashMap<String, Double>> matrixP,
 			HashMap<String,HashMap<String, Double>> matrixF,
@@ -410,7 +410,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		double z = 0;
 		System.out.println("teta = "+teta);
 		
-		stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+//		stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 		
 		if(split == Split.MULTI_SPLIT){
 			res = GAP_multiSplit(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, teta, prio);
@@ -515,13 +515,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//upper bound for utilization
 		Double ni = k*(pow-1);
 		
-		System.out.println();
-		System.out.println("##########################################################");
-		System.out.println("k= "+k);
-		System.out.println("ni= "+ni);
-		System.out.println("TETA= "+teta);
-		System.out.println("##########################################################");
-		System.out.println();
+//		System.out.println();
+//		System.out.println("##########################################################");
+//		System.out.println("k= "+k);
+//		System.out.println("ni= "+ni);
+//		System.out.println("TETA= "+teta);
+//		System.out.println("##########################################################");
+//		System.out.println();
 		
 		//(isFeas<-TRUE)
 		res.setFeasible(true);
@@ -627,7 +627,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 					//factorization returns the list of factor in creasing order
 					List<Integer> Sj = Utils.factorization(hyperperiodPeriodMap.get(transId));
 					
-					System.out.println("Factors Sj: "+Sj);
+//					System.out.println("Factors Sj: "+Sj);
 					
 					Integer split = 1;
 					
@@ -1312,13 +1312,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//upper bound for utilization
 		Double ni = k*(pow-1);
 		
-		System.out.println();
-		System.out.println("##########################################################");
-		System.out.println("k= "+k);
-		System.out.println("ni= "+ni);
-		System.out.println("TETA= "+teta);
-		System.out.println("##########################################################");
-		System.out.println();
+//		System.out.println();
+//		System.out.println("##########################################################");
+//		System.out.println("k= "+k);
+//		System.out.println("ni= "+ni);
+//		System.out.println("TETA= "+teta);
+//		System.out.println("##########################################################");
+//		System.out.println();
 		
 		//(isFeas<-TRUE)
 		res.setFeasible(true);
@@ -1459,12 +1459,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
 								split, ni, teta, null);
 								
-						System.out.println();
-						System.out.println("##########################################################");
-						System.out.println("Fj_sp: "+Fj_sp);
-						System.out.println("priorityList: "+priorityList);
-						System.out.println("##########################################################");
-						System.out.println();
+//						System.out.println();
+//						System.out.println("##########################################################");
+//						System.out.println("Fj_sp: "+Fj_sp);
+//						System.out.println("priorityList: "+priorityList);
+//						System.out.println("##########################################################");
+//						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -1503,8 +1503,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//version in which i stop at the first split
 							Sj.remove(split);
 							
-							System.out.println("remove split "+split);
-							System.out.println("Sj "+Sj);
+//							System.out.println("remove split "+split);
+//							System.out.println("Sj "+Sj);
 							
 							if(Sj.isEmpty()) res.setFeasible(false);
 							else
@@ -2265,7 +2265,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	/* function to create a table that say the list of DevId of the
 	 * things that respect the restriction of a request identified
 	 * by the transactionId (Map<transId, List<DevId>>) */
-	private HashMap<String, List<String>> createMatrixM(
+	public HashMap<String, List<String>> createM(
 			List<Pair<String, Request>> requests,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList) {
@@ -2670,7 +2670,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			assParams.setTotalUtilization(0.0);
 			
 			//z_i set to one or to the value of the battery/100
-			assParams.setResidualBattery(batt/BATT_CONST);
+			assParams.setResidualBattery(new Double(batt/BATT_CONST));
 			
 			assignmentParamsMap.put(devId, assParams);
 		}

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Test2 {
 
-	private final int REQ_PERIOD = 4;
+	private final int REQ_PERIOD = 1;
 	
 	//seed
 	//#reqs 
