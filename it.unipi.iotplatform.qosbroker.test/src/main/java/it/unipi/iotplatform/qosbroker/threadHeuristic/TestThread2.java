@@ -3,8 +3,6 @@ package it.unipi.iotplatform.qosbroker.threadHeuristic;
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
 import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Priority;
-import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
-import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
@@ -34,7 +32,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Circle;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
-import eu.neclab.iotplatform.ngsi.api.datamodel.StatusCode;
 
 public class TestThread2 implements Runnable{
 
@@ -47,8 +44,8 @@ public class TestThread2 implements Runnable{
 		private static final double texe[]={1.0 / 1000, 1.5 / 1000, 1.8 / 1000, 2.0 / 1000, 2.5 / 1000}; //s
 		
 		private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
-											//50	40		30		20		10		5
-		private static final double bat[]={25.355, 20.284, 15.213, 10.142, 5.071, 2.535}; //mJ/100000
+											//60	50		40		30		20		10
+		private static final double bat[]={30.426, 25.355, 20.284, 15.213, 10.142, 5.071}; //mJ/100000
 										//{50.710, 45.639, 40.568, 35.497, 30.426, 25.355}
 		private int requests;
 		private int requiredServicesPerRequest;
@@ -60,7 +57,9 @@ public class TestThread2 implements Runnable{
 		private final int EQTHINGS_LIST_SIZE = 4;
 		private final int[] M;
 		
-		private Random generator;
+		private final Random generator;
+		private final Long seed;
+		
 		private ScheduledExecutorService scheduledExecutorService;
 		private final AtomicInteger thingIdCounter = new AtomicInteger(0);
 		private final AtomicInteger transIdCounter = new AtomicInteger(0);
@@ -99,7 +98,9 @@ public class TestThread2 implements Runnable{
 			stopTest = false;
 			failedRequestList = new ArrayList<>();
 			stat = new Statistics();
-			generator = new Random(seed);
+			
+			this.seed = seed;
+			generator = new Random(this.seed);
 			
 			this.requests = requests;
 			this.requiredServicesPerRequest = requiredServicesPerRequest;
@@ -153,42 +154,39 @@ public class TestThread2 implements Runnable{
 				return;
 			}
 			
-			if(stopTest && mediumIndex == EQTHINGS_LIST_SIZE-1 && split == Split.SINGLE_SPLIT){
-				
-				System.out.println("NOW MULTI SPLIT");
-				
-				mediumIndex = -1;
-				
-				this.split = Split.MULTI_SPLIT;
-				
-				System.out.println("####################################");
-				System.out.println("thingsInfo: "+thingsInfo);
-				System.out.println("####################################");
-				System.out.println("servNameThingsIdList: "+servNameThingsIdList);
-				System.out.println("####################################");
-			}
-
 			if(stopTest){
+
 				requestCounter = 0;
 				stopTest = false;
-				//the next number of eqThings Per Service
-				mediumIndex++;
-				
-				medium = mediumList[mediumIndex];
-				
-				stat.medium = medium;
 				
 				startTime = new Date().getTime();
 				arrivalTimeList.clear();
 				failedRequestList.clear();
-				
 				feasibleAllocations.set(0);
 				
-				generateServices();
-				generateThingsServicesData(mediumList[mediumIndex]);
+				if(split == Split.SINGLE_SPLIT){
 					
-				System.out.println("Next EqThings Per Service Number");
-				
+					System.out.println("NOW MULTI SPLIT");
+					this.split = Split.MULTI_SPLIT;
+					
+					printM(M);
+				}
+				else{
+					
+					System.out.println("NOW SINGLE SPLIT");
+					this.split = Split.SINGLE_SPLIT;
+					
+					System.out.println("Next factor of services on a thing");
+					//the next number of eqThings Per Service
+					mediumIndex++;
+					medium = mediumList[mediumIndex];
+					stat.medium = medium;				
+					generateServices();
+					generateThingsServicesData(mediumList[mediumIndex]);
+					
+					printM(M);
+				}
+
 			}
 			
 			lock.unlock();
@@ -538,8 +536,6 @@ public class TestThread2 implements Runnable{
 				
 			}
 			while(min(thingsNumber, rows)==0 || !checkM(M));
-			
-			printM(M);
 			
 			for(int j=0; j<totalServices; j++){  
 			      for(int i=0; i<thingsNumber; i++){

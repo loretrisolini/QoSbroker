@@ -39,14 +39,11 @@ public class Test2 {
 		int requiredServicesPerRequest;
 		int totalServices;
 		int thingsNumber;
-		Split split;
 		
 		try{
 		
 			output = new FileWriter(fileTest.getAbsolutePath()+"/testInfo.txt", true);
 			writer = new PrintWriter(output);
-			writer.println("####################################");
-			writer.println("####################################");
 			
 			//read the seed
 			if(args[0].contentEquals("null")){
@@ -99,7 +96,8 @@ public class Test2 {
 			Runnable run = new TestThread2(
 					seed,
 					requests,
-					requiredServicesPerRequest, totalServices, thingsNumber,
+					requiredServicesPerRequest, totalServices, 
+					thingsNumber, 
 					scheduledExecutorService);
 	
 			scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);
