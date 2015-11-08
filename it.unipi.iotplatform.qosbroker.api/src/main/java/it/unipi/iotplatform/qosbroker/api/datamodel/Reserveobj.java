@@ -13,6 +13,7 @@ public class Reserveobj {
 	
 	//feasible
 	private boolean feasible = false;
+	
 	//theta value
 	private Double theta = 0.0;
 	
@@ -108,7 +109,5 @@ public class Reserveobj {
 	public void setTransId_opType(HashMap<String, String> transId_opType) {
 		this.transId_opType = transId_opType;
 	}
-	
 
-	
 }

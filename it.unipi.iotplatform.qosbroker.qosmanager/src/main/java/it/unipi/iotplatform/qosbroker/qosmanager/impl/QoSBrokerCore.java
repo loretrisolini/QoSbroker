@@ -31,9 +31,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.w3c.dom.Node;
+
+import com.google.gson.Gson;
 
 import eu.neclab.iotplatform.iotbroker.commons.EntityIDMatcher;
 import eu.neclab.iotplatform.iotbroker.commons.Pair;
@@ -85,7 +90,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 	
-	private final Statistics stat = new Statistics();
+	private static Statistics stat = new Statistics();;
 
 	/** String representing xml content type. */
 	private final String CONTENT_TYPE_XML = "application/xml";
@@ -1473,5 +1478,4 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 		return output;
 	}
 
-	
 }

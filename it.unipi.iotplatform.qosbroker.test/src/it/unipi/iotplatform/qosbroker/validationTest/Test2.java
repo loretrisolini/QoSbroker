@@ -39,6 +39,7 @@ public class Test2 {
 		int requiredServicesPerRequest;
 		int totalServices;
 		int thingsNumber;
+		Split split;
 		
 		try{
 		
@@ -97,7 +98,7 @@ public class Test2 {
 					seed,
 					requests,
 					requiredServicesPerRequest, totalServices, 
-					thingsNumber, 
+					thingsNumber,
 					scheduledExecutorService);
 	
 			scheduledExecutorService.scheduleWithFixedDelay(run, 0, REQ_PERIOD, TimeUnit.SECONDS);

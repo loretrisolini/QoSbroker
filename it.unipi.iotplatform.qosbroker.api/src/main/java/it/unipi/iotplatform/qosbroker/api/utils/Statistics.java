@@ -24,19 +24,28 @@ import eu.neclab.iotplatform.ngsi.api.datamodel.Point;
 
 public class Statistics{
 
-	public static final String STAT_DIR = "./Statistics/";
+	public static final String STAT_DIR = "/home/lorenzo/Statistics";
 	
-	public static File file = new File(STAT_DIR);
+	public static File file;
 	
 	private static int abgapIterationCounter = 0;
 	private static int resultCounter = 0;
 	
 	public int medium = 0;
 	
+	public Statistics(){
+
+	}
+	
 	public void printThingsMappings(Request request, HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> serviceEquivalentThings) {
 			
 		FileWriter fileWriterThingsMappings = null;
+		
+		file = new File(STAT_DIR);
+		if(!file.exists()){
+			file.mkdir();
+		}
 		
 		try{
 			//create Thing folder
@@ -147,7 +156,7 @@ public class Statistics{
 		try{
 			
 			//create Thing folder
-			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results_"+split);
+			File fileABGAP = new File("./ABGAP_Results_"+split);
 			if(!fileABGAP.exists()){
 				fileABGAP.mkdirs();
 			}
@@ -386,7 +395,7 @@ public class Statistics{
 		try{
 			
 			//create Thing folder
-			File fileABGAP = new File(file.getAbsolutePath()+"ABGAP_Results_"+split);
+			File fileABGAP = new File("./ABGAP_Results_"+split);
 			if(!fileABGAP.exists()){
 				fileABGAP.mkdirs();
 			}
@@ -446,6 +455,11 @@ public class Statistics{
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
+		file = new File(STAT_DIR);
+		if(!file.exists()){
+			file.mkdir();
+		}
+		
 		try{
 			
 			output = new FileWriter(file.getPath()+"/ServiceAgreementReq.txt", true);
@@ -481,6 +495,11 @@ public class Statistics{
 		
 		PrintWriter writer=null;
 		FileWriter output = null;
+		
+		file = new File(STAT_DIR);
+		if(!file.exists()){
+			file.mkdir();
+		}
 		
 		try{
 			

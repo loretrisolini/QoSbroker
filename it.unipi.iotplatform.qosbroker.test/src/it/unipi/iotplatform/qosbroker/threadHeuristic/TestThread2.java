@@ -44,8 +44,8 @@ public class TestThread2 implements Runnable{
 		private static final double texe[]={1.0 / 1000, 1.5 / 1000, 1.8 / 1000, 2.0 / 1000, 2.5 / 1000}; //s
 		
 		private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
-											//60	50		40		30		20		10
-		private static final double bat[]={30.426, 25.355, 20.284, 15.213, 10.142, 5.071}; //mJ/100000
+											//50		40		30		20		10      5
+		private static final double bat[]={25.355, 20.284, 15.213, 10.142, 5.071, 2.535}; //mJ/100000
 										//{50.710, 45.639, 40.568, 35.497, 30.426, 25.355}
 		private int requests;
 		private int requiredServicesPerRequest;
@@ -119,6 +119,8 @@ public class TestThread2 implements Runnable{
 			mediumIndex = 0;
 			medium = mediumList[mediumIndex];
 			generateThingsServicesData(medium);
+			
+			printM(M);
 			
 			stat.medium = medium;
 			

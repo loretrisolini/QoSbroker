@@ -74,6 +74,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 //	private PrintWriter writer;
 //	private static int resultGapCounter = 0; 
 	
+	private boolean multiSplit = false;
+	
 	/**
 	 * @param k the number of requests
 	 * @param requests all the requests as Pair <transId, Request>
@@ -214,15 +216,16 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 				ret.setRes(res);
 				
-				StatusCode statusCode= new StatusCode(QoSCode.OK_200.getCode(),QoSReasonPhrase.OK_200.name(), "QoSCalculator -- computeAllocation()" + res[imax].getOperationStatus());
+				StatusCode statusCode= new StatusCode(QoSCode.OK_200.getCode(),QoSReasonPhrase.OK_200.name(), "QoSCalculator -- computeAllocation()" + res[imax].getOperationStatus() + " multi_split "+multiSplit);
 				ret.setStatusCode(statusCode);
 				operationStatus = "";
+				multiSplit = false;
 				
 				//store reservation results
 				reservationResults = res[imax];
 				
 				//store reservation results
-//				storeReservationResults();
+				storeReservationResults();
 				
 				stat.printAllocationSchema(res[imax].getAllocationSchema(), split.name());
 //				resultGapCounter = 0;
@@ -765,6 +768,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//set the split
 							allocation.setSplit(new Integer(split));
 							
+							if(split > 1 && !multiSplit) multiSplit = true;
+							
 							//compute the list <i, w_ij_sp>
 							List<Pair<String, Integer>> listThingWij_sp = computeAllocation(Fj_sp, split);
 							
@@ -980,6 +985,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 					Integer split = new Integer(allocationTemp.getSplit());
 					allocation.setSplit(split);
+					
+					if(split > 1 && !multiSplit) multiSplit = true;
 					
 					//get the list <i, w_ij_sp> from the allocationTemp object
 					List<Pair<String, Integer>> listThingWij_sp = allocationTemp.getAllocatedThings();

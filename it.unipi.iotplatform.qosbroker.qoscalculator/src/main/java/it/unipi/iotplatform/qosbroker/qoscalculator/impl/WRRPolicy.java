@@ -65,21 +65,23 @@ public class WRRPolicy extends Policy{
 			
 			//search for the devId in the list that match with lastDevId
 			//so i take the pair <devId, w_ij>
-			if(devIdList.get(i).getLeft().contentEquals(lastDevId) && counter < devIdList.get(i).getRight()){
-				
-				howMany.get(transId).put(service, new Integer(counter+1));
-				
-				break;
-			}
-			else{
-				
-				policyMap.get(transId).put(service, devIdList.get(((i+1)%devIdList.size())).getLeft());
-				
-				howMany.get(transId).put(service, 1);
-				
-				lastDevId = devIdList.get(((i+1)%devIdList.size())).getLeft();
-				
-				break;
+			if(devIdList.get(i).getLeft().contentEquals(lastDevId)){
+				if(counter < devIdList.get(i).getRight()){
+					
+					howMany.get(transId).put(service, new Integer(counter+1));
+					
+					break;
+				}
+				else{
+					
+					policyMap.get(transId).put(service, devIdList.get(((i+1)%devIdList.size())).getLeft());
+					
+					howMany.get(transId).put(service, 1);
+					
+					lastDevId = devIdList.get(((i+1)%devIdList.size())).getLeft();
+					
+					break;
+				}
 			}
 		}
 		
