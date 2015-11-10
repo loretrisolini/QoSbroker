@@ -98,4 +98,24 @@ public class Utils {
 	    }
 	    return factors;
 	}
+	
+	public static long getHyperperiod(ArrayList<Double> periods){
+	    long result = (long) Math.ceil(periods.get(0));
+	    for(int i = 1; i < periods.size(); i++) result = lcm(result, (long) Math.ceil(periods.get(i)));
+	    return result;
+	}
+	
+	private static long gcd(long a, long b){
+	    while (b > 0)
+	    {
+	        long temp = b;
+	        b = a % b; // % is remainder
+	        a = temp;
+	    }
+	    return a;
+	}
+
+	private static long lcm(long a, long b){
+	    return a * (b / gcd(a, b));
+	}
 }

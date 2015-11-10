@@ -1,6 +1,10 @@
 package it.unipi.iotplatform.qosbroker.api.datamodel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import eu.neclab.iotplatform.iotbroker.commons.Pair;
 
 /* class that represents the inputs and the result of a single iteration of ABGAP algorithm */
 public class Reserveobj {
@@ -13,6 +17,9 @@ public class Reserveobj {
 	
 	//feasible
 	private boolean feasible = false;
+	
+	private int reqIndexNotFeas;
+	private String transIdNotFeas;
 	
 	//theta value
 	private Double theta = 0.0;
@@ -43,7 +50,19 @@ public class Reserveobj {
 			this.allocationSchema.put(transId, new HashMap<String, AllocationInfo>());
 		}
 		
-		this.allocationSchema.get(transId).put(serviceName, allocation);
+		AllocationInfo allocationCopy = new AllocationInfo();
+		
+		allocationCopy.setSplit(new Integer(allocation.getSplit()));
+		
+		List<Pair<String, Integer>> allocList = new ArrayList<>();
+		for(Pair<String, Integer> alloc : allocation.getAllocatedThings()){
+			
+			allocList.add(new Pair<String, Integer>(new String(alloc.getLeft()), new Integer(alloc.getRight())));
+		}
+		
+		allocationCopy.setAllocatedThings(allocList);
+		
+		this.allocationSchema.get(transId).put(serviceName, allocationCopy);
 	}
 	
 	public Priority getPriority() {
@@ -108,6 +127,22 @@ public class Reserveobj {
 
 	public void setTransId_opType(HashMap<String, String> transId_opType) {
 		this.transId_opType = transId_opType;
+	}
+
+	public int getReqIndexNotFeas() {
+		return reqIndexNotFeas;
+	}
+
+	public void setReqIndexNotFeas(int reqIndexNotFeas) {
+		this.reqIndexNotFeas = reqIndexNotFeas;
+	}
+
+	public String getTransIdNotFeas() {
+		return transIdNotFeas;
+	}
+
+	public void setTransIdNotFeas(String transIdNotFeas) {
+		this.transIdNotFeas = transIdNotFeas;
 	}
 
 }

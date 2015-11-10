@@ -12,6 +12,7 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
 import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
+import it.unipi.iotplatform.qosbroker.api.utils.Utils;
 import it.unipi.iotplatform.qosbroker.qoscalculator.impl.QoSCalculator;
 
 import java.io.File;
@@ -227,7 +228,7 @@ public class TestThread2 implements Runnable{
 			}
 
 			//compute hyperiod h
-			Long h = ServicePeriodParams.getHyperperiod(periodsList);
+			Long h = Utils.getHyperperiod(periodsList);
 			
 			System.out.println("hyperperiod: "+h);
 
@@ -251,26 +252,26 @@ public class TestThread2 implements Runnable{
 			}
 			
 			//matrix F of the normalized energy costs
-			HashMap<String,HashMap<String, Double>> matrixF = qosCalculator.createF(thingsInfo, servPeriodsMap);
-			if(matrixF == null){
-				
-				System.out.println("ERROR matrixF");
-				
-				stopTest = true;
-				mediumIndex = EQTHINGS_LIST_SIZE-1;
-				return;
-			}
-			
-			//matrix U of the utilizations
-			HashMap<String,HashMap<String, Double>> matrixU = qosCalculator.createU(thingsInfo, servPeriodsMap);
-			if(matrixU == null){
-				
-				System.out.println("ERROR matrixU");
-				
-				stopTest = true;
-				mediumIndex = EQTHINGS_LIST_SIZE-1;
-				return;
-			}
+//			HashMap<String,HashMap<String, Double>> matrixF = qosCalculator.createF(thingsInfo, servPeriodsMap);
+//			if(matrixF == null){
+//				
+//				System.out.println("ERROR matrixF");
+//				
+//				stopTest = true;
+//				mediumIndex = EQTHINGS_LIST_SIZE-1;
+//				return;
+//			}
+//			
+//			//matrix U of the utilizations
+//			HashMap<String,HashMap<String, Double>> matrixU = qosCalculator.createU(thingsInfo, servPeriodsMap);
+//			if(matrixU == null){
+//				
+//				System.out.println("ERROR matrixU");
+//				
+//				stopTest = true;
+//				mediumIndex = EQTHINGS_LIST_SIZE-1;
+//				return;
+//			}
 			
 			//coeff h/p_j for each request 
 			HashMap<String, Integer> hyperperiodPeriodMap = new HashMap<>();
@@ -292,29 +293,29 @@ public class TestThread2 implements Runnable{
 			Priority prio = Priority.BATTERY;
 
 			
-			//Map<DevId, Map<transId::ServName ,p_ij>>>
-			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
-			//execution with p_ij=f_ij
-			
-			try{
-
-				result = qosCalculator.ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
-
-				result.setAllocPolicy(allocPolicy);
-				result.setPriority(prio);
-				
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-				
-			if(result == null){
-				System.out.println("QoSCalculator ERROR");
-				
-				stopTest = true;
-				mediumIndex = EQTHINGS_LIST_SIZE-1;
-				return;
-			}
+//			//Map<DevId, Map<transId::ServName ,p_ij>>>
+//			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
+//			//execution with p_ij=f_ij
+//			
+//			try{
+//
+//				result = qosCalculator.ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+//
+//				result.setAllocPolicy(allocPolicy);
+//				result.setPriority(prio);
+//				
+//			}
+//			catch(Exception e){
+//				e.printStackTrace();
+//			}
+//				
+//			if(result == null){
+//				System.out.println("QoSCalculator ERROR");
+//				
+//				stopTest = true;
+//				mediumIndex = EQTHINGS_LIST_SIZE-1;
+//				return;
+//			}
 			
 			
 			if(result.isFeasible()){
@@ -333,17 +334,17 @@ public class TestThread2 implements Runnable{
 				failedRequestList.add(requestCounter);
 			}
 
-			if((requestCounter+1) > requestList.size()){
-				System.out.println("Requests terminated");
-				
-				stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
-				
-				printResults();
-				
-				stopTest = true;
-				
-				return;
-			}
+//			if((requestCounter+1) > requestList.size()){
+//				System.out.println("Requests terminated");
+//				
+//				stat.printInputsABGAP(k, requests, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
+//				
+//				printResults();
+//				
+//				stopTest = true;
+//				
+//				return;
+//			}
 		}
 		
 		public void printResults(){

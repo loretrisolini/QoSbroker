@@ -6,7 +6,6 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.DataStructure;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
-import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ServiceFeatures;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
@@ -15,9 +14,11 @@ import it.unipi.iotplatform.qosbroker.qosmonitor.api.QoSMonitorIF;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,7 +27,6 @@ import eu.neclab.iotplatform.iotbroker.commons.Pair;
 import eu.neclab.iotplatform.ngsi.api.datamodel.Code;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElement;
 import eu.neclab.iotplatform.ngsi.api.datamodel.ContextElementResponse;
-import eu.neclab.iotplatform.ngsi.api.datamodel.ContextRegistration;
 import eu.neclab.iotplatform.ngsi.api.datamodel.EntityId;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextRequest;
 import eu.neclab.iotplatform.ngsi.api.datamodel.NotifyContextResponse;
@@ -563,21 +563,22 @@ public class QoSMonitor implements Ngsi10Interface, QoSMonitorIF{
 																	ThingsIdList.class);
 						
 						List<String> oldEqThingsList = oldEqThings.getEqThings();
-						List<String> newEqThingsList = serviceEquivalentThings.get(entryOldEqThings.getLeft()).getEqThings();
-
+						List<String> newEqThingsList = serviceEquivalentThingsBck.get(entryOldEqThings.getLeft()).getEqThings();
+						
+						
 						//merge operation of the old eqThingsList and the new One
 						//avoiding duplicates, if a devId in oldEqThingsList
 						//it is present in newEqThingsList, it is removed
-						for(int i=0; i<oldEqThingsList.size(); i++){
-							for(String newDevId : newEqThingsList){
-								//remove duplicates from oldEqThingsList
-								//because it will be merge with
-								//newEqThingsList
-								if(oldEqThingsList.get(i).contentEquals(newDevId)){
-									oldEqThingsList.remove(i);
-								}
-								if(oldEqThingsList.isEmpty()){ break; }
+						for(int i = 0; i < oldEqThingsList.size(); i++){
+
+							//remove duplicates from oldEqThingsList
+							//because it will be merge with
+							//newEqThingsList
+							if(newEqThingsList.contains(oldEqThingsList.get(i))){
+								oldEqThingsList.remove(i);
+								i--;
 							}
+							if(oldEqThingsList.isEmpty()){ break; }
 						}
 						
 						for(int i=0; i<oldEqThingsList.size(); i++){

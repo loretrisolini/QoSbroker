@@ -88,7 +88,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 	@Override
 	public ReservationResults computeAllocation(
 			int k, List<Pair<String, Request>> requests, 
-			HashMap<String, ServicePeriodParams> servPeriodsMap,
+			HashMap<String, Double> periods,
+			HashMap<String, Integer> coefficients,
 			HashMap<String, Thing> thingsInfo,
 			HashMap<String, ThingsIdList> servNameThingsIdList,
 			double epsilon,
@@ -119,7 +120,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//Map<DevId, Map<transId::ServName ,f_ij>>>
 		//matric of normalized energy cost
 		//(matrix F) 
-		HashMap<String,HashMap<String, Double>> matrixF = createF(thingsInfo, servPeriodsMap);
+		HashMap<String,HashMap<String, Double>> matrixF = createF(thingsInfo, coefficients);
 		if(matrixF == null){
 			StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
 					QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation() f_ij is null");
@@ -135,7 +136,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//Map<DevId, Map<transId::ServName ,u_ij>>>
 		//matrix of utilization
 		//(matrix U)
-		HashMap<String,HashMap<String, Double>> matrixU = createU(thingsInfo, servPeriodsMap);
+		HashMap<String,HashMap<String, Double>> matrixU = createU(thingsInfo, periods);
 		if(matrixU == null){
 			StatusCode statusCode= new StatusCode(QoSCode.SERVICEALLOCATIONFAILED_502.getCode(),
 					QoSReasonPhrase.SERVICEALLOCATIONFAILED_502.name(), "QoSCalculator -- computeAllocation() u_ij is null");
@@ -154,19 +155,19 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//multiple services, so all the services in the same requests
 		//identified by transId will have the same periodj
 		//(matrix PHI)
-		HashMap<String, Integer> hyperperiodPeriodMap = new HashMap<>();
-		for(Map.Entry<String, ServicePeriodParams> entryPeriod :servPeriodsMap.entrySet()){
-			
-			//transId
-			String transId = entryPeriod.getKey();
-			//h/p_j
-			Integer nj = entryPeriod.getValue().getNj();
-			
-			hyperperiodPeriodMap.put(transId, nj);
-		}
+//		HashMap<String, Integer> hyperperiodPeriodMap = new HashMap<>();
+//		for(Map.Entry<String, ServicePeriodParams> entryPeriod :servPeriodsMap.entrySet()){
+//			
+//			//transId
+//			String transId = entryPeriod.getKey();
+//			//h/p_j
+//			Integer nj = entryPeriod.getValue().getNj();
+//			
+//			hyperperiodPeriodMap.put(transId, nj);
+//		}
 		
 		System.out.println();
-		System.out.println("h/pj for each transId: "+hyperperiodPeriodMap);
+		System.out.println("h/pj for each transId: "+coefficients);
 		System.out.println();
 		
 		try{
@@ -178,7 +179,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//Map<DevId, Map<transId::ServName ,p_ij>>>
 			HashMap<String,HashMap<String,Double>> matrixP = matrixF;
 			//execution with p_ij=f_ij
-			res[0] = ABGAP(k, requests, matrixP, matrixF, matrixU, hyperperiodPeriodMap, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
+			res[0] = ABGAP(k, requests, matrixP, matrixF, matrixU, coefficients, thingsInfo, servNameThingsIdList, matrixM, epsilon, prio, split);
 
 			res[0].setAllocPolicy(allocPolicy);
 			res[0].setPriority(prio);
@@ -258,7 +259,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	/* function to create the utilization matrix u_ij */
 	public HashMap<String,HashMap<String, Double>> createU(
 			HashMap<String, Thing> thingsInfo,
-			HashMap<String, ServicePeriodParams> servPeriodsMap) {
+			HashMap<String, Double> periods) {
 		
 		//Map<DevId, Map<transId::Service, u_ij>>
 		HashMap<String,HashMap<String, Double>> U = new HashMap<>();
@@ -275,11 +276,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, Double> transIdServiceMap = new HashMap<>();
 			
 			//Map<transId, <h/p_j, p_j>>
-			for(Map.Entry<String, ServicePeriodParams> entryPeriod: servPeriodsMap.entrySet()){
+			for(Map.Entry<String, Double> entryPeriod: periods.entrySet()){
 				
 				String transId = entryPeriod.getKey();
 				
-				Double p_j = entryPeriod.getValue().getPeriod();
+				Double p_j = entryPeriod.getValue();
 				
 				//Map<ServiceName, <c_ij, t_ij>>
 				for(Map.Entry<String, ServiceFeatures> entryServ: services.entrySet()){
@@ -314,7 +315,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	/* function to create the utilization matrix f_ij */
 	public HashMap<String,HashMap<String, Double>> createF(
 			HashMap<String, Thing> thingsInfo,
-			HashMap<String, ServicePeriodParams> servPeriodsMap) {
+			HashMap<String, Integer> coefficients) {
 		
 		//Map<DevId, Map<transId::Service,  f_ij>>
 		HashMap<String,HashMap<String, Double>> F = new HashMap<>();
@@ -341,12 +342,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 			HashMap<String, Double> transIdServiceMap = new HashMap<>();
 
 			
-			//Map<transId, <h/p_j, p_j>>
-			for(Map.Entry<String, ServicePeriodParams> entryPeriod: servPeriodsMap.entrySet()){
+			//Map<transId, <h/p_j>>
+			for(Map.Entry<String, Integer> entryPeriod: coefficients.entrySet()){
 				
 				String transId = entryPeriod.getKey();
 				
-				Integer hp_j = entryPeriod.getValue().getNj();
+				Integer hp_j = entryPeriod.getValue();
 				
 				//Map<ServiceName, <c_ij, t_ij>>
 				for(Map.Entry<String, ServiceFeatures> entryServ: services.entrySet()){
@@ -518,13 +519,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 		//upper bound for utilization
 		Double ni = k*(pow-1);
 		
-//		System.out.println();
-//		System.out.println("##########################################################");
-//		System.out.println("k= "+k);
-//		System.out.println("ni= "+ni);
-//		System.out.println("TETA= "+teta);
-//		System.out.println("##########################################################");
-//		System.out.println();
+		System.out.println();
+		System.out.println("##########################################################");
+		System.out.println("k= "+k);
+		System.out.println("ni= "+ni);
+		System.out.println("TETA= "+teta);
+		System.out.println("##########################################################");
+		System.out.println();
 		
 		//(isFeas<-TRUE)
 		res.setFeasible(true);
@@ -666,12 +667,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
 								split, ni, teta, null);
 								
-//						System.out.println();
-//						System.out.println("##########################################################");
-//						System.out.println("Fj_sp: "+Fj_sp);
-//						System.out.println("priorityList: "+priorityList);
-//						System.out.println("##########################################################");
-//						System.out.println();
+						System.out.println();
+						System.out.println("##########################################################");
+						System.out.println("Fj_sp: "+Fj_sp);
+						System.out.println("priorityList: "+priorityList);
+						System.out.println("##########################################################");
+						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -712,7 +713,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 //							System.out.println("remove split "+split);
 //							System.out.println("Sj "+Sj);
 							
-							if(Sj.isEmpty()) res.setFeasible(false);
+							if(Sj.isEmpty()){
+								res.setFeasible(false);
+								res.setTransIdNotFeas(transId);
+
+							}
 							else
 								split = Sj.get(0);
 							
@@ -734,11 +739,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 							return res;
 						}
 						
-//						System.out.println();
-//						System.out.println("##########################################################");
-//						System.out.println("devId with max priority: " + devId_maxPriority);
-//						System.out.println("##########################################################");
-//						System.out.println();
+						System.out.println();
+						System.out.println("##########################################################");
+						System.out.println("devId with max priority: " + devId_maxPriority);
+						System.out.println("##########################################################");
+						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -752,11 +757,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 						if((c_ij_sp_Sum - c_ij_sp_MaxPriority) < split){
 							ds = INF;
 							
-//							System.out.println();
-//							System.out.println("##########################################################");
-//							System.out.println("FINAL ALLOCATION in ONE SHOOT");
-//							System.out.println("##########################################################");
-//							System.out.println();
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("FINAL ALLOCATION in ONE SHOOT");
+							System.out.println("##########################################################");
+							System.out.println();
 //							writer.println();
 //							writer.println("##########################################################");
 //							writer.println("FINAL ALLOCATION in ONE SHOOT");
@@ -768,7 +773,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//set the split
 							allocation.setSplit(new Integer(split));
 							
-							if(split > 1 && !multiSplit) multiSplit = true;
+							if(split > 1 && !multiSplit) 
+								multiSplit = true;
 							
 							//compute the list <i, w_ij_sp>
 							List<Pair<String, Integer>> listThingWij_sp = computeAllocation(Fj_sp, split);
@@ -810,7 +816,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 							//add allocation to the allocationSchema in the reserveObj
 							res.addAllocation(transId, reqServiceName, allocation);
 							
-//							System.out.println("Allocation stored in reserveObj: "+res);
 							
 							//remove service in the list of the request object
 							//request obj index is requestIndex, service index is serviceIndex
@@ -825,15 +830,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 							allocationTemp = null;
 							
 							
-//							System.out.println();
-//							System.out.println("##########################################################");
-//							System.out.println("##########################################################");
-//							System.out.println("transId="+transId);
-//							System.out.println("and servName="+reqServiceName.toUpperCase()+" TETA: "+teta);
-//							System.out.println(allocation.toString());
-//							System.out.println("##########################################################");
-//							System.out.println("##########################################################");
-//							System.out.println();
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("##########################################################");
+							System.out.println("transId="+transId);
+							System.out.println("and servName="+reqServiceName.toUpperCase()+" TETA: "+teta);
+							System.out.println(allocation.toString());
+							System.out.println("##########################################################");
+							System.out.println("##########################################################");
+							System.out.println();
 
 //							writer.println();
 //							writer.println("##########################################################");
@@ -854,7 +859,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 						else{
 							
 							if(Fj_sp.size() == 1){
-								System.out.println("ERROR");
+								System.out.println("ERROR same thingId for the same service");
 								System.out.println(servNameThingsIdList);
 								res.setFeasible(false);
 								
@@ -877,9 +882,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 //							System.out.println("d > ds: "+ (d > ds));
 //							System.out.println();
 							
-//							System.out.println("################################");
-//							System.out.println("TEMPORARY CHOSEN SERVICE");
-//							System.out.println("################################");
+							System.out.println("################################");
+							System.out.println("TEMPORARY CHOSEN SERVICE");
+							System.out.println("################################");
 							
 							ds = d;
 							
@@ -915,13 +920,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 								allocationTemp.addThing(devId, wij_sp);
 							}
 							
-//							System.out.println();
-//							System.out.println("##########################################################");
-//							System.out.println("transId: "+allocationTransId);
-//							System.out.println("serviceName: "+allocationServiceName.toUpperCase());
-//							System.out.println(allocationTemp.toString()+" TETA: "+teta);
-//							System.out.println("##########################################################");
-//							System.out.println();
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("transId: "+allocationTransId);
+							System.out.println("serviceName: "+allocationServiceName.toUpperCase());
+							System.out.println(allocationTemp.toString()+" TETA: "+teta);
+							System.out.println("##########################################################");
+							System.out.println();
 //							writer.println();
 //							writer.println("##########################################################");
 //							writer.println("##########################################################");
@@ -970,11 +975,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//the allocation in one shoot
 				if(ds != INF){
 				
-//					System.out.println();
-//					System.out.println("##########################################################");
-//					System.out.println("FINAL ALLOCATION");
-//					System.out.println("##########################################################");
-//					System.out.println();
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("FINAL ALLOCATION");
+					System.out.println("##########################################################");
+					System.out.println();
 //					writer.println();
 //					writer.println("##########################################################");
 //					writer.println("FINAL ALLOCATION");
@@ -986,7 +991,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 					Integer split = new Integer(allocationTemp.getSplit());
 					allocation.setSplit(split);
 					
-					if(split > 1 && !multiSplit) multiSplit = true;
+					if(split > 1 && !multiSplit) 
+						multiSplit = true;
 					
 					//get the list <i, w_ij_sp> from the allocationTemp object
 					List<Pair<String, Integer>> listThingWij_sp = allocationTemp.getAllocatedThings();
@@ -1027,7 +1033,6 @@ public class QoSCalculator implements QoSCalculatorIF {
 					//add allocation to the allocationSchema in the reserveObj
 					res.addAllocation(allocationTransId, allocationServiceName, allocation);
 					
-//					System.out.println("Allocation stored in reserveObj: "+res);
 					
 					//remove service in the list of the request object
 					//request obj index is requestIndex, service index is serviceIndex
@@ -1038,15 +1043,15 @@ public class QoSCalculator implements QoSCalculatorIF {
 					}
 
 					
-//					System.out.println();
-//					System.out.println("##########################################################");
-//					System.out.println("##########################################################");
-//					System.out.println("transId="+allocationTransId);
-//					System.out.println("and servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
-//					System.out.println(allocation.toString());
-//					System.out.println("##########################################################");
-//					System.out.println("##########################################################");
-//					System.out.println();
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					System.out.println("transId="+allocationTransId);
+					System.out.println("and servName="+allocationServiceName.toUpperCase()+" TETA: "+teta);
+					System.out.println(allocation.toString());
+					System.out.println("##########################################################");
+					System.out.println("##########################################################");
+					System.out.println();
 	
 //					writer.println();
 //					writer.println("##########################################################");
@@ -1070,15 +1075,17 @@ public class QoSCalculator implements QoSCalculatorIF {
 				
 			}
 			else{
-//				System.out.println();
-//				System.out.println("##########################################################");
-//				System.out.println("ALLOCATION FAILED, TETA: "+teta);
-//				System.out.println("##########################################################");
-//				System.out.println();
+				System.out.println();
+				System.out.println("##########################################################");
+				System.out.println("ALLOCATION FAILED, TETA: "+teta);
+				System.out.println("##########################################################");
+				System.out.println();
 				
 				allocationTransId = null;
 				allocationServiceName = null;
 				allocationTemp = null;
+				
+				multiSplit = false;
 				
 //				writer.println();
 //				writer.println("##########################################################");
@@ -1517,7 +1524,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 //							System.out.println("remove split "+split);
 //							System.out.println("Sj "+Sj);
 							
-							if(Sj.isEmpty()) res.setFeasible(false);
+							if(Sj.isEmpty()){
+								res.setFeasible(false);
+
+								res.setTransIdNotFeas(transId);
+							}
 							else
 								split = Sj.get(0);
 							
@@ -2313,10 +2324,10 @@ public class QoSCalculator implements QoSCalculatorIF {
 			//iterate over the list of required servName
 			for(String reqServName: reqServNameList){
 				
-				if(servNameThingsIdList.get(reqServName) == null || servNameThingsIdList.get(reqServName).getEqThings()==null){
-					System.out.println("ERROR matrixM");
-					return null;
-				}
+//				if(servNameThingsIdList.get(reqServName) == null || servNameThingsIdList.get(reqServName).getEqThings()==null){
+//					System.out.println("ERROR matrixM");
+//					continue;
+//				}
 				
 				//clone the list of DevId of all equivalent things for that 
 				//required service name
@@ -2396,7 +2407,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//that is empty, the allocation can take place
 				if(eqThings.isEmpty()){
 					operationStatus = "no things respect restrictions of the transaction "+transId+", service: "+reqServName;
-					return null;
+					matrixM.put(transId+"::"+reqServName, new ArrayList<String>());
+					//return null;
 				}
 				else{
 

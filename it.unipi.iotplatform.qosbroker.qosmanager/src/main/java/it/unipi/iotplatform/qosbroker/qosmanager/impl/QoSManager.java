@@ -9,11 +9,10 @@ import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
-import it.unipi.iotplatform.qosbroker.api.datamodel.ServicePeriodParams;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Split;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Thing;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ThingsIdList;
-import it.unipi.iotplatform.qosbroker.api.utils.Statistics;
+import it.unipi.iotplatform.qosbroker.api.utils.Utils;
 import it.unipi.iotplatform.qosbroker.couchdb.api.QoSBigDataRepository;
 import it.unipi.iotplatform.qosbroker.qoscalculator.api.QoSCalculatorIF;
 import it.unipi.iotplatform.qosbroker.qosmanager.api.QoSManagerIF;
@@ -112,10 +111,15 @@ public class QoSManager implements QoSManagerIF {
 		List<Pair<String, Request>> requestsList = new ArrayList<>();
 		
 		//it is used to compute hyperperiod h
-		ArrayList<Double> periodsList = new ArrayList<>();
+//		ArrayList<Double> periodsList = new ArrayList<>();
 		
 		//Map<transactionId, <p_j, h/p_j>>
-		HashMap<String, ServicePeriodParams> servPeriodParamsMap = new HashMap<>();
+//		HashMap<String, ServicePeriodParams> servPeriodParamsMap = new HashMap<>();
+		
+		//Map<transactionId, p_j>
+		HashMap<String, Double> periods = new HashMap<>();
+		//Map<transactionId, <h/p_j>>
+		HashMap<String, Integer> coefficients = new HashMap<>();
 		
 		Double p_j;
 		
@@ -132,12 +136,14 @@ public class QoSManager implements QoSManagerIF {
 				//take the period p_j equal to maxRateRequest
 				//in QoSrequirements of the request identified by transId
 				p_j = req.getQosRequirements().getMaxRateRequest();
-				periodsList.add(p_j);
+//				periodsList.add(p_j);
 				
-				//set p_j in servPeriodParamsMap
-				ServicePeriodParams servPeriodParams = new ServicePeriodParams();
-				servPeriodParams.setPeriod(p_j);
-				servPeriodParamsMap.put(transId, servPeriodParams);
+//				//set p_j in servPeriodParamsMap
+//				ServicePeriodParams servPeriodParams = new ServicePeriodParams();
+//				servPeriodParams.setPeriod(p_j);
+//				servPeriodParamsMap.put(transId, servPeriodParams);
+				
+				periods.put(transId, p_j);
 				
 				requestsList.add(new Pair<String, Request>(transId, req));
 			}
@@ -149,22 +155,26 @@ public class QoSManager implements QoSManagerIF {
 		
 		k+=request.getRequiredServicesNameList().size();
 		p_j = request.getQosRequirements().getMaxRateRequest();
-		periodsList.add(p_j);
+//		periodsList.add(p_j);
 		
-		ServicePeriodParams servPeriodParams = new ServicePeriodParams();
-		servPeriodParams.setPeriod(p_j);
-		servPeriodParamsMap.put(transactionId, servPeriodParams);
+		periods.put(transactionId, p_j);
+		
+//		ServicePeriodParams servPeriodParams = new ServicePeriodParams();
+//		servPeriodParams.setPeriod(p_j);
+//		servPeriodParamsMap.put(transactionId, servPeriodParams);
 		
 		System.out.println("QoSManager -- createAgreement() compute hyperperiod");
 		//compute hyperiod h
-		Long h = ServicePeriodParams.getHyperperiod(periodsList);
+		Long h = Utils.getHyperperiod(new ArrayList<>(periods.values()));
+		
+		System.out.print(h);
 		
 		Double coeff;
 		//complete to fill Map<transactionId, <p_j, h/p_j>> with h/p_j
-		for(Map.Entry<String, ServicePeriodParams> entry: servPeriodParamsMap.entrySet()){
-			p_j = entry.getValue().getPeriod();
+		for(Map.Entry<String, Double> entry: periods.entrySet()){
+			p_j = entry.getValue();
 			coeff = h/p_j;
-			entry.getValue().setNj(coeff.intValue());
+			coefficients.put(entry.getKey(), coeff.intValue());
 		}
 		
 		System.out.println("QoSManager -- createAgreement() read THINGS_INFO_DB and SERV_EQ_THINGS_DB");
@@ -205,7 +215,7 @@ public class QoSManager implements QoSManagerIF {
 		
 		System.out.println("QoSManager -- createAgreement() compute allocation");
 		//execute allocation algorithm
-		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, servPeriodParamsMap, 
+		ReservationResults result = qosCalculator.computeAllocation(k, requestsList, periods, coefficients, 
 														thingsInfo, servNameThingsIdList, 0.001, Split.MULTI_SPLIT);
 		
 		//Map<transId, Map<reqServName, List<devId>>>

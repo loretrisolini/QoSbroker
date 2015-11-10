@@ -26,7 +26,7 @@ public class ThingsIdList extends DataStructure{
 	}
 	
 	public void addEqThing(String devId){
-		eqThings.add(devId);
+		eqThings.add(new String(devId));
 	}
 	
 	public List<String> getEqThings() {

@@ -164,89 +164,89 @@ public class TestThread1 implements Runnable{
 
 	public void allocationTest(Split split){
 		
-		requestCounter++;
-		
-		if(requestCounter == requestList.size()){
-			System.out.println("Requests terminated");
-			
-			printResults();
-			
-			stopTest = true;
-			
-			return;
-		}
-		
-		System.out.println("Start Request number: "+requestCounter);
-		System.out.println("############################################");
-		System.out.println("EqThingsPerService: "+eqThingsxServ+" split: "+split);
-		System.out.println("############################################");
-		
-		Long ArrivalTime = new Date().getTime() - startTime;
-			
-		List<Pair<String, Request>> requests = new ArrayList<>();
-		ArrayList<Double> periodsList = new ArrayList<Double>();
-		HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
-		int k=0;
-		
-		for(int i=0; i < requestCounter; i++){
-			requests.add(requestList.get(i));
-			
-			k+=requestList.get(i).getRight().getRequiredServicesNameList().size();
-			
-			String transId = requestList.get(i).getLeft();
-			
-			servPeriodsMap.put(transId, new ServicePeriodParams());
-			servPeriodsMap.get(transId).setPeriod(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
-			periodsList.add(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
-		}
-
-		//compute hyperiod h
-		Long h = ServicePeriodParams.getHyperperiod(periodsList);
-		
-		System.out.println("hyperperiod: "+h);
-
-		Double coeff;
-		//complete to fill Map<transactionId, <p_j, h/p_j>> with h/p_j
-		for(Map.Entry<String, ServicePeriodParams> entry: servPeriodsMap.entrySet()){
-			Double p_j = entry.getValue().getPeriod();
-			coeff = h/p_j;
-			entry.getValue().setNj(coeff.intValue());
-		}
-		
-		ReservationResults result = null;
-		
-		try{
-
-			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
-			
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
-			
-		if(result == null){
-			System.out.println("QoSCalculator ERROR");
-			this.scheduledExecutorService.shutdownNow();
-		}
-		
-		
-		if(result.isFeas()){
-			
-			feasibleAllocations.getAndIncrement();
-			
-			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
-
-		}
-		else{
-			
-			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
-
-			printResults();
-
-			stopTest = true;
-			
-			return;
-		}
+//		requestCounter++;
+//		
+//		if(requestCounter == requestList.size()){
+//			System.out.println("Requests terminated");
+//			
+//			printResults();
+//			
+//			stopTest = true;
+//			
+//			return;
+//		}
+//		
+//		System.out.println("Start Request number: "+requestCounter);
+//		System.out.println("############################################");
+//		System.out.println("EqThingsPerService: "+eqThingsxServ+" split: "+split);
+//		System.out.println("############################################");
+//		
+//		Long ArrivalTime = new Date().getTime() - startTime;
+//			
+//		List<Pair<String, Request>> requests = new ArrayList<>();
+//		ArrayList<Double> periodsList = new ArrayList<Double>();
+//		HashMap<String, ServicePeriodParams> servPeriodsMap = new HashMap<>();
+//		int k=0;
+//		
+//		for(int i=0; i < requestCounter; i++){
+//			requests.add(requestList.get(i));
+//			
+//			k+=requestList.get(i).getRight().getRequiredServicesNameList().size();
+//			
+//			String transId = requestList.get(i).getLeft();
+//			
+//			servPeriodsMap.put(transId, new ServicePeriodParams());
+//			servPeriodsMap.get(transId).setPeriod(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
+//			periodsList.add(requestList.get(i).getRight().getQosRequirements().getMaxRateRequest());
+//		}
+//
+//		//compute hyperiod h
+//		Long h = ServicePeriodParams.getHyperperiod(periodsList);
+//		
+//		System.out.println("hyperperiod: "+h);
+//
+//		Double coeff;
+//		//complete to fill Map<transactionId, <p_j, h/p_j>> with h/p_j
+//		for(Map.Entry<String, ServicePeriodParams> entry: servPeriodsMap.entrySet()){
+//			Double p_j = entry.getValue().getPeriod();
+//			coeff = h/p_j;
+//			entry.getValue().setNj(coeff.intValue());
+//		}
+//		
+//		ReservationResults result = null;
+//		
+//		try{
+//
+//			result = qosCalculator.computeAllocation(k, requests, servPeriodsMap, thingsInfo, servNameThingsIdList, epsilon, split);
+//			
+//		}
+//		catch(Exception e){
+//			e.printStackTrace();
+//		}
+//			
+//		if(result == null){
+//			System.out.println("QoSCalculator ERROR");
+//			this.scheduledExecutorService.shutdownNow();
+//		}
+//		
+//		
+//		if(result.isFeas()){
+//			
+//			feasibleAllocations.getAndIncrement();
+//			
+//			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, true));
+//
+//		}
+//		else{
+//			
+//			arrivalTimeList.add(new Pair<Long,Boolean>(ArrivalTime, false));
+//
+//			printResults();
+//
+//			stopTest = true;
+//			
+//			return;
+//		}
 
 	}
 	
