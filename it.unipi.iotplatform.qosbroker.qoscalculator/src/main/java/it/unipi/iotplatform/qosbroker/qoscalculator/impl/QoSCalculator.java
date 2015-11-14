@@ -2,10 +2,12 @@ package it.unipi.iotplatform.qosbroker.qoscalculator.impl;
 
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationInfo;
 import it.unipi.iotplatform.qosbroker.api.datamodel.AllocationPolicy;
+import it.unipi.iotplatform.qosbroker.api.datamodel.LocationScopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Priority;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSCode;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSConsts;
 import it.unipi.iotplatform.qosbroker.api.datamodel.QoSReasonPhrase;
+import it.unipi.iotplatform.qosbroker.api.datamodel.QoSscopeValue;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Request;
 import it.unipi.iotplatform.qosbroker.api.datamodel.ReservationResults;
 import it.unipi.iotplatform.qosbroker.api.datamodel.Reserveobj;
@@ -52,7 +54,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 	
 	private final WRRPolicy wrrPolicyManager = new WRRPolicy();
 	
-	private final double BATT_CONST = 50.710;
+	private final double BATT_CONST = 10; //50.710;
 	
 	/** The logger. */
 	private static Logger logger = Logger.getLogger(QoSCalculator.class);
@@ -544,11 +546,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		writer = new PrintWriter(Statistics.fileABGAP.getAbsolutePath()+"/GapResult_"+prio.name()+"_MULTISPLIT_ABGAP_"+Statistics.abgapCounter+"_GAP_"+resultGapCounter+".txt", "UTF-8");
 //		resultGapCounter++;
 		
-//		System.out.println();
-//		System.out.println("##########################################################");
-//		System.out.println("PRIORITY: "+prio.name());
-//		System.out.println("##########################################################");
-//		System.out.println();
+		System.out.println();
+		System.out.println("##########################################################");
+		System.out.println("PRIORITY: "+prio.name());
+		System.out.println("##########################################################");
+		System.out.println();
 		
 		//index to identify the position of the ServiceObject 
 		//on which an assignment is executed
@@ -581,13 +583,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 				//for example: queryContext
 				String opType = requestObj.getOpType();
 				
-//				System.out.println();
-//				System.out.println("##########################################################");
-//				System.out.println("request with TransId: "+transId);
-//				System.out.println("opType: "+opType);
-//				System.out.println("Request "+requestObj);
-//				System.out.println("##########################################################");
-//				System.out.println();
+				System.out.println();
+				System.out.println("##########################################################");
+				System.out.println("request with TransId: "+transId);
+				System.out.println("opType: "+opType);
+				System.out.println("Request "+requestObj);
+				System.out.println("##########################################################");
+				System.out.println();
 				
 //				writer.println();
 //				writer.println("##########################################################");
@@ -614,12 +616,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 					List<String> eqThings = servNameThingsIdList.get(reqServiceName).getEqThings();
 					
 					
-//					System.out.println();
-//					System.out.println("##########################################################");
-//					System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase() +
-//									" inside request with TransId: "+transId);
-//					System.out.println("##########################################################");
-//					System.out.println();
+					System.out.println();
+					System.out.println("##########################################################");
+					System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase() +
+									" inside request with TransId: "+transId);
+					System.out.println("##########################################################");
+					System.out.println();
 //					writer.println();
 //					writer.println("##########################################################");
 //					writer.println("ServiceRequest Name: "+reqServiceName.toUpperCase()
@@ -641,11 +643,11 @@ public class QoSCalculator implements QoSCalculatorIF {
 					//so one service to only one thing
 					while(!Sj.isEmpty()){
 						
-//						System.out.println();
-//						System.out.println("##########################################################");
-//						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
-//						System.out.println("##########################################################");
-//						System.out.println();
+						System.out.println();
+						System.out.println("##########################################################");
+						System.out.println("SPLIT factor = "+String.valueOf(split)+" TETA: "+teta);
+						System.out.println("##########################################################");
+						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -686,14 +688,14 @@ public class QoSCalculator implements QoSCalculatorIF {
 						//if(Fj_sp = 0 || sum(c_ij_sp) < split)
 						if(c_ij_sp_Sum < split){
 							
-//							System.out.println();
-//							System.out.println("##########################################################");
-//							System.out.println("SPLIT FACTOR: "+split);
-//							System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase()+
-//									" inside request with TransId: "+transId);
-//							System.out.println("NO THINGS FOUND, TETA: "+teta);
-//							System.out.println("##########################################################");
-//							System.out.println();
+							System.out.println();
+							System.out.println("##########################################################");
+							System.out.println("SPLIT FACTOR: "+split);
+							System.out.println("ServiceRequest Name: "+reqServiceName.toUpperCase()+
+									" inside request with TransId: "+transId);
+							System.out.println("NO THINGS FOUND, TETA: "+teta);
+							System.out.println("##########################################################");
+							System.out.println();
 							
 //							writer.println();
 //							writer.println("##########################################################");
@@ -710,8 +712,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 							
 							Sj.remove(split);
 							
-//							System.out.println("remove split "+split);
-//							System.out.println("Sj "+Sj);
+							System.out.println("remove split "+split);
+							System.out.println("Sj "+Sj);
 							
 							if(Sj.isEmpty()){
 								res.setFeasible(false);
@@ -868,9 +870,9 @@ public class QoSCalculator implements QoSCalculatorIF {
 							
 							d = getDiffMaxSecondMax(Fj_sp, split);
 							
-//							System.out.println();
-//							System.out.println("DIFFERENCE d="+String.valueOf(d));
-//							System.out.println();
+							System.out.println();
+							System.out.println("DIFFERENCE d="+String.valueOf(d));
+							System.out.println();
 //							writer.println();
 //							writer.println("DIFFERENCE d="+String.valueOf(d));
 //							writer.println();
@@ -1477,12 +1479,12 @@ public class QoSCalculator implements QoSCalculatorIF {
 								matrixM.get(transId+"::"+reqServiceName), transId, reqServiceName, 
 								split, ni, teta, null);
 								
-//						System.out.println();
-//						System.out.println("##########################################################");
-//						System.out.println("Fj_sp: "+Fj_sp);
-//						System.out.println("priorityList: "+priorityList);
-//						System.out.println("##########################################################");
-//						System.out.println();
+						System.out.println();
+						System.out.println("##########################################################");
+						System.out.println("Fj_sp: "+Fj_sp);
+						System.out.println("priorityList: "+priorityList);
+						System.out.println("##########################################################");
+						System.out.println();
 						
 //						writer.println();
 //						writer.println("##########################################################");
@@ -2530,17 +2532,17 @@ public class QoSCalculator implements QoSCalculatorIF {
 //		writer.println("##########################################################");
 
 //		writer.println("CHECK CONSTRAINTS FOR SERVICE "+ reqServiceName+"<---------------------------");
-//		System.out.println();
-//		System.out.println("CHECK CONSTRAINTS FOR SERVICE "+ reqServiceName.toUpperCase() +"<---------------------------");
-//		
-//		System.out.println("equivalent Things: "+eqThings);
+		System.out.println();
+		System.out.println("CHECK CONSTRAINTS FOR SERVICE "+ reqServiceName.toUpperCase() +"<---------------------------");
+		
+		System.out.println("equivalent Things: "+eqThings);
 		
 		//iterate over the list of equivalent things
 		//to check constraints
 		for(String devId: eqThings){
 			
 //			writer.println("devId: "+devId);
-//			System.out.println("devId: "+devId);
+			System.out.println("devId: "+devId);
 			
 			//condition for the local optimization
 			//where a devId is excluded
@@ -2551,7 +2553,7 @@ public class QoSCalculator implements QoSCalculatorIF {
 				if(eqThingsTransaction.contains(devId)){
 					
 //					writer.println("devId "+devId+" respects the constraints of the transId "+transactionId);
-//					System.out.println("devId "+devId+" respects the constraints of the transId "+transactionId);
+					System.out.println("devId "+devId+" respects the constraints of the transId "+transactionId);
 					
 					//get f_ij,u_ij, p_ij
 					Double f_ij = matrixF.get(devId).get(transactionId+"::"+reqServiceName);
@@ -2566,46 +2568,46 @@ public class QoSCalculator implements QoSCalculatorIF {
 						
 //					writer.println("f_ij: "+f_ij);
 //					writer.println("u_ij: "+u_ij);
-//					System.out.println("f_ij: "+f_ij);
-//					System.out.println("u_ij: "+u_ij);
-//					System.out.println("p_ij: "+p_ij);
+					System.out.println("f_ij: "+f_ij);
+					System.out.println("u_ij: "+u_ij);
+					System.out.println("p_ij: "+p_ij);
 					
 					//get c_i and z_i
 					Double c_i = assignmentParamsMap.get(devId).getTotalUtilization();
 					Double z_i = assignmentParamsMap.get(devId).getResidualBattery();
 					
-//					System.out.println("c_i: "+c_i);
-//					System.out.println("(u_ij/split): "+(u_ij/split));
-//					System.out.println("z_i: "+z_i);
-//					System.out.println("(f_ij/split): "+(f_ij/split));
-//					System.out.println("split: "+split);
+					System.out.println("c_i: "+c_i);
+					System.out.println("(u_ij/split): "+(u_ij/split));
+					System.out.println("z_i: "+z_i);
+					System.out.println("(f_ij/split): "+(f_ij/split));
+					System.out.println("split: "+split);
 //					writer.println("c_i: "+c_i);
 //					writer.println("(u_ij/split): "+(u_ij/split));
 //					writer.println("z_i: "+z_i);
 //					writer.println("(f_ij/split): "+(f_ij/split));
 //					writer.println("split: "+split);
-//					System.out.println("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
-//					System.out.println("ni: "+ni);
-//					System.out.println("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
-//					System.out.println("teta: "+teta);
+					System.out.println("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
+					System.out.println("ni: "+ni);
+					System.out.println("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
+					System.out.println("teta: "+teta);
 //					writer.println("c_i + (u_ij/split): "+(c_i + (u_ij/split)));
 //					writer.println("ni: "+ni);
 //					writer.println("z_i - (f_ij/split): "+(z_i - (f_ij/split)));
 //					writer.println("teta: "+teta);
 					
 					//limit for the capacity to be less than ni
-					int capacityLimit = (int)Math.floor((ni-c_i)/(u_ij/split));
-//					System.out.println("(ni-c_i)/(u_ij/split): "+(ni-c_i)/(u_ij/split));
+					int capacityLimit = (int)(Math.ceil((ni-c_i)/(u_ij/split))-1);
+					System.out.println("(ni-c_i)/(u_ij/split): "+(ni-c_i)/(u_ij/split));
 					
 					//limit for the capacity to be greater than teta
 					int residualBatteryLimit = (int)Math.floor((z_i-teta)/(f_ij/split));
-//					System.out.println("(z_i-teta)/(f_ij/split): "+(z_i-teta)/(f_ij/split));
+					System.out.println("(z_i-teta)/(f_ij/split): "+(z_i-teta)/(f_ij/split));
 					
 					//how many times can assign the job (or sub job) j
 					//to the thing i respecting the constraints of utilization and battery
 					int c_ij_split = Math.min(capacityLimit, residualBatteryLimit);
 					
-//					System.out.println("c_ij_split: "+c_ij_split);
+					System.out.println("c_ij_split: "+c_ij_split);
 //					writer.println("c_ij_split: "+c_ij_split);
 					
 					//check the constraints about ni and teta
@@ -2616,13 +2618,13 @@ public class QoSCalculator implements QoSCalculatorIF {
 						priorityMap.put(devId, p_ij);
 						Fj_spTemp.put(devId, c_ij_split);
 						
-//						System.out.println();
-//						System.out.println("##########################################################");
-//						System.out.println("ADD DEVID: "+devId+" to Fjsp");
-//						System.out.println("c_ij_split: "+c_ij_split);
-//						System.out.println("p_ij: "+p_ij);
-//						System.out.println("##########################################################");
-//						System.out.println();
+						System.out.println();
+						System.out.println("##########################################################");
+						System.out.println("ADD DEVID: "+devId+" to Fjsp");
+						System.out.println("c_ij_split: "+c_ij_split);
+						System.out.println("p_ij: "+p_ij);
+						System.out.println("##########################################################");
+						System.out.println();
 //						writer.println();
 //						writer.println("##########################################################");
 //						writer.println("add devId: "+devId+" to Fjsp");
@@ -2632,20 +2634,20 @@ public class QoSCalculator implements QoSCalculatorIF {
 //						writer.println();
 						
 					}
-//					System.out.println();
+					System.out.println();
 //					writer.println("");
 //					writer.println("");
 				}
 				else{
 //					writer.println(devId+"not respect the constraints");
 					
-//					System.out.println("devId "+devId+" doesn't respect the constraints for transId "+transactionId);
+					System.out.println("devId "+devId+" doesn't respect the constraints for transId "+transactionId);
 				}
 			}
 		}
 		
 		if(Fj_spTemp.isEmpty()){ 
-//			System.out.println("NO THING found for service: "+ reqServiceName.toUpperCase());
+			System.out.println("NO THING found for service: "+ reqServiceName.toUpperCase());
 //			writer.println("NO THING found for service: "+ reqServiceName.toUpperCase());
 		}
 		else{
@@ -2662,8 +2664,8 @@ public class QoSCalculator implements QoSCalculatorIF {
 			}
 		}
 		
-//		System.out.println();
-//		System.out.println();
+		System.out.println();
+		System.out.println();
 //		writer.println("##########################################################");
 //		writer.println("##########################################################");
 //		writer.println("##########################################################");
@@ -2707,18 +2709,48 @@ public class QoSCalculator implements QoSCalculatorIF {
 		
 		for(Pair<String, Request> reqEntry: requests){
 			
-			String transId = reqEntry.getLeft();
+			String transId = new String(reqEntry.getLeft());
 			Request req = new Request();
 			
-			req.setOpType(reqEntry.getRight().getOpType());
-			req.setLocationRequirementPoint(reqEntry.getRight().getLocationRequirementPoint());
-			req.setLocationRequirementCircle(reqEntry.getRight().getLocationRequirementCircle());
-			req.setQosRequirements(reqEntry.getRight().getQosRequirements());
+			req.setOpType(new String(reqEntry.getRight().getOpType()));
 			
-			List<String> servList = new ArrayList<>(); 
-			servList.addAll(reqEntry.getRight().getRequiredServicesNameList());
+			if(reqEntry.getRight().getLocationRequirementPoint() != null){
+				Point p = new Point();
+				p.setLatitude(reqEntry.getRight().getLocationRequirementPoint().getLocationRequirement().getLatitude());
+				p.setLongitude(reqEntry.getRight().getLocationRequirementPoint().getLocationRequirement().getLongitude());
+				
+				LocationScopeValue<Point> locReq = new LocationScopeValue<Point>();
+				locReq.setLocationRequirement(p);
+				req.setLocationRequirementPoint(locReq);
+			}
 			
-			req.setRequiredServicesNameList(servList);
+			if(reqEntry.getRight().getLocationRequirementCircle() != null){
+				Circle c = new Circle();
+				c.setCenterLatitude(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getCenterLatitude());
+				c.setCenterLongitude(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getCenterLongitude());
+				c.setRadius(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getRadius());
+				
+				LocationScopeValue<Circle> locReq = new LocationScopeValue<Circle>();
+				locReq.setLocationRequirement(c);
+				req.setLocationRequirementCircle(locReq);
+			}
+			
+			double maxRateRequest = reqEntry.getRight().getQosRequirements().getMaxRateRequest();
+			double maxRespTime = reqEntry.getRight().getQosRequirements().getMaxResponseTime();
+			QoSscopeValue qos = new QoSscopeValue();
+			qos.setMaxRateRequest(maxRateRequest);
+			qos.setMaxResponseTime(maxRespTime);
+			req.setQosRequirements(qos);
+			
+			List<String> servListBck = new ArrayList<>(); 
+			
+			List<String> servList = reqEntry.getRight().getRequiredServicesNameList();
+			
+			for(String service : servList){
+				servListBck.add(new String(service));
+			}
+			
+			req.setRequiredServicesNameList(servListBck);
 			
 			reqListBck.add(new Pair<String, Request>(transId, req));
 		}

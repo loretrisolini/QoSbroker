@@ -49,7 +49,6 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	private int mediumIndex;
 	
 	private final int EQTHINGS_LIST_SIZE = 4;
-	private int[] M;
 	
 	private final Random generator;
 	private final Long seed;
@@ -62,14 +61,6 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	private HashMap<String, ThingsIdList> servNameThingsIdList;
 	private List<Pair<String, Request>> requestList;
 	
-	//HashMap to store p_j
-	private HashMap<String, Double> periods;
-	//HashMap to store h/p_j 
-	private HashMap<String, Integer> coefficients;
-	//List of requests that modify in the execution of the tests
-	private List<Pair<String, Request>> requestsBck;
-	private HashMap<String,HashMap<String, Double>> matrixF;
-
 	//Map<split::medium, <#allocazioniFeas, SimulationTime>>
 	private HashMap<String, Pair<Integer, Long>> testResults;
 
@@ -107,30 +98,19 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		this.split = Split.SINGLE_SPLIT;
 		this.epsilon = 0.001;
 		
-		M = new int[n*k];
-		
 		System.out.println("generate requests");
-		generateRequests();
-		
-		System.out.println("set services");
-		setServices();
-		
-		System.out.println("generate things");
-		generateThings();
+		requestList = generateRequests(k);
 		
 		mediumIndex = 1;
 		medium = mediumList[mediumIndex];
 		
 		System.out.println("medium: "+medium);
-		generateThingsServicesData(medium);
+		servNameThingsIdList = generateThingsServicesData(medium, this.n, this.k);
+		
+		System.out.println("generate things given eqThings for each service j");
+		thingsInfo = generateThings(this.n, servNameThingsIdList);
 		
 		stat.medium = medium;
-		
-		System.out.println("####################################");
-		System.out.println("thingsInfo: "+thingsInfo);
-		System.out.println("####################################");
-		System.out.println("servNameThingsIdList: "+servNameThingsIdList);
-		System.out.println("####################################");
 
 		testResults = new HashMap<String, Pair<Integer, Long>>();
 		
@@ -141,7 +121,7 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 	public void allocationTest(){
 		
 		//set result object
-		Reserveobj result = new Reserveobj();;
+		Reserveobj result = new Reserveobj();
 		result.setFeasible(false);
 
 		//store number of services
@@ -149,10 +129,10 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		
 		//clone request list, create periodList
 		System.out.println("clone requests");
-		cloneRequests();
+		List<Pair<String, Request>> requestsBck = cloneRequests();
 		
 		//set periods list
-		setPeriodsList();
+		HashMap<String, Double> periods = setPeriodsList(requestsBck);
 		System.out.println("set periods: "+periods);
 		
 		//create matrixM to filter equivalent Things accordingly to the restrictions in each request
@@ -178,11 +158,11 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		}
 		
 		//compute h and set coefficients h/p_j
-		hyperperiodComputations();
+		HashMap<String, Integer> coefficients = hyperperiodComputations(periods);
 		
 		//matrix F of the normalized energy costs
 		System.out.println("set matrix F");
-		matrixF = qosCalculator.createF(thingsInfo, coefficients);
+		HashMap<String,HashMap<String, Double>> matrixF = qosCalculator.createF(thingsInfo, coefficients);
 		if(matrixF == null){
 			
 			System.out.println("ERROR matrixF");
@@ -195,10 +175,17 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		
 		boolean stopTest = false;
 		
+//		System.out.println("######################");
+//		System.out.println(matrixF);
+//		System.out.println(matrixM);
+//		System.out.println(matrixU);
+		
 		while(!stopTest){
 			
 			System.out.println("Test with medium "+medium+" split "+split.name());
 			System.out.println("############################################");
+			
+
 			
 			//stop at the first feasible allocation or when all the
 			//requests are finished
@@ -222,9 +209,13 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 					
 					failedRequestList.add(transIdNotFeas);
 					
-					System.out.println("remove period and coefficient of failed transId");
-					coefficients.remove(transIdNotFeas);
+					System.out.println("remove period of failed transId");
+					System.out.println("periods list size: "+periods.size());
+					
 					periods.remove(transIdNotFeas);
+					
+					System.out.println("periods: "+periods);
+					System.out.println("new periods list size: "+periods.size());
 					
 					for(int i = 0; i < requestsBck.size(); i++){
 						
@@ -245,13 +236,18 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 					System.out.println("###################");
 					System.out.println("new requests list: \n");
 					System.out.println(requestsBck);
+					if(requestsBck.size() == this.requestList.size()){
+						throw new RuntimeException("requestBCK List not modified, requestsBck size: "
+													+requestsBck.size()+" original requests list size: "+this.requestList.size());
+					}
 					System.out.println("###################");
 					
 					//decrement total reqs counter
 					k--;
 					
 					//compute h and set coefficients h/p_j
-					hyperperiodComputations();
+					System.out.println("reset all coefficeints h/p_j given the modified periods list");
+					coefficients = hyperperiodComputations(periods);
 
 					//matrix F of the normalized energy costs
 					matrixF = qosCalculator.createF(thingsInfo, coefficients);
@@ -264,7 +260,7 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 				}
 			}
 			
-			if(!result.isFeasible()) stat.printAllocationSchema(result.getAllocationSchema(), split.name());
+			if(result.isFeasible()) stat.printAllocationSchema(result.getAllocationSchema(), split.name());
 			
 			//store simulation results
 			finishTime = (new Date().getTime() - startTime)/1000;
@@ -278,7 +274,7 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 			//print intermediate results
 			printResults(false);
 
-			if(split == Split.MULTI_SPLIT && mediumIndex == EQTHINGS_LIST_SIZE-1){
+			if(split == Split.SINGLE_SPLIT/*Split.MULTI_SPLIT*/ && mediumIndex == EQTHINGS_LIST_SIZE-1){
 				
 				System.out.println("STOP SIMULATION");
 				break;
@@ -298,41 +294,50 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 			
 			//clone request list, create periodList
 			System.out.println("clone requests");
-			cloneRequests();
+			requestsBck = cloneRequests();
 			
 			//set periods list
-			setPeriodsList();
+			periods = setPeriodsList(requestsBck);
 			System.out.println("set periods: "+periods);
 			
 			//compute h and set coefficients h/p_j
-			hyperperiodComputations();
+			coefficients = hyperperiodComputations(periods);
 
-			//matrix F of the normalized energy costs
-			matrixF = qosCalculator.createF(thingsInfo, coefficients);
-			if(matrixF == null){
-				
-				System.out.println("ERROR matrixF");
-				
-				return;
-			}
-
-			if(split == Split.SINGLE_SPLIT){
-				
-				split = Split.MULTI_SPLIT;
-				
-			}
-			else{
+//			if(split == Split.SINGLE_SPLIT){
+//				
+//				split = Split.MULTI_SPLIT;
+//			
+//				System.out.println("reset Matrix F because coefficients are changed");
+//				matrixF = qosCalculator.createF(thingsInfo, coefficients);
+//				if(matrixF == null){
+//					
+//					System.out.println("ERROR matrixF");
+//					
+//					return;
+//				}
+//				
+//			}
+//			else{
 				//next factor services on a thing
 				mediumIndex++;
 				
-				System.out.println("set services");
-				setServices();
-				
 				medium = mediumList[mediumIndex];
 				System.out.println("medium: "+medium);
-				generateThingsServicesData(medium);
+				servNameThingsIdList = generateThingsServicesData(medium, this.n, this.k);
 				
-				printM(M);
+				System.out.println("generate things");
+				thingsInfo = generateThings(this.n, servNameThingsIdList);
+				
+				//matrix F of the normalized energy costs
+				
+				System.out.println("reset Matrix F because service of each thing and coefficients are changed");
+				matrixF = qosCalculator.createF(thingsInfo, coefficients);
+				if(matrixF == null){
+					
+					System.out.println("ERROR matrixF");
+					
+					return;
+				}
 				
 				stat.medium = medium;
 				
@@ -342,7 +347,7 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 				//Map<transId::service, List<devId>>
 				
 				//eqThings for a service are changed
-				System.out.println("reset Matrix M because eqThings Per service is changed");
+				System.out.println("reset Matrix M because eqThings Per service and service of each thing are changed");
 				matrixM = qosCalculator.createM(requestsBck,thingsInfo,servNameThingsIdList);
 				if(matrixM == null){
 
@@ -364,7 +369,11 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 					stopTest = true;
 				}
 				
-			}
+//				System.out.println("######################");
+//				System.out.println(matrixF);
+//				System.out.println(matrixM);
+//				System.out.println(matrixU);
+//			}
 		}
 		
 		//final results
@@ -427,34 +436,82 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		}
 	}
 	
-	private void setPeriodsList(){
+	private HashMap<String, Double> setPeriodsList(List<Pair<String, Request>> requests){
 		
-		periods = new HashMap<>();
+		HashMap<String, Double> periods = new HashMap<>();
 		
 		//get the first requestCounter requests
-		for(int i=0; i < requestsBck.size(); i++){
+		for(int i=0; i < requests.size(); i++){
 			
-			String transId = requestsBck.get(i).getLeft();
+			String transId = new String(requests.get(i).getLeft());
 			
-			periods.put(transId, requestsBck.get(i).getRight().getQosRequirements().getMaxRateRequest());
+			periods.put(transId, new Double(requests.get(i).getRight().getQosRequirements().getMaxRateRequest()));
 
 		}
+		
+		return periods;
 	}
 	
-	private void cloneRequests(){
+	private List<Pair<String, Request>> cloneRequests() {
 		
-		requestsBck = new ArrayList<>();
+		List<Pair<String, Request>> requestsBck = new ArrayList<Pair<String, Request>>();
 		
-		//get the first requestCounter requests
-		for(int i=0; i < requestList.size(); i++){
-			requestsBck.add(requestList.get(i));
+		for(Pair<String, Request> reqEntry: requestList){
 			
+			String transId = new String(reqEntry.getLeft());
+			Request req = new Request();
+			
+			req.setOpType(new String(reqEntry.getRight().getOpType()));
+			
+			if(reqEntry.getRight().getLocationRequirementPoint() != null){
+				Point p = new Point();
+				p.setLatitude(reqEntry.getRight().getLocationRequirementPoint().getLocationRequirement().getLatitude());
+				p.setLongitude(reqEntry.getRight().getLocationRequirementPoint().getLocationRequirement().getLongitude());
+				
+				LocationScopeValue<Point> locReq = new LocationScopeValue<Point>();
+				locReq.setLocationRequirement(p);
+				req.setLocationRequirementPoint(locReq);
+			}
+			
+			if(reqEntry.getRight().getLocationRequirementCircle() != null){
+				Circle c = new Circle();
+				c.setCenterLatitude(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getCenterLatitude());
+				c.setCenterLongitude(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getCenterLongitude());
+				c.setRadius(reqEntry.getRight().getLocationRequirementCircle().getLocationRequirement().getRadius());
+				
+				LocationScopeValue<Circle> locReq = new LocationScopeValue<Circle>();
+				locReq.setLocationRequirement(c);
+				req.setLocationRequirementCircle(locReq);
+			}
+			
+			double maxRateRequest = reqEntry.getRight().getQosRequirements().getMaxRateRequest();
+			double maxRespTime = reqEntry.getRight().getQosRequirements().getMaxResponseTime();
+			QoSscopeValue qos = new QoSscopeValue();
+			qos.setMaxRateRequest(maxRateRequest);
+			qos.setMaxResponseTime(maxRespTime);
+			req.setQosRequirements(qos);
+			
+			List<String> servListBck = new ArrayList<>(); 
+			
+			List<String> servList = reqEntry.getRight().getRequiredServicesNameList();
+			
+			for(String service : servList){
+				servListBck.add(new String(service));
+			}
+			
+			req.setRequiredServicesNameList(servListBck);
+			
+			requestsBck.add(new Pair<String, Request>(transId, req));
 		}
+		
+		System.out.println("clone requests:");
+		System.out.println(requestsBck);
+		return requestsBck;
 	}
 	
-	private void hyperperiodComputations(){
+	private HashMap<String, Integer> hyperperiodComputations(HashMap<String, Double> periods){
 		
-		coefficients = new HashMap<>();
+		HashMap<String, Integer> coefficients = new HashMap<>();
 		
 		//compute hyperiod h
 		Long h = Utils.getHyperperiod(new ArrayList<>(periods.values()));
@@ -472,6 +529,8 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		System.out.println();
 		System.out.println("h/pj for each transId: "+coefficients);
 		System.out.println();
+		
+		return coefficients;
 	}
 	
 	private int getRandomIndex(int max){
@@ -481,9 +540,9 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		return i;
 	}
 	
-	private void generateRequests(){
+	private List<Pair<String, Request>> generateRequests(int k){
 		
-		requestList = new ArrayList<>();
+		List<Pair<String, Request>> requestList = new ArrayList<>();
 		
 		for(int r=0; r<k; r++){
 			
@@ -528,22 +587,24 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		System.out.println("requests:");
 		System.out.println(requestList);
 		System.out.println("###################");
+		
+		return requestList;
 	}
 	
-	private void setServices(){
+	private HashMap<String, ThingsIdList> setServices(int k){
 		
-		servNameThingsIdList = new HashMap<>(k);
+		HashMap<String, ThingsIdList> servNameThingsIdList = new HashMap<>(k);
 		
 		for(int j=0; j<k; j++){
 			
 			servNameThingsIdList.put(String.valueOf(j), new ThingsIdList());
 		}
-		
+		return servNameThingsIdList;
 	}
 	
-	private void generateThings(){
+	private HashMap<String, Thing> generateThings(int n, HashMap<String, ThingsIdList> servNameThingsIdList){
 		
-		thingsInfo = new HashMap<>(n);
+		HashMap<String, Thing> thingsInfo = new HashMap<>(n);
 		
 		for(int i = 0; i < n; i++){
 			
@@ -563,12 +624,80 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 			t.setCoords(point);
 			
 			String thingId = String.valueOf(thingIdCounter.getAndIncrement());
+			
+			System.out.println("set things services");
+			
+			List<String> serviceList = new ArrayList<>();
+			
+			System.out.println("iterate on services list to see what services has been assigned to the things with id: "+thingId);
+			for(Map.Entry<String, ThingsIdList> entryEqThings : servNameThingsIdList.entrySet()){
+				
+				String service = entryEqThings.getKey();
+				List<String> eqThings = entryEqThings.getValue().getEqThings();
+				
+				if(eqThings.contains(thingId)){
+					
+					serviceList.add(service);
+				}
+			}
+			
+			HashMap<String, ServiceFeatures> services = new HashMap<String, ServiceFeatures>(serviceList.size());
+				
+			for(String service : serviceList){
+
+				ServiceFeatures servFeat = new ServiceFeatures();
+				
+				//latency = ttransf_1 + texe + ttransf_2
+				index = getRandomIndex(ttransf.length);
+				double t_transf_1 = ttransf[index];
+				
+				index = getRandomIndex(texe.length);
+				double t_exe = texe[index];
+				
+				index = getRandomIndex(ttransf.length);
+				double t_transf_2 = ttransf[index];
+				
+				double latency = t_transf_1 + t_exe + t_transf_2;
+				servFeat.setLatency(latency);
+				
+				//c_ij = prx*ttransf+pmcu*texe+ptx*ttransf
+				double enCost = prx*t_transf_1+pmcu*t_exe+ptx*t_transf_2;
+				servFeat.setEnergyCost(enCost);
+				
+				services.put(service, servFeat);
+				
+			}
+				
+			t.setServicesList(services);
 			thingsInfo.put(thingId, t);
 			
 		}
+		
+		System.out.println("###############################");
+		System.out.println("<Things>: ");
+		
+		for(Map.Entry<String, Thing> entry: thingsInfo.entrySet()){
+			System.out.println("thingId "+entry.getKey());
+			System.out.println("thingBatt "+entry.getValue().getBatteryLevel());
+			
+			HashMap<String, ServiceFeatures> servicesPrint = entry.getValue().getServicesList();
+			for(Map.Entry<String, ServiceFeatures> entryService : servicesPrint.entrySet()){
+				System.out.println("service "+entryService.getKey());
+				System.out.println("latency "+entryService.getValue().getLatency());
+				System.out.println("energy cost "+entryService.getValue().getEnergyCost());
+			}
+			System.out.println("###############################");
+		}
+		
+		//reset thing id counter
+		thingIdCounter.set(0);
+		
+		return thingsInfo;
 	}
 	
-	private void generateThingsServicesData(int medium){
+	private HashMap<String, ThingsIdList> generateThingsServicesData(int medium,  
+												int n, 
+												int k){
 		
 		double m = (double)medium/100 * (double)k;
 		
@@ -577,6 +706,7 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		double p = (double)m / (double)k;
 		double q = 1 - p;
 		
+		int[] M = new int[n*k];
 		int[] rows = new int[n];
 		double tmp;
 		
@@ -597,7 +727,12 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 
 			rows = sum(n, k, M);
 		}
-		while(min(n, rows)==0 || !checkM());
+		while(min(n, rows)==0 || !checkM(M, n, k));
+		
+		printM(M);
+		
+		System.out.println("set services");
+		HashMap<String, ThingsIdList> servNameThingsIdList = setServices(k);
 		
 		System.out.println("set eqThings list per service");
 		for(int j=0; j<k; j++){
@@ -614,84 +749,32 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 		      
 		      ThingsIdList eqThings = new ThingsIdList();
 		      eqThings.setEqThings(thingsIdList);
-		      this.servNameThingsIdList.put(String.valueOf(j), eqThings);
+		      
+		      for(int t=0; t< thingsIdList.size(); t++){
+		    	  int occ = 0;
+		    	  
+		    	  for(int t1 = 0; t1 < thingsIdList.size(); t1++){
+		    		  if(thingsIdList.get(t1).contentEquals(thingsIdList.get(t)))
+		    			  occ++;
+		    	  }
+		    	  
+		    	  if(occ > 1){
+		    		  System.out.println("ERRORE duplicates things for service j");
+		    		  System.exit(-1);
+		    	  }
+		      }
+		      
+		      servNameThingsIdList.put(String.valueOf(j), eqThings);
 		}
 		System.out.println("<eq things per service>:");
-		System.out.println(this.servNameThingsIdList);
+		System.out.println(servNameThingsIdList);
 		
-		System.out.println("");
-		System.out.println("");
-		System.out.println("set things");
-		for(Map.Entry<String, Thing> entryThing : thingsInfo.entrySet()){
-			
-			String thingId = entryThing.getKey();
-			Thing t = entryThing.getValue();
-			
-			List<String> serviceList = new ArrayList<>();
-			
-			for(Map.Entry<String, ThingsIdList> entryEqThings : servNameThingsIdList.entrySet()){
-				
-				String service = entryEqThings.getKey();
-				List<String> eqThings = entryEqThings.getValue().getEqThings();
-				
-				if(eqThings.contains(thingId)){
-					
-					serviceList.add(service);
-				}
-			}
-			
-			//assumption one service per thing
-			HashMap<String, ServiceFeatures> services = new HashMap<String, ServiceFeatures>(serviceList.size());
-				
-			for(String service : serviceList){
-
-				ServiceFeatures servFeat = new ServiceFeatures();
-				
-				//latency = ttransf_1 + texe + ttransf_2
-				int index = getRandomIndex(ttransf.length);
-				double t_transf_1 = ttransf[index];
-				
-				index = getRandomIndex(texe.length);
-				double t_exe = texe[index];
-				
-				index = getRandomIndex(ttransf.length);
-				double t_transf_2 = ttransf[index];
-				
-				double latency = t_transf_1 + t_exe + t_transf_2;
-				servFeat.setLatency(latency);
-				
-				//c_ij = prx*ttransf+pmcu*texe+ptx*ttransf
-				double enCost = prx*t_transf_1+pmcu*t_exe+ptx*t_transf_2;
-				servFeat.setEnergyCost(enCost);
-				
-				//one service per thing
-				services.put(service, servFeat);
-				
-			}
-				
-			t.setServicesList(services);
-			thingsInfo.put(thingId, t);
-		}
+		return servNameThingsIdList;
 		
-		System.out.println("###############################");
-		System.out.println("<Things>: ");
-		
-		for(Map.Entry<String, Thing> entry: thingsInfo.entrySet()){
-			System.out.println("thingId "+entry.getKey());
-			System.out.println("thingBatt "+entry.getValue().getBatteryLevel());
-			
-			HashMap<String, ServiceFeatures> services = entry.getValue().getServicesList();
-			for(Map.Entry<String, ServiceFeatures> entryService : services.entrySet()){
-				System.out.println("service "+entryService.getKey());
-				System.out.println("latency "+entryService.getValue().getLatency());
-				System.out.println("energy cost "+entryService.getValue().getEnergyCost());
-			}
-			System.out.println("###############################");
-		}
 	}
 
 
-	private boolean checkM() {
+	private boolean checkM(int[] M, int n, int k) {
 		
 		int sum = 0;
 		int i,j;
