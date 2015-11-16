@@ -22,43 +22,41 @@ public class TestMain {
 		PrintWriter writer=null;
 		FileWriter output = null;
 		
-		Long seed;
-		int k;
-		int n;
+		Long seed = 0L;
+		int k = 0;
+		int n = 0;
+		
+		//read the seed
+		if(args[0].contentEquals("null")){
+			System.out.println("no seed read, creation of the seed");
+			seed = System.currentTimeMillis();
+		}
+		else{
+			seed = Long.valueOf(args[0]);
+		}
+		
+		k = Integer.parseInt(args[1]);
+		
+		n = Integer.parseInt(args[2]);
 		
 		try{
 		
 			output = new FileWriter(fileTest.getAbsolutePath()+"/testInfo.txt", true);
 			writer = new PrintWriter(output);
 			
-			//read the seed
-			if(args[0].contentEquals("null")){
-				System.out.println("no seed read, creation of the seed");
-				seed = System.currentTimeMillis();
-			}
-			else{
-				seed = Long.valueOf(args[0]);
-			}
-			
 			System.out.println("Seed: "+seed);
 			writer.println("Seed: "+seed);
-			
-			k = Integer.parseInt(args[1]);
-			
+
 			System.out.println("requests: "+k);
 			writer.println("requests: "+k);
-			
-			n = Integer.parseInt(args[2]);
+
 			System.out.println("thingsNumber: "+n);
 			writer.println("thingsNumber: "+n);
 			
 			System.out.println("Parameters of the test set");
 			writer.println("Parameters of the test set");
 			writer.println("####################################");
-			
-			Test5 test = new Test5(seed, k, n);
 
-			test.allocationTest();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -71,7 +69,12 @@ public class TestMain {
 				System.out.println("Error while flushing/closing fileWriter !!!");
                 e.printStackTrace();
 			}
+			
 		}
+		
+		Test5 test = new Test5(seed, k, n);
+
+		test.allocationTest();
 
 	}
 }

@@ -44,7 +44,7 @@ public class Test5 {
 	
 	private static final double per[]={10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0}; //s
 										
-	private static final double bat[]={50.710, 45.639, 40.568, 35.497, 30.426, 25.355};//{25.355, 20.284, 15.213, 10.142, 5.071, 2.535}; //mJ/100000
+	private static final double bat[]={25.355, 20.284, 15.213, 10.142, 5.071, 2.535};//{50.710, 45.639, 40.568, 35.497, 30.426, 25.355}; //mJ/100000
 									
 	private int k;
 	private int n;
@@ -150,7 +150,7 @@ public class Test5 {
 		
 		boolean stopTest = false;
 
-		HashMap<String,HashMap<String,Double>> matrixP;
+		HashMap<String,HashMap<String,Double>> matrixP = new HashMap<>();
 		
 		while(!stopTest){
 			
@@ -166,50 +166,52 @@ public class Test5 {
 			//stop at the first feasible allocation or when all the
 			//requests are finished
 			while(indexTest <= ITERATIONS){
-
-				System.out.println("medium: "+medium);
-				servNameThingsIdList.clear();
-				servNameThingsIdList = generateThingsServicesData(medium, this.n, this.k, servNameThingsIdList);
 				
-				thingsInfo = setServicesOnThings(thingsInfo, servNameThingsIdList);
-				
-				//create matrixM to filter equivalent Things accordingly to the restrictions in each request
-				//Map<transId::service, List<devId>>
-				System.out.println("set matrix M");
-				matrixM = qosCalculator.createM(requestList,thingsInfo,servNameThingsIdList);
-				if(matrixM == null){
-
-					System.out.println("ERROR matrixM");
+				if(indexTest == 0 || split == Split.SINGLE_SPLIT){
+					System.out.println("medium: "+medium);
+					servNameThingsIdList.clear();
+					servNameThingsIdList = generateThingsServicesData(medium, this.n, this.k, servNameThingsIdList);
 					
-					return;
+					thingsInfo = setServicesOnThings(thingsInfo, servNameThingsIdList);
+					
+					//create matrixM to filter equivalent Things accordingly to the restrictions in each request
+					//Map<transId::service, List<devId>>
+					System.out.println("set matrix M");
+					matrixM = qosCalculator.createM(requestList,thingsInfo,servNameThingsIdList);
+					if(matrixM == null){
+	
+						System.out.println("ERROR matrixM");
+						
+						return;
+					}
+					
+					//matrix U of the utilizations
+					//Map<DevId, Map<transId::Service, u_ij>>
+					System.out.println("set matrix U");
+					matrixU = qosCalculator.createU(thingsInfo, periods);
+					if(matrixU == null){
+						
+						System.out.println("ERROR matrixU");
+						
+						return;
+					}
+					
+					//matrix F of the normalized energy costs
+					System.out.println("set matrix F");
+					matrixF = qosCalculator.createF(thingsInfo, coefficients);
+					if(matrixF == null){
+						
+						System.out.println("ERROR matrixF");
+						
+						return;
+					}
+					
+					System.out.println("iteration number: "+indexTest);
+					
+					//Map<DevId, Map<transId::ServName ,p_ij>>>
+					matrixP = matrixF;
 				}
-				
-				//matrix U of the utilizations
-				//Map<DevId, Map<transId::Service, u_ij>>
-				System.out.println("set matrix U");
-				matrixU = qosCalculator.createU(thingsInfo, periods);
-				if(matrixU == null){
 					
-					System.out.println("ERROR matrixU");
-					
-					return;
-				}
-				
-				//matrix F of the normalized energy costs
-				System.out.println("set matrix F");
-				matrixF = qosCalculator.createF(thingsInfo, coefficients);
-				if(matrixF == null){
-					
-					System.out.println("ERROR matrixF");
-					
-					return;
-				}
-				
-				System.out.println("iteration number: "+indexTest);
-				
-				//Map<DevId, Map<transId::ServName ,p_ij>>>
-				matrixP = matrixF;
-				
 //				stat.printInputsABGAP(k, requestList, matrixF, matrixU, coefficients, thingsInfo, servNameThingsIdList, matrixM, prio.name(), split.name());
 				
 				try{
@@ -353,8 +355,8 @@ public class Test5 {
 			//print final results how many feasible
 			writer1.println("Iterations: " + ITERATIONS);
 			writer1.println("Simulation Time: " + simulationsTime);
-			writer1.println("Split: single; medium " + medium + "Feasible Allocations: " + howManyFeasSingle);
-			writer1.println("Split: multi; medium " + medium + "Feasible Allocations: " + howManyFeasMulti);
+			writer1.println("Split: single; medium " + medium + " Feasible Allocations: " + howManyFeasSingle);
+			writer1.println("Split: multi; medium " + medium + " Feasible Allocations: " + howManyFeasMulti);
 			
 			int lineCounter = 0;
 			for(Pair<String, Boolean> res : testCompare){
@@ -368,7 +370,7 @@ public class Test5 {
 				
 				writer2.println("iteration: "+iteration+" split: "+split+" medium: "+medium+" feasible: "+feas);
 				
-				if(lineCounter < 2)
+				if(lineCounter < 1)
 					lineCounter++;
 				else{
 					lineCounter=0;
@@ -703,8 +705,8 @@ public class Test5 {
 			rows = sum(n, k, M);
 		}
 		while(min(n, rows)==0 || !checkM(M, n, k));
-		
-		printM(M);
+
+//		printM(M);
 		
 		System.out.println("set eqThings list per service");
 		for(int j=0; j<k; j++){
