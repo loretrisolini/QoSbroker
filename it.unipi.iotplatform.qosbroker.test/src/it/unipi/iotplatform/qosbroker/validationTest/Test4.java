@@ -203,16 +203,16 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 					
 				if(!result.isFeasible()){
 					
-					String transIdNotFeas = result.getTransIdNotFeas();
+//					String transIdNotFeas = result.getTransIdNotFeas();
 					
-					System.out.println("transId failed request: "+transIdNotFeas);
-					
-					failedRequestList.add(transIdNotFeas);
-					
-					System.out.println("remove period of failed transId");
-					System.out.println("periods list size: "+periods.size());
-					
-					periods.remove(transIdNotFeas);
+//					System.out.println("transId failed request: "+transIdNotFeas);
+//					
+//					failedRequestList.add(transIdNotFeas);
+//					
+//					System.out.println("remove period of failed transId");
+//					System.out.println("periods list size: "+periods.size());
+//					
+//					periods.remove(transIdNotFeas);
 					
 					System.out.println("periods: "+periods);
 					System.out.println("new periods list size: "+periods.size());
@@ -220,16 +220,16 @@ private static final float[] coords = {0, 2, 4, 6, 8, 10};
 					for(int i = 0; i < requestsBck.size(); i++){
 						
 						String transId = requestsBck.get(i).getLeft();
-						
-						//remove request not feasible
-						if(transId.contentEquals(transIdNotFeas)){
-							
-							System.out.println("remove request number: "+i);
-							
-							requestsBck.remove(i);
-							
-							break;
-						}
+//						
+//						//remove request not feasible
+//						if(transId.contentEquals(transIdNotFeas)){
+//							
+//							System.out.println("remove request number: "+i);
+//							
+//							requestsBck.remove(i);
+//							
+//							break;
+//						}
 						
 					}
 					

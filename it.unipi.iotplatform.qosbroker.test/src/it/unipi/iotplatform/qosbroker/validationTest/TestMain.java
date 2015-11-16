@@ -56,7 +56,7 @@ public class TestMain {
 			writer.println("Parameters of the test set");
 			writer.println("####################################");
 			
-			Test4 test = new Test4(seed, k, n);
+			Test5 test = new Test5(seed, k, n);
 
 			test.allocationTest();
 		}

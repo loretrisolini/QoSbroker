@@ -18,9 +18,6 @@ public class Reserveobj {
 	//feasible
 	private boolean feasible = false;
 	
-	private int reqIndexNotFeas;
-	private String transIdNotFeas;
-	
 	//theta value
 	private Double theta = 0.0;
 	
@@ -127,22 +124,6 @@ public class Reserveobj {
 
 	public void setTransId_opType(HashMap<String, String> transId_opType) {
 		this.transId_opType = transId_opType;
-	}
-
-	public int getReqIndexNotFeas() {
-		return reqIndexNotFeas;
-	}
-
-	public void setReqIndexNotFeas(int reqIndexNotFeas) {
-		this.reqIndexNotFeas = reqIndexNotFeas;
-	}
-
-	public String getTransIdNotFeas() {
-		return transIdNotFeas;
-	}
-
-	public void setTransIdNotFeas(String transIdNotFeas) {
-		this.transIdNotFeas = transIdNotFeas;
 	}
 
 }

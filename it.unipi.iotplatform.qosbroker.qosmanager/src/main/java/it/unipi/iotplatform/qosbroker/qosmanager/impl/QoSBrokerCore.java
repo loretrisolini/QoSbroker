@@ -90,7 +90,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 	
 	private final String CONFMAN_REG_URL = System.getProperty("confman.ip");
 	
-	private static Statistics stat = new Statistics();;
+	private static Statistics stat = new Statistics();
 
 	/** String representing xml content type. */
 	private final String CONTENT_TYPE_XML = "application/xml";

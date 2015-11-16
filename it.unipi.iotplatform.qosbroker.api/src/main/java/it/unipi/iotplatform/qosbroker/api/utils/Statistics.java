@@ -155,12 +155,12 @@ public class Statistics{
 		try{
 			
 			//create Thing folder
-			File fileABGAP = new File("./ABGAP_Results_"+split);
+			File fileABGAP = new File("./ABGAP_Results");
 			if(!fileABGAP.exists()){
 				fileABGAP.mkdirs();
 			}
 
-			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_"+split+"_ABGAP_"+abgapIterationCounter+"_Medium_"+medium+".csv", true);
+			fileWriterInputGap = new FileWriter(fileABGAP.getPath()+"/InputsABGAP_ABGAP_"+abgapIterationCounter+"_Medium_"+medium+".csv", true);
 			abgapIterationCounter++;
 			
 			fileWriterInputGap.append("k,Priority,SplitPolicy");
