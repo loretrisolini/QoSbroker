@@ -43,7 +43,7 @@
 		interface="it.unipi.iotplatform.qosbroker.qosmanager.api.QoSBrokerIF" bean-name="QoSBrokerCore" ></osgi:reference>
 
 	<beans:bean id="RestController"
-		class="it.unipi.iotplatform.qosbroker.qosrestcontroller.impl.RestController" >
+		class="it.unipi.iotplatform.qosbroker.restcontroller.impl.RestController" >
  		<beans:property name="ngsi9Core" ref="Ngsi9Interface"></beans:property>
 		<beans:property name="ngsiCore" ref="Ngsi10Interface"></beans:property> 
 		<beans:property name="qosNgsiCore" ref="QoSNgsi10Interface"></beans:property> 

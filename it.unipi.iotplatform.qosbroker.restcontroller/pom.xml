@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   
   
-  <parent>
-    <groupId>it.unipi.iotplatform</groupId>
-    <artifactId>QoSbrokerParent</artifactId>
-    <version>4.3.3</version>
- 	<relativePath>../QoSbrokerParent</relativePath>
-  </parent>
+	<parent>
+		<groupId>eu.neclab.iotplatform</groupId>
+		<artifactId>IoTbrokerParent</artifactId>
+		<version>4.3.3</version>
+		<relativePath>../IoTbrokerParent</relativePath>
+	</parent>
   
   <modelVersion>4.0.0</modelVersion>
   <artifactId>qosbroker.restcontroller</artifactId>
@@ -34,7 +34,7 @@
 			<configuration>
 				<manifestLocation>META-INF</manifestLocation>
 				<instructions>
-					<Private-Package>it.unipi.iotplatform.qosbroker.qosmanager.*</Private-Package>
+					<Private-Package>it.unipi.iotplatform.qosbroker.restcontroller.*</Private-Package>
 					<Import-Package>it.unipi.iotplatform.qosbroker.qosmanager.api;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",
@@ -52,13 +52,6 @@
 							org.osgi.framework;version="1.6",
 							org.springframework.beans.factory;version="${spring.version}",
 							org.springframework.beans.factory.annotation;version="${spring.version}",
-							
-							org.springframework.beans.factory.config;version="${spring.version}",
-							org.springframework.context.annotation;version="${spring.version}",
-							org.springframework.context.support;version="${spring.version}",
-							org.springframework.cglib.core;version="${spring.version}",
-							org.springframework.cglib.proxy;version="${spring.version}",
-							
 							org.springframework.http;version="${spring.version}",
 							org.springframework.http.client;version="${spring.version}",
 							org.springframework.http.converter;version="${spring.version}",
@@ -105,23 +98,23 @@
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qosmanager</artifactId>
+			<version>4.3.3</version>
 		</dependency>
 
 		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.api</artifactId>
+			<version>4.3.3</version>
 		</dependency>
 	</dependencies>
 

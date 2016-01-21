@@ -39,7 +39,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
  * DAMAGE.
  ******************************************************************************/
-package it.unipi.iotplatform.qosbroker.qosrestcontroller.sanitycheck;
+package it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
