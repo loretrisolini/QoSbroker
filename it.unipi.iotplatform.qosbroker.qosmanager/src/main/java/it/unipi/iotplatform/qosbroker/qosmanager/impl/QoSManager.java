@@ -56,7 +56,7 @@ public class QoSManager implements QoSManagerIF {
 	public String getTemplate() {
 
 		try{
-			FileInputStream is = new FileInputStream("/home/lorenzo/Downloads/FIWARE-WORK/git/QoSbroker/qosbrokerconfig/schemas/wsag4j/fiware-template.xml");
+			FileInputStream is = new FileInputStream("/home/lorenzo/Dropbox/MasterThesis/FIWARE-QoS-Deployment/git/QoSbroker/qosbrokerconfig/schemas/wsag4j/fiware-template.xml");
 
 		    DocumentBuilderFactory dFactory= DocumentBuilderFactory.newInstance();
 		    DocumentBuilder dBuilder= dFactory.newDocumentBuilder();

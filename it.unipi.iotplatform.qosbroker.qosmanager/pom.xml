@@ -2,13 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>it.unipi.iotplatform</groupId>
-		<artifactId>QoSbrokerParent</artifactId>
+		<groupId>eu.neclab.iotplatform</groupId>
+		<artifactId>IoTbrokerParent</artifactId>
 		<version>4.3.3</version>
-		<relativePath>../QoSbrokerParent</relativePath>
+		<relativePath>../IoTbrokerParent</relativePath>
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
+	<groupId>it.unipi.iotplatform</groupId>
 	<artifactId>qosbroker.qosmanager</artifactId>
 	<name>it.unipi.iotplatform.qosbroker.qosmanager</name>
 	<packaging>bundle</packaging>
@@ -73,43 +74,34 @@
  		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
-			<version>4.3.3</version>
 		</dependency> 
 		
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.core</artifactId>
-			<version>4.3.3</version>
 		</dependency> 
 		
  		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qosmonitor</artifactId>
+			<version>4.3.3</version>
 		</dependency> 
-
-<!--  	    <dependency>
-		  <groupId>eu.betaas.net.sf.wsag4j</groupId>
-		  <artifactId>wsag4j-negotiation</artifactId>
-		  <version>0.0.1-SNAPSHOT</version>
-	  	</dependency>  -->
 
  		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.couchdb</artifactId>
+			<version>4.3.3</version>
 		</dependency> 
 
 		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.qoscalculator</artifactId>
+			<version>4.3.3</version>
 		</dependency>   
-<!-- 		<dependency>
-			<groupId>it.unipi.iotplatform</groupId>
-			<artifactId>qosbroker.api</artifactId>
-		</dependency> -->
+
 	</dependencies>
 </project>

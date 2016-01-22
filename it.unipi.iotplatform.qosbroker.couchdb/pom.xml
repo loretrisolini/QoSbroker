@@ -1,12 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>it.unipi.iotplatform</groupId>
-    <artifactId>QoSbrokerParent</artifactId>
-    <version>4.3.3</version>
-	<relativePath>../QoSbrokerParent</relativePath>
-  </parent>
+	<parent>
+		<groupId>eu.neclab.iotplatform</groupId>
+		<artifactId>IoTbrokerParent</artifactId>
+		<version>4.3.3</version>
+		<relativePath>../IoTbrokerParent</relativePath>
+	</parent>
 
+  <groupId>it.unipi.iotplatform</groupId>
   <artifactId>qosbroker.couchdb</artifactId>
   <packaging>bundle</packaging>
   <name>it.unipi.iotplatform.qosbroker.couchdb</name>
@@ -79,23 +80,9 @@
 			<version>4.3.2</version>
 		</dependency>
 
- 		<!-- GUAVA -->
-<!--		<dependency>
-			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
-			<version>20140107</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.2.2</version>
-		</dependency> -->
-
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		
 		<dependency>
@@ -107,17 +94,16 @@
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.client</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>it.unipi.iotplatform</groupId>
 			<artifactId>qosbroker.api</artifactId>
+			<version>4.3.3</version>
 		</dependency>
 	</dependencies>
 

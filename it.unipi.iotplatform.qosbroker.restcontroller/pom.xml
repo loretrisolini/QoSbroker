@@ -10,6 +10,7 @@
 	</parent>
   
   <modelVersion>4.0.0</modelVersion>
+  <groupId>it.unipi.iotplatform</groupId>
   <artifactId>qosbroker.restcontroller</artifactId>
   <name>it.unipi.iotplatform.qosbroker.restcontroller</name>
   <packaging>bundle</packaging>
@@ -34,7 +35,9 @@
 			<configuration>
 				<manifestLocation>META-INF</manifestLocation>
 				<instructions>
-					<Private-Package>it.unipi.iotplatform.qosbroker.restcontroller.*</Private-Package>
+					<!-- <Private-Package>it.unipi.iotplatform.qosbroker.restcontroller.*</Private-Package> -->
+					<Export-Package>it.unipi.iotplatform.qosbroker.restcontroller.impl;version="4.3.3",
+ 							it.unipi.iotplatform.qosbroker.restcontroller.sanitycheck;version="4.3.3";uses:="javax.xml.bind.annotation"</Export-Package>
 					<Import-Package>it.unipi.iotplatform.qosbroker.qosmanager.api;version="${pom.version}",
 							it.unipi.iotplatform.qosbroker.api.datamodel;version="${pom.version}",
 							eu.neclab.iotplatform.iotbroker.commons;version="${pom.version}",

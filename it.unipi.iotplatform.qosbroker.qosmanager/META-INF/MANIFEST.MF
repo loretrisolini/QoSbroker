@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1446242928485
-Build-Jdk: 1.8.0_60
+Bnd-LastModified: 1453399486336
+Build-Jdk: 1.8.0_66
 Built-By: lorenzo
 Bundle-ManifestVersion: 2
 Bundle-Name: it.unipi.iotplatform.qosbroker.qosmanager
@@ -27,4 +27,4 @@ Import-Package: eu.neclab.iotplatform.iotbroker.core;version="4.3.3",it.
  .xml.xpath,org.osgi.framework;version="1.5",org.xml.sax
 Originally-Created-By: Apache Maven Bundle Plugin
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"
-Tool: Bnd-2.4.1.201501161923
+Tool: Bnd-3.0.0.201509101326

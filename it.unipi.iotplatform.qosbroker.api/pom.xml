@@ -2,13 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>it.unipi.iotplatform</groupId>
-		<artifactId>QoSbrokerParent</artifactId>
+		<groupId>eu.neclab.iotplatform</groupId>
+		<artifactId>IoTbrokerParent</artifactId>
 		<version>4.3.3</version>
-		<relativePath>../QoSbrokerParent</relativePath>
+		<relativePath>../IoTbrokerParent</relativePath>
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
+  	<groupId>it.unipi.iotplatform</groupId>
 	<artifactId>qosbroker.api</artifactId>
 	<name>it.unipi.iotplatform.qosbroker.api</name>
 	<packaging>bundle</packaging>
@@ -63,16 +64,20 @@
 
 	<dependencies>
 
- 		<dependency>
+  		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>iotbroker.commons</artifactId>
-			<version>4.3.3</version>
 		</dependency>
 		<dependency>
 			<groupId>eu.neclab.iotplatform</groupId>
 			<artifactId>ngsi.api</artifactId>
-			<version>4.3.3</version>
-		</dependency> 	    
+		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20141113</version>
+		</dependency>
 		
 	</dependencies>
 </project>

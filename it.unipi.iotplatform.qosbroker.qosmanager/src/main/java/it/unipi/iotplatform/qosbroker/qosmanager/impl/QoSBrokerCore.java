@@ -836,7 +836,7 @@ public class QoSBrokerCore implements Ngsi10Interface, Ngsi9Interface, QoSBroker
 //		CREATE THE REQUEST FROM THE INFO TAKEN FROM SERVICE_AGREEMENT_REQUEST
 		
 		//create List<requiredServicesName> of services required in service Agreement request
-		//LinkedHashSer is used to avoid the equal string in requiredServicesName
+		//LinkedHashSet is used to avoid the equal string in requiredServicesName
 		//so thre are no equal serviceName Temp, Temp is equal to Temp
 		List<String> requiredServicesName = new ArrayList<>(new LinkedHashSet<String>(serviceRequest.getAttributeList()));
 		
